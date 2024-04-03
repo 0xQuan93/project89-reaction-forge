@@ -8,7 +8,7 @@
   <body style="text-align: center; padding: 0; border: 0; margin: 0;background: #231F20;">
     <canvas id="unity-canvas" width=1080 height=1920 tabindex="-1"
       style="width: 1080px; height: 1920px; background: #231F20; margin-top: 10px; margin-bottom: 10px"></canvas>
-    <script src="Build/20240401_Build_Release.loader.js"></script>
+    <script src="Build/Build_Release.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -32,12 +32,12 @@
       }
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
-        dataUrl: "Build/20240401_Build_Release.data",
-        frameworkUrl: "Build/20240401_Build_Release.framework.js",
-        codeUrl: "Build/20240401_Build_Release.wasm",
+        dataUrl: "Build/Build_Release.data",
+        frameworkUrl: "Build/Build_Release.framework.js",
+        codeUrl: "Build/Build_Release.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "PolygonalMind",
-        productName: "VIPE-Wallpapers",
+        productName: "VIPE-ReactMaker",
         productVersion: "1",
         matchWebGLToCanvasSize: false,
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
