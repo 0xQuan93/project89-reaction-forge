@@ -101,6 +101,10 @@ class SceneManager {
     return this.renderer;
   }
 
+  getCamera() {
+    return this.camera;
+  }
+
   frameObject(object: THREE.Object3D, padding = 1.2) {
     if (!this.camera || !this.controls) return;
     this.box.setFromObject(object);
@@ -176,57 +180,117 @@ class SceneManager {
     width?: number;
     height?: number;
     includeLogo?: boolean;
+    transparentBackground?: boolean;
   }): Promise<string | null> {
     if (!this.renderer || !this.canvas || !this.scene || !this.camera) return null;
     
     const includeLogo = options?.includeLogo ?? true;
+    const transparentBackground = options?.transparentBackground ?? false;
     const targetWidth = options?.width || this.canvas.width;
     const targetHeight = options?.height || this.canvas.height;
     
-    console.log('[SceneManager] Capturing snapshot:', { targetWidth, targetHeight, includeLogo });
+    console.log('[SceneManager] Capturing snapshot:', { 
+      targetWidth, 
+      targetHeight, 
+      includeLogo, 
+      transparentBackground 
+    });
     
-    // If custom resolution requested, render to an off-screen canvas
-    if (options?.width || options?.height) {
-      // Save current renderer size
-      const originalSize = new THREE.Vector2();
-      this.renderer.getSize(originalSize);
-      
-      // Temporarily resize renderer for high-res capture
-      this.renderer.setSize(targetWidth, targetHeight, false);
-      this.camera.aspect = targetWidth / targetHeight;
-      this.camera.updateProjectionMatrix();
-      
-      // Render at target resolution
-      this.renderer.render(this.scene, this.camera);
-      
-      // Capture the render
-      const dataUrl = await this.compositeWithLogo(this.renderer.domElement, targetWidth, targetHeight, includeLogo);
-      
-      // Restore original size
-      this.renderer.setSize(originalSize.x, originalSize.y, false);
-      this.camera.aspect = originalSize.x / originalSize.y;
-      this.camera.updateProjectionMatrix();
-      
-      return dataUrl;
+    // Save current background and clear color state
+    const originalBackground = this.scene.background;
+    const originalClearColor = new THREE.Color();
+    const originalClearAlpha = this.renderer.getClearAlpha();
+    this.renderer.getClearColor(originalClearColor);
+    
+    // If transparent background requested, temporarily remove background and set transparent clear
+    if (transparentBackground) {
+      this.scene.background = null;
+      this.renderer.setClearColor(0x000000, 0); // Fully transparent
+      console.log('[SceneManager] Background removed and clear color set to transparent');
     }
     
-    // Normal resolution capture
-    this.renderer.render(this.scene, this.camera);
-    return this.compositeWithLogo(this.renderer.domElement, this.canvas.width, this.canvas.height, includeLogo);
+    try {
+      // If custom resolution requested, render to an off-screen canvas
+      if (options?.width || options?.height) {
+        // Save current renderer size
+        const originalSize = new THREE.Vector2();
+        this.renderer.getSize(originalSize);
+        
+        // Temporarily resize renderer for high-res capture
+        this.renderer.setSize(targetWidth, targetHeight, false);
+        this.camera.aspect = targetWidth / targetHeight;
+        this.camera.updateProjectionMatrix();
+        
+        // Render at target resolution
+        this.renderer.render(this.scene, this.camera);
+        
+        // Capture the render
+        const dataUrl = await this.compositeWithLogo(
+          this.renderer.domElement, 
+          targetWidth, 
+          targetHeight, 
+          includeLogo,
+          transparentBackground
+        );
+        
+        // Restore original size
+        this.renderer.setSize(originalSize.x, originalSize.y, false);
+        this.camera.aspect = originalSize.x / originalSize.y;
+        this.camera.updateProjectionMatrix();
+        
+        // Restore background and clear color
+        this.scene.background = originalBackground;
+        this.renderer.setClearColor(originalClearColor, originalClearAlpha);
+        
+        return dataUrl;
+      }
+      
+      // Normal resolution capture
+      this.renderer.render(this.scene, this.camera);
+      
+      const dataUrl = await this.compositeWithLogo(
+        this.renderer.domElement, 
+        this.canvas.width, 
+        this.canvas.height, 
+        includeLogo,
+        transparentBackground
+      );
+      
+      // Restore background and clear color
+      this.scene.background = originalBackground;
+      this.renderer.setClearColor(originalClearColor, originalClearAlpha);
+      
+      return dataUrl;
+    } catch (error) {
+      // Ensure background and clear color are restored even on error
+      this.scene.background = originalBackground;
+      this.renderer.setClearColor(originalClearColor, originalClearAlpha);
+      throw error;
+    }
   }
   
   private async compositeWithLogo(
     sourceCanvas: HTMLCanvasElement,
     width: number,
     height: number,
-    includeLogo: boolean
+    includeLogo: boolean,
+    transparentBackground: boolean = false
   ): Promise<string> {
     // Create a temporary canvas to composite logo
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
-    const ctx = tempCanvas.getContext('2d');
+    const ctx = tempCanvas.getContext('2d', { alpha: true });
     if (!ctx) return sourceCanvas.toDataURL('image/png');
+    
+    // Clear canvas - if transparent, don't fill with color
+    if (!transparentBackground) {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
+    } else {
+      // Clear to transparent
+      ctx.clearRect(0, 0, width, height);
+    }
     
     // Draw the WebGL canvas
     ctx.drawImage(sourceCanvas, 0, 0, width, height);

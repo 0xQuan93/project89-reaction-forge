@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as THREE from 'three';
 import { sceneManager } from '../../three/sceneManager';
 import { useReactionStore } from '../../state/useReactionStore';
 import { exportAsWebM, canExportVideo } from '../../utils/gifExporter';
@@ -31,20 +32,24 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
 
   const handleExportPNG = async () => {
     const dimensions = getExportDimensions();
-    console.log('[ExportTab] Exporting PNG with dimensions:', dimensions, 'includeLogo:', includeLogo);
+    console.log('[ExportTab] Exporting PNG with dimensions:', dimensions, 'includeLogo:', includeLogo, 'transparentBg:', transparentBg);
     
-    // Use the new captureSnapshot with resolution and logo options
+    // Use the new captureSnapshot with resolution, logo, and transparency options
     const dataUrl = await sceneManager.captureSnapshot({
       width: dimensions.width,
       height: dimensions.height,
       includeLogo: includeLogo,
+      transparentBackground: transparentBg,
     });
     
     if (!dataUrl) return;
     
     const link = document.createElement('a');
     link.href = dataUrl;
-    link.download = `${activePreset.id}-${resolution}.png`;
+    const filename = transparentBg 
+      ? `${activePreset.id}-${resolution}-transparent.png`
+      : `${activePreset.id}-${resolution}.png`;
+    link.download = filename;
     link.click();
   };
 
@@ -72,12 +77,71 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     setExportProgress(0);
 
     try {
-      // Note: exportAsWebM currently uses canvas size
-      // TODO: Implement resolution-specific rendering
-      await exportAsWebM(canvas, 3, `${activePreset.id}-${resolution}.webm`, (progress) => {
-        setExportProgress(Math.round(progress * 100));
-      });
-      alert('Export complete! For Twitter: convert at ezgif.com/webm-to-gif');
+      // Save current renderer state
+      const renderer = sceneManager.getRenderer();
+      if (!renderer) {
+        throw new Error('Renderer not available');
+      }
+
+      const originalSize = new THREE.Vector2();
+      renderer.getSize(originalSize);
+      const camera = sceneManager.getCamera();
+      const originalAspect = camera ? camera.aspect : undefined;
+
+      // Temporarily resize renderer for high-res export
+      // NOTE: We only resize the renderer, NOT the canvas element
+      // The renderer will render to its internal buffer at target size
+      // and we'll capture from that buffer via the composite canvas
+      if (dimensions.width && dimensions.height) {
+        // Resize renderer internal buffer (this is what actually renders)
+        // The third parameter 'false' means don't update CSS, but it WILL update
+        // the canvas element's width/height attributes to match the renderer size
+        renderer.setSize(dimensions.width, dimensions.height, false);
+        
+        // Update camera aspect ratio to match target resolution
+        if (camera) {
+          camera.aspect = dimensions.width / dimensions.height;
+          camera.updateProjectionMatrix();
+        }
+        
+        console.log('[ExportTab] Renderer resized to:', dimensions.width, 'x', dimensions.height);
+        console.log('[ExportTab] Canvas dimensions (auto-updated by renderer):', canvas.width, 'x', canvas.height);
+        console.log('[ExportTab] Camera aspect:', camera?.aspect);
+        
+        // Force renderer to render at new size
+        const scene = sceneManager.getScene();
+        if (scene && camera) {
+          renderer.render(scene, camera);
+        }
+        
+        // Wait a few frames to ensure renderer has fully rendered at new size
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      }
+
+      try {
+        // Export with target resolution
+        await exportAsWebM(
+          canvas, 
+          3, 
+          `${activePreset.id}-${resolution}.webm`, 
+          (progress) => {
+            setExportProgress(Math.round(progress * 100));
+          },
+          { width: dimensions.width, height: dimensions.height }
+        );
+        alert('Export complete! For Twitter: convert at ezgif.com/webm-to-gif');
+      } finally {
+        // Always restore original renderer size and camera aspect
+        // The renderer.setSize() will automatically restore canvas element dimensions
+        renderer.setSize(originalSize.x, originalSize.y, false);
+        if (camera && originalAspect !== undefined) {
+          camera.aspect = originalAspect;
+          camera.updateProjectionMatrix();
+        }
+        console.log('[ExportTab] Renderer restored to:', originalSize.x, 'x', originalSize.y);
+      }
     } catch (error) {
       console.error('Export failed:', error);
       alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

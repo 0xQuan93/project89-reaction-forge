@@ -7,6 +7,8 @@ export interface ExportOptions {
   duration: number; // Total duration in seconds
   fps?: number; // Frames per second (default: 30)
   onProgress?: (progress: number) => void; // Progress callback (0-1)
+  width?: number; // Target width (optional, uses canvas width if not provided)
+  height?: number; // Target height (optional, uses canvas height if not provided)
 }
 
 /**
@@ -31,18 +33,36 @@ export async function exportAsWebM(
   canvas: HTMLCanvasElement,
   duration: number,
   filename: string,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  options?: { width?: number; height?: number }
 ): Promise<void> {
-  console.log('[VideoExporter] Starting WebM recording with logo...');
+  const targetWidth = options?.width || canvas.width;
+  const targetHeight = options?.height || canvas.height;
+  
+  console.log('[VideoExporter] Starting WebM recording with logo...', {
+    targetWidth,
+    targetHeight,
+    canvasSize: { width: canvas.width, height: canvas.height },
+    canvasClientSize: { width: canvas.clientWidth, height: canvas.clientHeight }
+  });
+  
+  // Verify canvas dimensions match target (they should after renderer.setSize)
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    console.warn('[VideoExporter] Canvas dimensions do not match target!', {
+      canvas: `${canvas.width}x${canvas.height}`,
+      target: `${targetWidth}x${targetHeight}`
+    });
+  }
 
   if (!canExportVideo()) {
     throw new Error('Browser does not support video recording');
   }
 
-  // Create composite canvas with logo
+  // Create composite canvas with logo at target resolution
+  // This is an off-screen canvas used for captureStream
   const compositeCanvas = document.createElement('canvas');
-  compositeCanvas.width = canvas.width;
-  compositeCanvas.height = canvas.height;
+  compositeCanvas.width = targetWidth;
+  compositeCanvas.height = targetHeight;
   const ctx = compositeCanvas.getContext('2d');
   if (!ctx) {
     throw new Error('Cannot get 2D context');
@@ -51,7 +71,7 @@ export async function exportAsWebM(
   // Load logo
   const logo = await loadLogoImage();
   
-  // Calculate logo dimensions (8% of canvas width)
+  // Calculate logo dimensions (8% of composite canvas width)
   const logoWidth = compositeCanvas.width * 0.08;
   const logoHeight = logo ? (logo.height / logo.width) * logoWidth : 0;
   const padding = 20;
@@ -64,8 +84,15 @@ export async function exportAsWebM(
   let lastFrameTime = 0;
 
   const drawFrame = () => {
-    // Draw WebGL canvas
-    ctx.drawImage(canvas, 0, 0);
+    // Clear the composite canvas
+    ctx.clearRect(0, 0, targetWidth, targetHeight);
+    
+    // Draw the WebGL canvas content to the composite canvas
+    // The renderer should have rendered at targetWidth x targetHeight
+    // and the canvas element's width/height should match (set by renderer.setSize)
+    // Draw the entire canvas, scaling to fill the composite canvas
+    // This ensures the background and all content fills the entire frame
+    ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
     
     // Draw logo with opacity
     if (logo) {
