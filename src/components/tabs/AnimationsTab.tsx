@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import { avatarManager } from '../../three/avatarManager';
 import { getMixamoAnimation } from '../../pose-lab/getMixamoAnimation';
+import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToScenePaths';
+import { animationManager } from '../../three/animationManager';
 import { useReactionStore } from '../../state/useReactionStore';
 
 export function AnimationsTab() {
@@ -65,24 +67,42 @@ export function AnimationsTab() {
         throw new Error('VRM not loaded');
       }
 
-      // Retarget the first animation to VRM
+      // Step 1: Retarget the first animation from Mixamo to VRM bone names
       const vrmClip = getMixamoAnimation(loadedAnimations, mixamoRoot, vrm);
       if (!vrmClip) {
         throw new Error('Failed to retarget animation to VRM');
       }
 
+      console.log('[AnimationsTab] Mixamo animation retargeted:', {
+        name: vrmClip.name,
+        duration: vrmClip.duration,
+        tracks: vrmClip.tracks.length,
+        sampleTrack: vrmClip.tracks[0]?.name
+      });
+
+      // Step 2: Convert bone names to scene paths (critical for animation to work)
+      const scenePathClip = convertAnimationToScenePaths(vrmClip, vrm);
+      scenePathClip.name = file.name.replace(/\.(fbx|gltf|glb)$/i, '');
+
+      console.log('[AnimationsTab] Animation converted to scene paths:', {
+        name: scenePathClip.name,
+        duration: scenePathClip.duration,
+        tracks: scenePathClip.tracks.length,
+        sampleTrack: scenePathClip.tracks[0]?.name
+      });
+
       // Add to animations list
       const newAnimation = {
-        name: file.name.replace(/\.(fbx|gltf|glb)$/i, ''),
-        duration: vrmClip.duration,
-        clip: vrmClip,
+        name: scenePathClip.name,
+        duration: scenePathClip.duration,
+        clip: scenePathClip,
       };
 
       setAnimations([...animations, newAnimation]);
       setStatusMessage(`✅ Loaded: ${newAnimation.name}`);
 
       // Auto-play the animation
-      playAnimation(vrmClip);
+      playAnimation(scenePathClip);
     } catch (error) {
       console.error('Failed to load animation:', error);
       setStatusMessage(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -103,22 +123,37 @@ export function AnimationsTab() {
   };
 
   const playAnimation = (clip: THREE.AnimationClip) => {
+    const vrm = avatarManager.getVRM();
+    if (!vrm) {
+      setStatusMessage('❌ VRM not loaded');
+      return;
+    }
+
     setCurrentAnimation(clip);
     
-    // Apply the animation using avatarManager's raw pose system
-    const animationData = {
-      tracks: clip.tracks,
-      duration: clip.duration,
+    console.log('[AnimationsTab] Playing animation:', {
       name: clip.name,
-    };
+      duration: clip.duration,
+      tracks: clip.tracks.length,
+      loop: isLooping,
+      sampleTrack: clip.tracks[0]?.name
+    });
 
-    // Use the avatarManager to play the animation
-    avatarManager.applyRawPose(animationData, isLooping ? 'loop' : 'once');
+    // Use avatarManager's playAnimationClip method
+    // This properly sets up the animation state and render loop updates
+    avatarManager.playAnimationClip(clip, isLooping);
+    
     setStatusMessage(`▶️ Playing: ${clip.name}`);
   };
 
   const handlePlayAnimation = (animation: typeof animations[0]) => {
     playAnimation(animation.clip);
+  };
+
+  const handleStopAnimation = () => {
+    avatarManager.stopAnimation();
+    setCurrentAnimation(null);
+    setStatusMessage('⏹️ Animation stopped');
   };
 
   return (
@@ -191,11 +226,25 @@ export function AnimationsTab() {
           <div className="tab-section">
             <h3>Playback Controls</h3>
             
+            <button
+              className="secondary full-width"
+              onClick={handleStopAnimation}
+              style={{ marginBottom: '1rem' }}
+            >
+              ⏹️ Stop Animation
+            </button>
+            
             <label className="checkbox-option">
               <input
                 type="checkbox"
                 checked={isLooping}
-                onChange={(e) => setIsLooping(e.target.checked)}
+                onChange={(e) => {
+                  setIsLooping(e.target.checked);
+                  if (currentAnimation) {
+                    // Restart animation with new loop setting
+                    avatarManager.playAnimationClip(currentAnimation, e.target.checked);
+                  }
+                }}
               />
               <span>Loop animation</span>
             </label>
@@ -209,7 +258,11 @@ export function AnimationsTab() {
                   max="2"
                   step="0.1"
                   value={playbackSpeed}
-                  onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const speed = parseFloat(e.target.value);
+                    setPlaybackSpeed(speed);
+                    avatarManager.setAnimationSpeed(speed);
+                  }}
                 />
               </label>
             </div>

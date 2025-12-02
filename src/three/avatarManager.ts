@@ -239,6 +239,57 @@ class AvatarManager {
   }
 
   /**
+   * Play an animation clip directly (for Pose Lab)
+   * @param clip - The THREE.AnimationClip to play
+   * @param loop - Whether to loop the animation (default: true)
+   */
+  playAnimationClip(clip: THREE.AnimationClip, loop = true) {
+    if (!this.vrm) {
+      console.warn('[AvatarManager] Cannot play animation - VRM not loaded');
+      return;
+    }
+
+    console.log('[AvatarManager] Playing animation clip:', clip.name, { loop });
+
+    // Reset humanoid pose before starting animation
+    if (this.vrm.humanoid?.resetNormalizedPose) {
+      this.vrm.humanoid.resetNormalizedPose();
+    } else {
+      this.vrm.humanoid?.resetPose();
+    }
+
+    // Set animated state and play animation
+    this.isAnimated = true;
+    animationManager.playAnimation(clip, loop);
+  }
+
+  /**
+   * Stop the current animation
+   */
+  stopAnimation() {
+    this.isAnimated = false;
+    animationManager.stopAnimation(true);
+  }
+
+  /**
+   * Set animation loop mode
+   */
+  setAnimationLoop(loop: boolean) {
+    if (this.isAnimated && animationManager.isPlaying()) {
+      animationManager.setLoop(loop);
+    }
+  }
+
+  /**
+   * Set animation playback speed
+   */
+  setAnimationSpeed(speed: number) {
+    if (this.isAnimated && animationManager.isPlaying()) {
+      animationManager.setSpeed(speed);
+    }
+  }
+
+  /**
    * Check if an animation is currently playing
    */
   isAnimationPlaying(): boolean {

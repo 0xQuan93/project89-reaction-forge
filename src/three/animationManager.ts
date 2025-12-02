@@ -97,6 +97,31 @@ class AnimationManager {
   }
 
   /**
+   * Set the loop mode of the current animation
+   */
+  setLoop(loop: boolean) {
+    if (this.currentAction) {
+      this.currentAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+    }
+  }
+
+  /**
+   * Set the playback speed of the current animation
+   */
+  setSpeed(speed: number) {
+    if (this.currentAction) {
+      this.currentAction.timeScale = speed;
+    }
+  }
+
+  /**
+   * Get the current action (for external access if needed)
+   */
+  getCurrentAction(): THREE.AnimationAction | undefined {
+    return this.currentAction;
+  }
+
+  /**
    * Cleanup resources
    */
   cleanup() {
