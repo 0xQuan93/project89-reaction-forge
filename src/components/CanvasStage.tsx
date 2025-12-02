@@ -63,11 +63,6 @@ export function CanvasStage() {
   return (
     <div className="canvas-container">
       <canvas ref={canvasRef} className="canvas-stage" />
-      <img 
-        src="/logo/89-logo.svg" 
-        alt="Logo"
-        className="logo-overlay"
-      />
     </div>
   );
 }

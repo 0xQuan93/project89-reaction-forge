@@ -1,16 +1,41 @@
+import { useState } from 'react';
 import './App.css';
+import { AppHeader } from './components/AppHeader';
 import { CanvasStage } from './components/CanvasStage';
-import { ReactionPanel } from './components/ReactionPanel';
+import { ViewportOverlay } from './components/ViewportOverlay';
+import { ControlPanel } from './components/ControlPanel';
 
 function App() {
-  console.log('[App] Rendering App component');
-  
+  const [mode, setMode] = useState<'reactions' | 'poselab'>('reactions');
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  console.log('[App] Rendering App component, mode:', mode);
+
   return (
     <div className="app-shell">
+      <AppHeader mode={mode} onModeChange={setMode} />
+      
       <main className="layout">
-        <CanvasStage />
-        <ReactionPanel />
+        <section className="viewport">
+          <CanvasStage />
+          <ViewportOverlay mode={mode} />
+        </section>
+
+        <ControlPanel mode={mode} />
       </main>
+
+      {/* Mobile drawer toggle */}
+      <button
+        className="control-toggle"
+        onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+      >
+        {mobileDrawerOpen ? 'Close' : 'Controls'}
+      </button>
+
+      {/* Mobile drawer */}
+      <div className={`control-drawer ${mobileDrawerOpen ? 'open' : ''}`}>
+        <ControlPanel mode={mode} />
+      </div>
     </div>
   );
 }
