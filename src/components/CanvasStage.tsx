@@ -10,6 +10,7 @@ export function CanvasStage() {
   const preset = useReactionStore((state) => state.activePreset);
   const avatarReady = useReactionStore((state) => state.isAvatarReady);
   const setAvatarReady = useReactionStore((state) => state.setAvatarReady);
+  const animationMode = useReactionStore((state) => state.animationMode);
   const sourceUrl = useAvatarSource((state) => state.currentUrl);
 
   useEffect(() => {
@@ -23,16 +24,19 @@ export function CanvasStage() {
     if (!sourceUrl) return;
     let cancelled = false;
     setAvatarReady(false);
+    console.log('[CanvasStage] Loading avatar from:', sourceUrl);
     avatarManager
       .load(sourceUrl)
       .then(() => {
         if (cancelled) return;
+        console.log('[CanvasStage] Avatar loaded successfully');
         setAvatarReady(true);
         const currentPreset = useReactionStore.getState().activePreset;
+        console.log('[CanvasStage] Applying initial preset:', currentPreset.id);
         applyPreset(currentPreset);
       })
       .catch((error) => {
-        console.error('Failed to load VRM', error);
+        console.error('[CanvasStage] Failed to load VRM:', error);
       });
     return () => {
       cancelled = true;
@@ -41,15 +45,30 @@ export function CanvasStage() {
 
   useEffect(() => {
     if (!avatarReady) return;
+    console.log('[CanvasStage] Preset or animation mode changed, applying:', preset.id, animationMode);
     applyPreset(preset);
-  }, [preset, avatarReady]);
+  }, [preset, avatarReady, animationMode]);
 
   const applyPreset = (currentPreset: ReactionPreset) => {
-    avatarManager.applyPose(currentPreset.pose);
+    // Use preset's animation settings or fall back to global animation mode
+    const animated = currentPreset.animated ?? (animationMode !== 'static');
+    const mode = currentPreset.animationMode ?? animationMode;
+    console.log('[CanvasStage] Applying preset with animation:', { animated, mode });
+    
+    avatarManager.applyPose(currentPreset.pose, animated, mode);
     avatarManager.applyExpression(currentPreset.expression);
     sceneManager.setBackground(currentPreset.background);
   };
 
-  return <canvas ref={canvasRef} className="canvas-stage" />;
+  return (
+    <div className="canvas-container">
+      <canvas ref={canvasRef} className="canvas-stage" />
+      <img 
+        src="/logo/89-logo.svg" 
+        alt="Logo"
+        className="logo-overlay"
+      />
+    </div>
+  );
 }
 

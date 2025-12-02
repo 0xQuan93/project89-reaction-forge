@@ -5,6 +5,14 @@ import type { BackgroundId } from '../types/reactions';
 
 type TickHandler = (delta: number) => void;
 
+// Logo overlay configuration
+const LOGO_CONFIG = {
+  path: '/logo/89-logo.svg', // Project 89 logo
+  position: 'bottom-right' as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
+  size: 0.08, // 8% of canvas width
+  opacity: 0.85,
+};
+
 class SceneManager {
   private renderer?: THREE.WebGLRenderer;
   private camera?: THREE.PerspectiveCamera;
@@ -82,6 +90,14 @@ class SceneManager {
     return this.scene;
   }
 
+  getCanvas() {
+    return this.canvas;
+  }
+
+  getRenderer() {
+    return this.renderer;
+  }
+
   frameObject(object: THREE.Object3D, padding = 1.2) {
     if (!this.camera || !this.controls) return;
     this.box.setFromObject(object);
@@ -105,15 +121,90 @@ class SceneManager {
     this.controls.update();
   }
 
-  setBackground(id: BackgroundId) {
+  async setBackground(id: BackgroundId) {
     if (!this.scene) return;
-    applyBackground(this.scene, id);
+    await applyBackground(this.scene, id);
   }
 
-  captureSnapshot(): string | null {
-    if (!this.renderer) return null;
+  async captureSnapshot(): Promise<string | null> {
+    if (!this.renderer || !this.canvas) return null;
+    
+    // Render the 3D scene
     this.renderer.render(this.scene!, this.camera!);
-    return this.renderer.domElement.toDataURL('image/png');
+    
+    // Create a temporary canvas to composite logo
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = this.canvas.width;
+    tempCanvas.height = this.canvas.height;
+    const ctx = tempCanvas.getContext('2d');
+    if (!ctx) return this.renderer.domElement.toDataURL('image/png');
+    
+    // Draw the WebGL canvas
+    ctx.drawImage(this.renderer.domElement, 0, 0);
+    
+    // Load and draw the logo
+    try {
+      const logo = await this.loadLogo();
+      if (logo) {
+        // Calculate logo size and position
+        const logoWidth = tempCanvas.width * LOGO_CONFIG.size;
+        const logoHeight = (logo.height / logo.width) * logoWidth;
+        
+        // Position based on config
+        let x = 0;
+        let y = 0;
+        const padding = 20;
+        
+        switch (LOGO_CONFIG.position) {
+          case 'bottom-right':
+            x = tempCanvas.width - logoWidth - padding;
+            y = tempCanvas.height - logoHeight - padding;
+            break;
+          case 'bottom-left':
+            x = padding;
+            y = tempCanvas.height - logoHeight - padding;
+            break;
+          case 'top-right':
+            x = tempCanvas.width - logoWidth - padding;
+            y = padding;
+            break;
+          case 'top-left':
+            x = padding;
+            y = padding;
+            break;
+        }
+        
+        // Draw logo with opacity
+        ctx.globalAlpha = LOGO_CONFIG.opacity;
+        ctx.drawImage(logo, x, y, logoWidth, logoHeight);
+        ctx.globalAlpha = 1.0;
+      }
+    } catch (error) {
+      console.warn('[SceneManager] Failed to add logo to snapshot:', error);
+    }
+    
+    return tempCanvas.toDataURL('image/png');
+  }
+  
+  private logoImage?: HTMLImageElement;
+  
+  private async loadLogo(): Promise<HTMLImageElement | null> {
+    // Return cached logo if available
+    if (this.logoImage) return this.logoImage;
+    
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        this.logoImage = img;
+        resolve(img);
+      };
+      img.onerror = () => {
+        console.warn('[SceneManager] Failed to load logo');
+        resolve(null);
+      };
+      img.src = LOGO_CONFIG.path;
+    });
   }
 
   dispose() {

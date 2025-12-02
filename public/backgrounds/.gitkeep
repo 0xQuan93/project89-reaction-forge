@@ -1,0 +1,15 @@
+# Background Images
+
+Place your background SVG/PNG/JPG files here.
+
+## Naming Convention
+- Use kebab-case: `midnight-circuit.svg`, `protocol-sunset.png`
+- Supported formats: SVG, PNG, JPG, WebP
+- Recommended size: 1920×1080 or larger
+
+## Example Files
+- midnight-circuit.svg
+- protocol-sunset.png
+- green-loom.jpg
+- neural-grid.svg
+

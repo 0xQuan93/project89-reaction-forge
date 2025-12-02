@@ -1,340 +1,246 @@
-# Project 89 Reaction Forge
+# 🎭 Reaction Forge
 
-**A WebGL-powered VRM avatar reaction generator for Project 89**
+**Create custom VRM avatar reactions with poses, expressions, and animations**
 
-![Project 89](https://img.shields.io/badge/Project-89-purple)
-![React](https://img.shields.io/badge/React-18-blue)
-![Three.js](https://img.shields.io/badge/Three.js-WebGL-green)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models.
 
 ---
 
-## 🎭 Overview
+## ✨ Features
 
-The **Project 89 Reaction Forge** is a browser-based tool that allows Proxim8 agents to generate branded reaction images using their VRM avatars. Users can create custom poses, expressions, and backgrounds, then save and share their reactions on social media.
+### 🎨 **Reaction Forge** - Create & Export Reactions
+- Load custom VRM avatars
+- 8 pre-made reaction presets
+- Custom pose/animation JSON support
+- Expression controls (Joy, Surprise, Calm)
+- 8 themed backgrounds
+- Export PNG images with logo overlay
+- Export WebM animations
+- Real-time 3D preview with orbit controls
 
-### Key Features
-
-- ✨ **VRM Avatar Support**: Full VRoid/VRM 1.0 compatibility
-- 🎨 **Custom Poses**: 8 unique Project 89-themed poses
-- 🎭 **Expressions**: Multiple facial expressions (coming soon)
-- 🖼️ **Branded Backgrounds**: Project 89 themed backgrounds (coming soon)
-- 💾 **Export**: Save reactions as PNG images
-- 🔗 **Portal Integration**: Seamless integration with beta.project89.org
-- 🎯 **Fixed Camera**: Consistent framing with no drift
-- 🔄 **Randomize**: Generate random reaction combinations
+### 🛠️ **Pose Lab** - Create Custom Poses
+- Retarget Mixamo FBX animations to VRM format
+- Real-time animation preview
+- Export pose JSON files
+- Export animation JSON files
+- Batch export multiple poses
+- Playback controls (play/pause/loop)
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js 18+ and npm
-- Modern browser with WebGL support
+- Modern web browser (Chrome, Firefox, Edge)
 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/reaction-forge.git
+cd reaction-forge
+
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
-### Development URLs
+### Open in Browser
+- **Reaction Forge**: http://localhost:5173/
+- **Pose Lab**: http://localhost:5173/?mode=pose-lab
 
-- **Main App**: `http://localhost:5173/`
-- **Pose Lab**: `http://localhost:5173/?mode=pose-lab`
+---
+
+## 📖 Usage Guide
+
+### Reaction Forge
+
+#### **Step 1: Load Avatar**
+1. Click **"📦 Load VRM Avatar"**
+2. Select your `.vrm` file
+3. Avatar loads in 3D viewport
+
+#### **Step 2: Choose Reaction**
+- **Option A**: Select from 8 presets (Dawn Runner, Sunset Call, etc.)
+- **Option B**: Drag & drop custom pose JSON from Pose Lab
+
+#### **Step 3: Customize**
+- Set **Animation Mode**: Static / Loop / Play Once
+- Adjust camera with mouse (orbit, zoom)
+
+#### **Step 4: Export**
+- **PNG**: Click "Save PNG" for static image
+- **WebM**: Click "Export Animation" for video
+- **Share**: Click "Share" to open in new tab
+
+---
+
+### Pose Lab
+
+#### **Step 1: Load VRM**
+1. Drag & drop `.vrm` file into **Step 1** zone
+2. Avatar appears facing forward
+
+#### **Step 2: Load Animation**
+1. Download FBX from [Mixamo](https://www.mixamo.com/)
+2. Drag & drop `.fbx` file into **Step 2** zone
+3. Animation retargets to VRM automatically
+
+#### **Step 3: Preview**
+- Use playback controls: ▶️ Play, ⏸️ Pause, ⏹️ Stop, 🔄 Restart
+- Toggle 🔁 Loop or 1️⃣ Play Once
+- Adjust camera with mouse
+
+#### **Step 4: Export**
+- **Export Pose JSON**: Static pose data
+- **Export Animation JSON**: Full animation clip
+- Save both files for use in Reaction Forge
 
 ---
 
 ## 📁 Project Structure
 
 ```
-project89-reactor/
+reaction-forge/
 ├── src/
 │   ├── components/          # React components
-│   │   ├── CanvasStage.tsx  # WebGL canvas renderer
-│   │   └── ReactionPanel.tsx # Control panel UI
+│   │   ├── CanvasStage.tsx  # 3D viewport
+│   │   └── ReactionPanel.tsx # Control panel
+│   ├── pose-lab/            # Pose Lab tool
+│   │   └── PoseLab.tsx      # Main component
+│   ├── poses/               # Pose definitions
+│   │   ├── *.json           # Static poses
+│   │   ├── *-animation.json # Animation clips
+│   │   └── fbx/             # Source FBX files
 │   ├── three/               # Three.js managers
-│   │   ├── sceneManager.ts  # Scene, camera, lights
+│   │   ├── sceneManager.ts  # Scene & rendering
 │   │   ├── avatarManager.ts # VRM loading & posing
-│   │   └── backgrounds.ts   # Background system
+│   │   └── animationManager.ts # Animation playback
 │   ├── state/               # Zustand stores
-│   │   ├── useReactionStore.ts  # Reaction state
-│   │   └── useAvatarSource.ts   # Avatar source management
-│   ├── poses/               # Pose definitions (JSON)
-│   │   ├── *.json           # VRM pose files (quaternions)
-│   │   ├── fbx/             # Mixamo source files
-│   │   └── index.ts         # Pose registry
-│   ├── pose-lab/            # In-browser pose retargeting tool
-│   │   ├── PoseLab.tsx      # Pose Lab UI
-│   │   ├── getMixamoAnimation.ts
-│   │   ├── poseFromClip.ts
-│   │   └── VRMRigMapMixamo.ts
-│   ├── data/                # Static data
-│   │   └── reactions.ts     # Reaction presets
-│   ├── types/               # TypeScript types
-│   │   ├── reactions.ts     # Pose/Expression/Background types
-│   │   └── global.d.ts      # Global type declarations
-│   ├── bridge/              # External integration
-│   │   └── avatarBridge.ts  # Portal communication bridge
-│   ├── App.tsx              # Main app component
-│   └── main.tsx             # App entry point
+│   └── utils/               # Utilities
 ├── public/
-│   └── vrm/                 # VRM avatar files
-├── scripts/                 # Custom Node.js scripts
-│   ├── convertPoses.mjs     # Pose format converter
-│   ├── importMixamoPose.mjs # (Deprecated)
-│   ├── retargetMixamoPose.mjs # (Deprecated)
-│   └── README.md            # Scripts documentation
-├── dist/                    # Production build output
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
+│   ├── backgrounds/         # SVG backgrounds
+│   ├── logo/                # Logo files
+│   └── vrm/                 # Sample VRM files
+├── docs/                    # Documentation
+└── scripts/                 # Build scripts
 ```
 
 ---
 
-## 🎨 Current Poses
+## 🎨 Available Presets
 
-All poses are Project 89-themed and optimized for avatar presentation:
-
-1. **Dawn Runner** - Dynamic sprint pose for reconnaissance briefs
-2. **Green Loom** - Celebratory dance for timeline victories
-3. **Sunset Call** - Relaxed sitting for casual intel drops
-4. **Cipher Whisper** - Meditative cross-legged for encrypted comms
-5. **Nebula Drift** - Contemplative standing for deep analysis
-6. **Loom Vanguard** - Heroic stance for mission declarations
-7. **Signal Reverie** - Thoughtful pose for signal interpretation
-8. **Protocol Enforcer** - Authoritative crouch for enforcement ops
-
----
-
-## 🛠️ Technical Architecture
-
-### Core Technologies
-
-- **React 18**: UI framework
-- **TypeScript 5**: Type-safe development
-- **Three.js**: 3D rendering engine
-- **@pixiv/three-vrm**: VRM model support
-- **Zustand**: Lightweight state management
-- **Vite**: Fast build tool and dev server
-
-### Key Systems
-
-#### 1. Scene Management (`sceneManager.ts`)
-- Fixed camera positioning (no drift)
-- Directional + ambient lighting
-- OrbitControls for user interaction
-- Render loop management
-
-#### 2. Avatar Management (`avatarManager.ts`)
-- VRM loading via GLTFLoader
-- Pose application using VRM Humanoid API
-- Scene rotation for camera-facing
-- Expression system (ready for implementation)
-
-#### 3. Pose System
-- **Format**: VRM-native quaternions (rotation-only)
-- **Storage**: JSON files in `src/poses/`
-- **Application**: Via `VRMHumanoid.setNormalizedPose()`
-- **Retargeting**: In-browser Pose Lab tool
-
-#### 4. Portal Integration
-- Global `window.project89Reactor` bridge
-- Avatar source management via Zustand
-- Supports both URL and File sources
+| Preset | Pose | Expression | Background |
+|--------|------|------------|------------|
+| **Dawn Runner** | Dynamic stance | Joy | Protocol Sunset |
+| **Sunset Call** | Standing wave | Joy | Protocol Sunset |
+| **Cipher Whisper** | Sitting pose | Calm | Neural Grid |
+| **Nebula Drift** | Walking | Calm | Quantum Field |
+| **Signal Reverie** | Crouching | Surprise | Signal Breach |
+| **Agent Dance** | Dancing | Joy | Cyber Waves |
+| **Agent Taunt** | Taunting | Joy | Signal Breach |
+| **Silly Agent** | Silly dance | Joy | Protocol Dawn |
 
 ---
 
-## 🎯 Adding New Poses
+## 🎯 Workflows
 
-### Using the Pose Lab
-
-1. **Start the Pose Lab**:
-   ```
-   http://localhost:5173/?mode=pose-lab
-   ```
-
-2. **Upload your VRM avatar**
-
-3. **Configure batch poses** in `src/pose-lab/PoseLab.tsx`:
-   ```typescript
-   const batchConfigs: BatchPoseConfig[] = [
-     {
-       id: 'my-new-pose',
-       label: 'My New Pose',
-       source: mixamoSources.dynamic,
-       fileName: 'My Mixamo Pose.fbx',
-       sceneRotation: { y: 180 }
-     }
-   ];
-   ```
-
-4. **Upload Mixamo FBX file** and click "Apply & Preview"
-
-5. **Export pose** - saves to `src/poses/my-new-pose.json`
-
-6. **Register the pose**:
-   - Add to `PoseId` type in `src/types/reactions.ts`
-   - Import in `src/poses/index.ts`
-   - Add reaction preset in `src/data/reactions.ts`
-
----
-
-## 🔧 Configuration
-
-### Camera Settings
-
-Fixed camera for consistent framing (no drift):
-
-```typescript
-// In sceneManager.ts
-camera.position.set(0, 1.4, 2.3);
-controls.target.set(0, 1.4, 0);
+### **Create Custom Reaction**
+```
+1. Pose Lab: Load VRM + Mixamo FBX
+2. Pose Lab: Export pose.json + animation.json
+3. Reaction Forge: Load VRM
+4. Reaction Forge: Drag animation.json
+5. Reaction Forge: Export WebM
 ```
 
-### Pose Format
+### **Quick Content Creation**
+```
+1. Reaction Forge: Load VRM
+2. Reaction Forge: Select preset
+3. Reaction Forge: Export PNG/WebM
+4. Share on social media!
+```
 
-All poses use rotation-only data:
-
-```json
-{
-  "sceneRotation": {
-    "y": 180  // Face camera
-  },
-  "vrmPose": {
-    "hips": {
-      "rotation": [x, y, z, w]  // Quaternion
-    }
-    // ... other bones (rotation only, no position)
-  }
-}
+### **Batch Export Poses**
+```
+1. Pose Lab: Load VRM
+2. Pose Lab: Click "Batch Export All Poses"
+3. All 8 poses export automatically
+4. Use in your own projects
 ```
 
 ---
 
-## 🚢 Deployment
+## 🔧 Development
 
 ### Build for Production
-
 ```bash
 npm run build
 ```
 
-Output: `dist/` folder ready for deployment
-
-### Environment Variables
-
-Create `.env` for custom configuration:
-
-```env
-VITE_DEFAULT_AVATAR_URL=https://your-cdn.com/avatar.vrm
-VITE_API_ENDPOINT=https://api.project89.org
+### Preview Production Build
+```bash
+npm run preview
 ```
 
----
-
-## 🔐 Proprietary Assets
-
-The following are proprietary to Project 89:
-
-- ✅ All pose JSON files (`src/poses/*.json`)
-- ✅ Mixamo FBX source files (`src/poses/fbx/`)
-- ✅ Custom VRM avatars (`public/vrm/`)
-- ✅ Pose Lab retargeting logic
-- ✅ Reaction preset configurations
-- ✅ Project 89 branding and themes
-
-**Do not distribute or use outside of Project 89 without authorization.**
-
----
-
-## 🐛 Known Issues
-
-- ⚠️ VRMUtils deprecation warning (cosmetic, no impact)
-- ⚠️ Expressions not yet implemented (coming soon)
-- ⚠️ Backgrounds not yet implemented (coming soon)
-
----
-
-## 🗺️ Roadmap
-
-### Phase 1: Core Functionality ✅
-- [x] VRM avatar loading
-- [x] Pose system with 8 poses
-- [x] Fixed camera (no drift)
-- [x] Randomize functionality
-- [x] PNG export
-- [x] Pose Lab tool
-
-### Phase 2: Branding & Polish (Current)
-- [ ] Custom Project 89 backgrounds
-- [ ] Logo overlays and watermarking
-- [ ] Facial expressions
-- [ ] UI/UX polish
-
-### Phase 3: Portal Integration
-- [ ] Wallet-gated avatar fetching
-- [ ] Social sharing integration
-- [ ] Reaction history/gallery
-- [ ] Community reaction feed
-
-### Phase 4: Advanced Features
-- [ ] Animation support (not just static poses)
-- [ ] Pose blending and transitions
-- [ ] Custom hand poses
-- [ ] Video export (animated reactions)
+### Type Checking
+```bash
+npm run type-check
+```
 
 ---
 
 ## 📚 Documentation
 
-- **Scripts**: See `scripts/README.md` for custom tooling
-- **Poses**: See `src/poses/README.md` for pose format details
-- **API**: TypeScript types provide inline documentation
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues
+- **[ROADMAP.md](ROADMAP.md)** - Future features
+- **[docs/](docs/)** - Technical guides
 
 ---
 
 ## 🤝 Contributing
 
-This is a proprietary Project 89 tool. For internal development:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-1. Create a feature branch
-2. Make changes with clear commit messages
-3. Test thoroughly (especially pose anchoring)
-4. Submit for review
-
----
-
-## 📄 License
-
-**Proprietary - Project 89**
-
-All rights reserved. This software and associated assets are the property of Project 89 and may not be used, copied, or distributed without explicit authorization.
+### Development Setup
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
 ---
 
-## 🆘 Support
+## 📝 License
 
-For questions or issues:
-- Internal Project 89 development team
-- Check `scripts/README.md` for tooling help
-- Review console logs for debugging
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with 💜 for Project 89**
+## 🙏 Acknowledgments
 
-*Weaving the optimal timeline, one reaction at a time.*
+- **[three-vrm](https://github.com/pixiv/three-vrm)** - VRM support for Three.js
+- **[Mixamo](https://www.mixamo.com/)** - Free character animations
+- **[VRoid Studio](https://vroid.com/)** - VRM avatar creation
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/reaction-forge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/reaction-forge/discussions)
+
+---
+
+## 🌟 Show Your Support
+
+If this project helped you, please give it a ⭐️!
+
+---
+
+**Made with 💚 for the VRM community**

@@ -24,17 +24,25 @@ dist-ssr
 *.sw?
 
 # ============================================
-# PROJECT 89 PROPRIETARY ASSETS
+# REACTION FORGE SPECIFIC
 # ============================================
 
-# Proprietary VRM Avatars
-# Uncomment to protect custom avatars from being committed
+# Proprietary VRM Avatars (uncomment to protect custom avatars)
 # public/vrm/*.vrm
+# !public/vrm/HarmonVox_519.vrm  # Keep sample avatar
 
-# Proprietary Mixamo Source Files
-# These are licensed assets - do not distribute
+# Mixamo Source Files (licensed - do not distribute)
 src/poses/fbx/*.fbx
-src/poses/fbx/*.json
+!src/poses/fbx/.gitkeep
+
+# Large export files
+*.webm
+*.mp4
+*.gif
+
+# Test/temporary poses
+*-test.json
+*-temp.json
 
 # Backup folders
 *-backup-*/
@@ -50,11 +58,29 @@ full-repo-backup-*.zip
 .env
 .env.local
 .env.production
+.env.*.local
 
 # Temporary files
 *.tmp
 *.temp
+.cache
 
 # OS files
 Thumbs.db
 .DS_Store
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Debug logs
+debug.log
+error.log

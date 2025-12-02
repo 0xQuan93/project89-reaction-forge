@@ -5,18 +5,27 @@ import App from './App.tsx'
 import PoseLab from './pose-lab/PoseLab'
 import { setupAvatarBridge } from './bridge/avatarBridge'
 
-const root = createRoot(document.getElementById('root')!)
+console.log('[main] Starting Project 89 Reaction Forge');
 
-const render = () => {
-  const params = new URLSearchParams(window.location.search)
-  const mode = params.get('mode')
-
-  root.render(
-  <StrictMode>
-      {mode === 'pose-lab' ? <PoseLab /> : <App />}
-  </StrictMode>,
-)
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('[main] Root element not found!');
+  throw new Error('Root element not found');
 }
 
-setupAvatarBridge()
-render()
+const root = createRoot(rootElement);
+
+const render = () => {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode');
+  console.log('[main] Render mode:', mode || 'main-app');
+
+  root.render(
+    <StrictMode>
+      {mode === 'pose-lab' ? <PoseLab /> : <App />}
+    </StrictMode>
+  );
+};
+
+setupAvatarBridge();
+render();

@@ -1,10 +1,9 @@
 import { create } from 'zustand';
 
-export const DEFAULT_VRM_URL =
-  'https://beta.project89.org/api/vrm/proxy?url=https%3A%2F%2Fdrive.google.com%2Fuc%3Fexport%3Ddownload%26id%3D1JmsLhn-9lA9JB9fMQ4tnO35htWMP11UW';
+export const DEFAULT_VRM_URL = '/vrm/HarmonVox_519.vrm';
 
 type AvatarSourceState = {
-  currentUrl: string;
+  currentUrl: string | null;
   sourceLabel: string;
   setRemoteUrl: (url: string, label?: string) => void;
   setFileSource: (file: File) => void;
@@ -21,8 +20,8 @@ const revokeObjectUrl = () => {
 };
 
 export const useAvatarSource = create<AvatarSourceState>((set) => ({
-  currentUrl: DEFAULT_VRM_URL,
-  sourceLabel: 'Default HarmonVox',
+  currentUrl: null, // Start with no avatar
+  sourceLabel: 'No avatar loaded',
   setRemoteUrl: (url, label = 'Remote VRM') => {
     revokeObjectUrl();
     set({
@@ -41,8 +40,8 @@ export const useAvatarSource = create<AvatarSourceState>((set) => ({
   reset: () => {
     revokeObjectUrl();
     set({
-      currentUrl: DEFAULT_VRM_URL,
-      sourceLabel: 'Default HarmonVox',
+      currentUrl: null,
+      sourceLabel: 'No avatar loaded',
     });
   },
 }));
