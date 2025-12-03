@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { sceneManager } from '../../three/sceneManager';
 import { useReactionStore } from '../../state/useReactionStore';
+import { avatarManager } from '../../three/avatarManager';
 import { exportAsWebM, canExportVideo } from '../../utils/gifExporter';
+
+type AspectRatio = '16:9' | '1:1' | '9:16';
 
 interface ExportTabProps {
   mode?: 'reactions' | 'poselab';
@@ -16,23 +19,90 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
   const [resolution, setResolution] = useState<'720p' | '1080p' | 'square'>('1080p');
   const [includeLogo, setIncludeLogo] = useState(true);
   const [transparentBg, setTransparentBg] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
+
+  // Get current aspect ratio from sceneManager on mount
+  useEffect(() => {
+    const currentRatio = sceneManager.getAspectRatio();
+    setAspectRatio(currentRatio);
+  }, []);
 
   const getExportDimensions = (): { width: number; height: number } => {
+    // Always get the current aspect ratio from sceneManager (not from state)
+    // This ensures we use the latest value set in Scene tab
+    const currentAspectRatio = sceneManager.getAspectRatio();
+    
+    // Get base resolution
+    let baseWidth: number;
+    let baseHeight: number;
+    
     switch (resolution) {
       case '720p':
-        return { width: 1280, height: 720 };
+        baseWidth = 1280;
+        baseHeight = 720;
+        break;
       case '1080p':
-        return { width: 1920, height: 1080 };
+        baseWidth = 1920;
+        baseHeight = 1080;
+        break;
       case 'square':
-        return { width: 1080, height: 1080 };
+        baseWidth = 1080;
+        baseHeight = 1080;
+        break;
       default:
-        return { width: 1920, height: 1080 };
+        baseWidth = 1920;
+        baseHeight = 1080;
+    }
+
+    // If resolution is 'square', always use square dimensions regardless of aspect ratio
+    if (resolution === 'square') {
+      return { width: 1080, height: 1080 };
+    }
+
+    // Calculate dimensions based on aspect ratio from Scene tab
+    const targetAspect = getAspectRatioValue(currentAspectRatio);
+    
+    if (targetAspect > 1) {
+      // Landscape (16:9) - use width as base
+      return { width: baseWidth, height: Math.round(baseWidth / targetAspect) };
+    } else if (targetAspect < 1) {
+      // Portrait (9:16) - use height as base
+      return { width: Math.round(baseHeight * targetAspect), height: baseHeight };
+    } else {
+      // Square (1:1)
+      const size = Math.min(baseWidth, baseHeight);
+      return { width: size, height: size };
+    }
+  };
+
+  const getAspectRatioValue = (ratio: AspectRatio): number => {
+    switch (ratio) {
+      case '16:9': return 16 / 9;
+      case '1:1': return 1;
+      case '9:16': return 9 / 16;
+      default: return 16 / 9;
     }
   };
 
   const handleExportPNG = async () => {
+    // Get current aspect ratio to ensure we're using the latest
+    const currentAspectRatio = sceneManager.getAspectRatio();
     const dimensions = getExportDimensions();
-    console.log('[ExportTab] Exporting PNG with dimensions:', dimensions, 'includeLogo:', includeLogo, 'transparentBg:', transparentBg);
+    
+    console.log('[ExportTab] Exporting PNG:', {
+      dimensions,
+      aspectRatio: currentAspectRatio,
+      includeLogo,
+      transparentBg
+    });
+    
+    // Ensure camera aspect matches export aspect ratio
+    const camera = sceneManager.getCamera();
+    if (camera) {
+      const exportAspect = dimensions.width / dimensions.height;
+      camera.aspect = exportAspect;
+      camera.updateProjectionMatrix();
+    }
     
     // Use the new captureSnapshot with resolution, logo, and transparency options
     const dataUrl = await sceneManager.captureSnapshot({
@@ -44,11 +114,14 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     
     if (!dataUrl) return;
     
+    // Generate filename with aspect ratio (unless it's the default 16:9 or square resolution)
+    // Format: {preset-id}-{resolution}-{aspect-ratio}-{transparent}.png
+    const aspectSuffix = resolution === 'square' ? '' : currentAspectRatio !== '16:9' ? `-${currentAspectRatio.replace(':', 'x')}` : '';
+    const transparentSuffix = transparentBg ? '-transparent' : '';
+    const filename = `${activePreset.id}-${resolution}${aspectSuffix}${transparentSuffix}.png`;
+    
     const link = document.createElement('a');
     link.href = dataUrl;
-    const filename = transparentBg 
-      ? `${activePreset.id}-${resolution}-transparent.png`
-      : `${activePreset.id}-${resolution}.png`;
     link.download = filename;
     link.click();
   };
@@ -60,8 +133,19 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
       return;
     }
 
-    if (animationMode === 'static') {
-      alert('Start an animation first (select Loop or Play Once)');
+    // Check if animation is playing
+    // In Pose Lab mode, check avatarManager directly
+    // In Reactions mode, check animationMode from store
+    const isAnimationPlaying = mode === 'poselab' 
+      ? avatarManager.isAnimationPlaying()
+      : animationMode !== 'static';
+
+    if (!isAnimationPlaying) {
+      if (mode === 'poselab') {
+        alert('Start an animation first (import and play an FBX/GLTF animation in the Animations tab)');
+      } else {
+        alert('Start an animation first (select Loop or Play Once)');
+      }
       return;
     }
 
@@ -70,8 +154,15 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
       return;
     }
 
+    // Get current aspect ratio to ensure we're using the latest from Scene tab
+    const currentAspectRatio = sceneManager.getAspectRatio();
     const dimensions = getExportDimensions();
-    console.log('[ExportTab] Exporting WebM with dimensions:', dimensions);
+    
+    console.log('[ExportTab] Exporting WebM:', {
+      dimensions,
+      aspectRatio: currentAspectRatio,
+      resolution
+    });
 
     setIsExporting(true);
     setExportProgress(0);
@@ -121,11 +212,19 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
       }
 
       try {
+        // Generate filename with aspect ratio (unless it's the default 16:9 or square resolution)
+        // Format: {preset-id|pose-lab}-{resolution}-{aspect-ratio}.webm
+        const aspectSuffix = resolution === 'square' ? '' : currentAspectRatio !== '16:9' ? `-${currentAspectRatio.replace(':', 'x')}` : '';
+        const baseName = mode === 'poselab'
+          ? `pose-lab-${resolution}`
+          : `${activePreset.id}-${resolution}`;
+        const filename = `${baseName}${aspectSuffix}.webm`;
+
         // Export with target resolution
         await exportAsWebM(
           canvas, 
           3, 
-          `${activePreset.id}-${resolution}.webm`, 
+          filename, 
           (progress) => {
             setExportProgress(Math.round(progress * 100));
           },

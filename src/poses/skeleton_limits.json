@@ -1,0 +1,3452 @@
+{
+  "hips": {
+    "limits": {
+      "x": [
+        -169,
+        169
+      ],
+      "y": [
+        -74,
+        86
+      ],
+      "z": [
+        -179,
+        176
+      ]
+    },
+    "range": {
+      "x": 338,
+      "y": 160,
+      "z": 354
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips.quaternion"
+  },
+  "spine": {
+    "limits": {
+      "x": [
+        -26,
+        1
+      ],
+      "y": [
+        -18,
+        16
+      ],
+      "z": [
+        -12,
+        13
+      ]
+    },
+    "range": {
+      "x": 26,
+      "y": 34,
+      "z": 25
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine.quaternion"
+  },
+  "chest": {
+    "limits": {
+      "x": [
+        -10,
+        3
+      ],
+      "y": [
+        -5,
+        5
+      ],
+      "z": [
+        -4,
+        2
+      ]
+    },
+    "range": {
+      "x": 13,
+      "y": 9,
+      "z": 7
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest.quaternion"
+  },
+  "neck": {
+    "limits": {
+      "x": [
+        -14,
+        14
+      ],
+      "y": [
+        -3,
+        6
+      ],
+      "z": [
+        -5,
+        7
+      ]
+    },
+    "range": {
+      "x": 28,
+      "y": 9,
+      "z": 13
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_neck.quaternion"
+  },
+  "head": {
+    "limits": {
+      "x": [
+        -33,
+        34
+      ],
+      "y": [
+        -32,
+        36
+      ],
+      "z": [
+        -27,
+        24
+      ]
+    },
+    "range": {
+      "x": 66,
+      "y": 69,
+      "z": 51
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_neck/Normalized_head.quaternion"
+  },
+  "shoulderR": {
+    "limits": {
+      "x": [
+        -12,
+        0
+      ],
+      "y": [
+        -23,
+        28
+      ],
+      "z": [
+        -15,
+        42
+      ]
+    },
+    "range": {
+      "x": 11,
+      "y": 51,
+      "z": 57
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR.quaternion"
+  },
+  "upper_armR": {
+    "limits": {
+      "x": [
+        -50,
+        121
+      ],
+      "y": [
+        -13,
+        76
+      ],
+      "z": [
+        -76,
+        -8
+      ]
+    },
+    "range": {
+      "x": 171,
+      "y": 90,
+      "z": 69
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR.quaternion"
+  },
+  "lower_armR": {
+    "limits": {
+      "x": [
+        -180,
+        180
+      ],
+      "y": [
+        6,
+        90
+      ],
+      "z": [
+        -180,
+        180
+      ]
+    },
+    "range": {
+      "x": 360,
+      "y": 84,
+      "z": 360
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR.quaternion"
+  },
+  "handR": {
+    "limits": {
+      "x": [
+        -103,
+        24
+      ],
+      "y": [
+        -29,
+        27
+      ],
+      "z": [
+        -33,
+        70
+      ]
+    },
+    "range": {
+      "x": 127,
+      "y": 55,
+      "z": 103
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR.quaternion"
+  },
+  "thumb_proximalR": {
+    "limits": {
+      "x": [
+        -13,
+        96
+      ],
+      "y": [
+        -47,
+        3
+      ],
+      "z": [
+        -18,
+        23
+      ]
+    },
+    "range": {
+      "x": 109,
+      "y": 49,
+      "z": 41
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_thumb_proximalR.quaternion"
+  },
+  "thumb_intermediateR": {
+    "limits": {
+      "x": [
+        -12,
+        14
+      ],
+      "y": [
+        -22,
+        0
+      ],
+      "z": [
+        -1,
+        44
+      ]
+    },
+    "range": {
+      "x": 26,
+      "y": 22,
+      "z": 44
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_thumb_proximalR/Normalized_thumb_intermediateR.quaternion"
+  },
+  "thumb_distalR": {
+    "limits": {
+      "x": [
+        -8,
+        17
+      ],
+      "y": [
+        -26,
+        3
+      ],
+      "z": [
+        2,
+        26
+      ]
+    },
+    "range": {
+      "x": 25,
+      "y": 29,
+      "z": 24
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_thumb_proximalR/Normalized_thumb_intermediateR/Normalized_thumb_distalR.quaternion"
+  },
+  "index_proximalR": {
+    "limits": {
+      "x": [
+        -5,
+        2
+      ],
+      "y": [
+        -6,
+        13
+      ],
+      "z": [
+        -82,
+        20
+      ]
+    },
+    "range": {
+      "x": 7,
+      "y": 19,
+      "z": 101
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_index_proximalR.quaternion"
+  },
+  "index_intermediateR": {
+    "limits": {
+      "x": [
+        -6,
+        0
+      ],
+      "y": [
+        -7,
+        0
+      ],
+      "z": [
+        -82,
+        0
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 7,
+      "z": 82
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_index_proximalR/Normalized_index_intermediateR.quaternion"
+  },
+  "index_distalR": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -4,
+        1
+      ],
+      "z": [
+        -32,
+        12
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 5,
+      "z": 43
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_index_proximalR/Normalized_index_intermediateR/Normalized_index_distalR.quaternion"
+  },
+  "middle_proximalR": {
+    "limits": {
+      "x": [
+        -7,
+        1
+      ],
+      "y": [
+        -8,
+        1
+      ],
+      "z": [
+        -90,
+        18
+      ]
+    },
+    "range": {
+      "x": 8,
+      "y": 9,
+      "z": 108
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_middle_proximalR.quaternion"
+  },
+  "middle_intermediateR": {
+    "limits": {
+      "x": [
+        -7,
+        0
+      ],
+      "y": [
+        -7,
+        0
+      ],
+      "z": [
+        -92,
+        0
+      ]
+    },
+    "range": {
+      "x": 7,
+      "y": 7,
+      "z": 92
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_middle_proximalR/Normalized_middle_intermediateR.quaternion"
+  },
+  "middle_distalR": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -4,
+        1
+      ],
+      "z": [
+        -43,
+        10
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 5,
+      "z": 53
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_middle_proximalR/Normalized_middle_intermediateR/Normalized_middle_distalR.quaternion"
+  },
+  "ring_proximalR": {
+    "limits": {
+      "x": [
+        -12,
+        1
+      ],
+      "y": [
+        -11,
+        1
+      ],
+      "z": [
+        -97,
+        18
+      ]
+    },
+    "range": {
+      "x": 12,
+      "y": 12,
+      "z": 115
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_ring_proximalR.quaternion"
+  },
+  "ring_intermediateR": {
+    "limits": {
+      "x": [
+        -7,
+        0
+      ],
+      "y": [
+        -7,
+        0
+      ],
+      "z": [
+        -90,
+        0
+      ]
+    },
+    "range": {
+      "x": 7,
+      "y": 7,
+      "z": 90
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_ring_proximalR/Normalized_ring_intermediateR.quaternion"
+  },
+  "ring_distalR": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -4,
+        1
+      ],
+      "z": [
+        -47,
+        11
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 5,
+      "z": 58
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_ring_proximalR/Normalized_ring_intermediateR/Normalized_ring_distalR.quaternion"
+  },
+  "little_proximalR": {
+    "limits": {
+      "x": [
+        -17,
+        16
+      ],
+      "y": [
+        -16,
+        1
+      ],
+      "z": [
+        -101,
+        14
+      ]
+    },
+    "range": {
+      "x": 33,
+      "y": 17,
+      "z": 115
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_little_proximalR.quaternion"
+  },
+  "little_intermediateR": {
+    "limits": {
+      "x": [
+        -7,
+        0
+      ],
+      "y": [
+        -7,
+        0
+      ],
+      "z": [
+        -94,
+        0
+      ]
+    },
+    "range": {
+      "x": 7,
+      "y": 7,
+      "z": 94
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_little_proximalR/Normalized_little_intermediateR.quaternion"
+  },
+  "little_distalR": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -5,
+        1
+      ],
+      "z": [
+        -59,
+        10
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 6,
+      "z": 70
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR/Normalized_little_proximalR/Normalized_little_intermediateR/Normalized_little_distalR.quaternion"
+  },
+  "shoulderL": {
+    "limits": {
+      "x": [
+        -4,
+        2
+      ],
+      "y": [
+        -14,
+        13
+      ],
+      "z": [
+        -26,
+        14
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 28,
+      "z": 40
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL.quaternion"
+  },
+  "upper_armL": {
+    "limits": {
+      "x": [
+        -35,
+        142
+      ],
+      "y": [
+        -69,
+        24
+      ],
+      "z": [
+        9,
+        107
+      ]
+    },
+    "range": {
+      "x": 178,
+      "y": 94,
+      "z": 98
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL.quaternion"
+  },
+  "lower_armL": {
+    "limits": {
+      "x": [
+        -180,
+        180
+      ],
+      "y": [
+        -90,
+        -3
+      ],
+      "z": [
+        -180,
+        180
+      ]
+    },
+    "range": {
+      "x": 360,
+      "y": 86,
+      "z": 360
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL.quaternion"
+  },
+  "handL": {
+    "limits": {
+      "x": [
+        -62,
+        35
+      ],
+      "y": [
+        -37,
+        17
+      ],
+      "z": [
+        -92,
+        16
+      ]
+    },
+    "range": {
+      "x": 97,
+      "y": 54,
+      "z": 108
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL.quaternion"
+  },
+  "thumb_proximalL": {
+    "limits": {
+      "x": [
+        -5,
+        94
+      ],
+      "y": [
+        -1,
+        48
+      ],
+      "z": [
+        -10,
+        16
+      ]
+    },
+    "range": {
+      "x": 99,
+      "y": 49,
+      "z": 26
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_thumb_proximalL.quaternion"
+  },
+  "thumb_intermediateL": {
+    "limits": {
+      "x": [
+        -16,
+        14
+      ],
+      "y": [
+        -5,
+        38
+      ],
+      "z": [
+        -41,
+        3
+      ]
+    },
+    "range": {
+      "x": 29,
+      "y": 43,
+      "z": 44
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_thumb_proximalL/Normalized_thumb_intermediateL.quaternion"
+  },
+  "thumb_distalL": {
+    "limits": {
+      "x": [
+        -7,
+        18
+      ],
+      "y": [
+        -16,
+        39
+      ],
+      "z": [
+        -23,
+        7
+      ]
+    },
+    "range": {
+      "x": 25,
+      "y": 54,
+      "z": 30
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_thumb_proximalL/Normalized_thumb_intermediateL/Normalized_thumb_distalL.quaternion"
+  },
+  "index_proximalL": {
+    "limits": {
+      "x": [
+        -7,
+        0
+      ],
+      "y": [
+        -14,
+        7
+      ],
+      "z": [
+        -49,
+        92
+      ]
+    },
+    "range": {
+      "x": 7,
+      "y": 20,
+      "z": 141
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_index_proximalL.quaternion"
+  },
+  "index_intermediateL": {
+    "limits": {
+      "x": [
+        -4,
+        0
+      ],
+      "y": [
+        0,
+        6
+      ],
+      "z": [
+        0,
+        69
+      ]
+    },
+    "range": {
+      "x": 4,
+      "y": 6,
+      "z": 69
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_index_proximalL/Normalized_index_intermediateL.quaternion"
+  },
+  "index_distalL": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -2,
+        3
+      ],
+      "z": [
+        -15,
+        31
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 5,
+      "z": 46
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_index_proximalL/Normalized_index_intermediateL/Normalized_index_distalL.quaternion"
+  },
+  "middle_proximalL": {
+    "limits": {
+      "x": [
+        -7,
+        1
+      ],
+      "y": [
+        -7,
+        7
+      ],
+      "z": [
+        -47,
+        91
+      ]
+    },
+    "range": {
+      "x": 8,
+      "y": 14,
+      "z": 137
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_middle_proximalL.quaternion"
+  },
+  "middle_intermediateL": {
+    "limits": {
+      "x": [
+        -6,
+        0
+      ],
+      "y": [
+        0,
+        7
+      ],
+      "z": [
+        0,
+        85
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 7,
+      "z": 85
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_middle_proximalL/Normalized_middle_intermediateL.quaternion"
+  },
+  "middle_distalL": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -1,
+        4
+      ],
+      "z": [
+        -14,
+        39
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 5,
+      "z": 53
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_middle_proximalL/Normalized_middle_intermediateL/Normalized_middle_distalL.quaternion"
+  },
+  "ring_proximalL": {
+    "limits": {
+      "x": [
+        -8,
+        3
+      ],
+      "y": [
+        -3,
+        7
+      ],
+      "z": [
+        -44,
+        100
+      ]
+    },
+    "range": {
+      "x": 11,
+      "y": 10,
+      "z": 144
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_ring_proximalL.quaternion"
+  },
+  "ring_intermediateL": {
+    "limits": {
+      "x": [
+        -5,
+        0
+      ],
+      "y": [
+        0,
+        7
+      ],
+      "z": [
+        0,
+        76
+      ]
+    },
+    "range": {
+      "x": 5,
+      "y": 7,
+      "z": 76
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_ring_proximalL/Normalized_ring_intermediateL.quaternion"
+  },
+  "ring_distalL": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -1,
+        4
+      ],
+      "z": [
+        -13,
+        43
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 6,
+      "z": 56
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_ring_proximalL/Normalized_ring_intermediateL/Normalized_ring_distalL.quaternion"
+  },
+  "little_proximalL": {
+    "limits": {
+      "x": [
+        -11,
+        15
+      ],
+      "y": [
+        4,
+        16
+      ],
+      "z": [
+        -42,
+        87
+      ]
+    },
+    "range": {
+      "x": 26,
+      "y": 12,
+      "z": 129
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_little_proximalL.quaternion"
+  },
+  "little_intermediateL": {
+    "limits": {
+      "x": [
+        -6,
+        0
+      ],
+      "y": [
+        -4,
+        4
+      ],
+      "z": [
+        0,
+        82
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 9,
+      "z": 82
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_little_proximalL/Normalized_little_intermediateL.quaternion"
+  },
+  "little_distalL": {
+    "limits": {
+      "x": [
+        -3,
+        0
+      ],
+      "y": [
+        -1,
+        5
+      ],
+      "z": [
+        -13,
+        61
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 6,
+      "z": 74
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL/Normalized_little_proximalL/Normalized_little_intermediateL/Normalized_little_distalL.quaternion"
+  },
+  "upper_legR": {
+    "limits": {
+      "x": [
+        -25,
+        72
+      ],
+      "y": [
+        -20,
+        14
+      ],
+      "z": [
+        -3,
+        40
+      ]
+    },
+    "range": {
+      "x": 97,
+      "y": 34,
+      "z": 43
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR.quaternion"
+  },
+  "lower_legR": {
+    "limits": {
+      "x": [
+        -86,
+        -6
+      ],
+      "y": [
+        -11,
+        10
+      ],
+      "z": [
+        -11,
+        10
+      ]
+    },
+    "range": {
+      "x": 80,
+      "y": 21,
+      "z": 21
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR/Normalized_lower_legR.quaternion"
+  },
+  "footR": {
+    "limits": {
+      "x": [
+        -39,
+        33
+      ],
+      "y": [
+        -14,
+        16
+      ],
+      "z": [
+        -29,
+        3
+      ]
+    },
+    "range": {
+      "x": 72,
+      "y": 30,
+      "z": 32
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR/Normalized_lower_legR/Normalized_footR.quaternion"
+  },
+  "toesR": {
+    "limits": {
+      "x": [
+        -30,
+        62
+      ],
+      "y": [
+        0,
+        1
+      ],
+      "z": [
+        -4,
+        7
+      ]
+    },
+    "range": {
+      "x": 92,
+      "y": 1,
+      "z": 11
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR/Normalized_lower_legR/Normalized_footR/Normalized_toesR.quaternion"
+  },
+  "upper_legL": {
+    "limits": {
+      "x": [
+        7,
+        98
+      ],
+      "y": [
+        -14,
+        16
+      ],
+      "z": [
+        -47,
+        8
+      ]
+    },
+    "range": {
+      "x": 91,
+      "y": 30,
+      "z": 55
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL.quaternion"
+  },
+  "lower_legL": {
+    "limits": {
+      "x": [
+        -130,
+        5
+      ],
+      "y": [
+        -9,
+        12
+      ],
+      "z": [
+        -8,
+        6
+      ]
+    },
+    "range": {
+      "x": 135,
+      "y": 21,
+      "z": 14
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL/Normalized_lower_legL.quaternion"
+  },
+  "footL": {
+    "limits": {
+      "x": [
+        -39,
+        43
+      ],
+      "y": [
+        -14,
+        22
+      ],
+      "z": [
+        -19,
+        29
+      ]
+    },
+    "range": {
+      "x": 82,
+      "y": 36,
+      "z": 48
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL/Normalized_lower_legL/Normalized_footL.quaternion"
+  },
+  "toesL": {
+    "limits": {
+      "x": [
+        -2,
+        47
+      ],
+      "y": [
+        0,
+        0
+      ],
+      "z": [
+        -6,
+        4
+      ]
+    },
+    "range": {
+      "x": 49,
+      "y": 0,
+      "z": 9
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL/Normalized_lower_legL/Normalized_footL/Normalized_toesL.quaternion"
+  },
+  "J_Bip_C_Hips": {
+    "limits": {
+      "x": [
+        1,
+        8
+      ],
+      "y": [
+        -7,
+        -2
+      ],
+      "z": [
+        1,
+        3
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 5,
+      "z": 2
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips.quaternion"
+  },
+  "J_Bip_C_Spine": {
+    "limits": {
+      "x": [
+        -5,
+        0
+      ],
+      "y": [
+        -1,
+        0
+      ],
+      "z": [
+        -1,
+        0
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 2,
+      "z": 1
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine.quaternion"
+  },
+  "J_Bip_C_Chest": {
+    "limits": {
+      "x": [
+        -8,
+        0
+      ],
+      "y": [
+        -3,
+        0
+      ],
+      "z": [
+        -2,
+        0
+      ]
+    },
+    "range": {
+      "x": 9,
+      "y": 3,
+      "z": 1
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest.quaternion"
+  },
+  "J_Bip_C_UpperChest": {
+    "limits": {
+      "x": [
+        -8,
+        0
+      ],
+      "y": [
+        -3,
+        0
+      ],
+      "z": [
+        -2,
+        0
+      ]
+    },
+    "range": {
+      "x": 9,
+      "y": 3,
+      "z": 1
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest.quaternion"
+  },
+  "J_Bip_C_Neck": {
+    "limits": {
+      "x": [
+        -17,
+        0
+      ],
+      "y": [
+        -4,
+        3
+      ],
+      "z": [
+        -4,
+        3
+      ]
+    },
+    "range": {
+      "x": 17,
+      "y": 6,
+      "z": 8
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_C_Neck.quaternion"
+  },
+  "J_Bip_C_Head": {
+    "limits": {
+      "x": [
+        -21,
+        12
+      ],
+      "y": [
+        -23,
+        12
+      ],
+      "z": [
+        -21,
+        9
+      ]
+    },
+    "range": {
+      "x": 34,
+      "y": 35,
+      "z": 30
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_C_Neck/Normalized_J_Bip_C_Head.quaternion"
+  },
+  "J_Bip_R_Shoulder": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -7,
+        6
+      ],
+      "z": [
+        -9,
+        8
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 13,
+      "z": 17
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder.quaternion"
+  },
+  "J_Bip_R_UpperArm": {
+    "limits": {
+      "x": [
+        -8,
+        60
+      ],
+      "y": [
+        4,
+        48
+      ],
+      "z": [
+        -95,
+        -58
+      ]
+    },
+    "range": {
+      "x": 68,
+      "y": 44,
+      "z": 37
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm.quaternion"
+  },
+  "J_Bip_R_LowerArm": {
+    "limits": {
+      "x": [
+        -180,
+        180
+      ],
+      "y": [
+        15,
+        89
+      ],
+      "z": [
+        -180,
+        180
+      ]
+    },
+    "range": {
+      "x": 360,
+      "y": 74,
+      "z": 360
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm.quaternion"
+  },
+  "J_Bip_R_Hand": {
+    "limits": {
+      "x": [
+        -17,
+        33
+      ],
+      "y": [
+        -11,
+        32
+      ],
+      "z": [
+        -8,
+        36
+      ]
+    },
+    "range": {
+      "x": 50,
+      "y": 42,
+      "z": 44
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand.quaternion"
+  },
+  "J_Bip_R_Thumb1": {
+    "limits": {
+      "x": [
+        8,
+        13
+      ],
+      "y": [
+        -8,
+        3
+      ],
+      "z": [
+        8,
+        19
+      ]
+    },
+    "range": {
+      "x": 4,
+      "y": 11,
+      "z": 11
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Thumb1.quaternion"
+  },
+  "J_Bip_R_Thumb2": {
+    "limits": {
+      "x": [
+        -4,
+        -4
+      ],
+      "y": [
+        -8,
+        -8
+      ],
+      "z": [
+        0,
+        0
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Thumb1/Normalized_J_Bip_R_Thumb2.quaternion"
+  },
+  "J_Bip_R_Thumb3": {
+    "limits": {
+      "x": [
+        -5,
+        -2
+      ],
+      "y": [
+        -16,
+        -8
+      ],
+      "z": [
+        2,
+        2
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 8,
+      "z": 0
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Thumb1/Normalized_J_Bip_R_Thumb2/Normalized_J_Bip_R_Thumb3.quaternion"
+  },
+  "J_Bip_R_Index1": {
+    "limits": {
+      "x": [
+        1,
+        5
+      ],
+      "y": [
+        -2,
+        6
+      ],
+      "z": [
+        -40,
+        -15
+      ]
+    },
+    "range": {
+      "x": 4,
+      "y": 8,
+      "z": 24
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Index1.quaternion"
+  },
+  "J_Bip_R_Index2": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -4,
+        -2
+      ],
+      "z": [
+        -40,
+        -14
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 3,
+      "z": 26
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Index1/Normalized_J_Bip_R_Index2.quaternion"
+  },
+  "J_Bip_R_Index3": {
+    "limits": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        -1,
+        0
+      ],
+      "z": [
+        -11,
+        -3
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 1,
+      "z": 8
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Index1/Normalized_J_Bip_R_Index2/Normalized_J_Bip_R_Index3.quaternion"
+  },
+  "J_Bip_R_Middle1": {
+    "limits": {
+      "x": [
+        -1,
+        2
+      ],
+      "y": [
+        -4,
+        1
+      ],
+      "z": [
+        -32,
+        -13
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 5,
+      "z": 19
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Middle1.quaternion"
+  },
+  "J_Bip_R_Middle2": {
+    "limits": {
+      "x": [
+        -3,
+        -1
+      ],
+      "y": [
+        -6,
+        -3
+      ],
+      "z": [
+        -57,
+        -24
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 3,
+      "z": 34
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Middle1/Normalized_J_Bip_R_Middle2.quaternion"
+  },
+  "J_Bip_R_Middle3": {
+    "limits": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        -2,
+        -1
+      ],
+      "z": [
+        -18,
+        -9
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 1,
+      "z": 9
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Middle1/Normalized_J_Bip_R_Middle2/Normalized_J_Bip_R_Middle3.quaternion"
+  },
+  "J_Bip_R_Ring1": {
+    "limits": {
+      "x": [
+        -3,
+        0
+      ],
+      "y": [
+        -11,
+        -2
+      ],
+      "z": [
+        -39,
+        -18
+      ]
+    },
+    "range": {
+      "x": 4,
+      "y": 9,
+      "z": 21
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Ring1.quaternion"
+  },
+  "J_Bip_R_Ring2": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -5,
+        -2
+      ],
+      "z": [
+        -47,
+        -19
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 3,
+      "z": 29
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Ring1/Normalized_J_Bip_R_Ring2.quaternion"
+  },
+  "J_Bip_R_Ring3": {
+    "limits": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        -2,
+        -1
+      ],
+      "z": [
+        -15,
+        -7
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 1,
+      "z": 8
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Ring1/Normalized_J_Bip_R_Ring2/Normalized_J_Bip_R_Ring3.quaternion"
+  },
+  "J_Bip_R_Little1": {
+    "limits": {
+      "x": [
+        -4,
+        0
+      ],
+      "y": [
+        -10,
+        -2
+      ],
+      "z": [
+        -40,
+        -22
+      ]
+    },
+    "range": {
+      "x": 4,
+      "y": 8,
+      "z": 19
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Little1.quaternion"
+  },
+  "J_Bip_R_Little2": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -5,
+        -2
+      ],
+      "z": [
+        -44,
+        -20
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 3,
+      "z": 25
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Little1/Normalized_J_Bip_R_Little2.quaternion"
+  },
+  "J_Bip_R_Little3": {
+    "limits": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        -2,
+        -1
+      ],
+      "z": [
+        -20,
+        -6
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 2,
+      "z": 13
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_R_Shoulder/Normalized_J_Bip_R_UpperArm/Normalized_J_Bip_R_LowerArm/Normalized_J_Bip_R_Hand/Normalized_J_Bip_R_Little1/Normalized_J_Bip_R_Little2/Normalized_J_Bip_R_Little3.quaternion"
+  },
+  "J_Bip_L_Shoulder": {
+    "limits": {
+      "x": [
+        -5,
+        1
+      ],
+      "y": [
+        -14,
+        12
+      ],
+      "z": [
+        3,
+        12
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 26,
+      "z": 9
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder.quaternion"
+  },
+  "J_Bip_L_UpperArm": {
+    "limits": {
+      "x": [
+        -22,
+        50
+      ],
+      "y": [
+        -43,
+        -27
+      ],
+      "z": [
+        52,
+        76
+      ]
+    },
+    "range": {
+      "x": 72,
+      "y": 16,
+      "z": 24
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm.quaternion"
+  },
+  "J_Bip_L_LowerArm": {
+    "limits": {
+      "x": [
+        0,
+        180
+      ],
+      "y": [
+        -88,
+        -14
+      ],
+      "z": [
+        0,
+        180
+      ]
+    },
+    "range": {
+      "x": 180,
+      "y": 74,
+      "z": 180
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm.quaternion"
+  },
+  "J_Bip_L_Hand": {
+    "limits": {
+      "x": [
+        11,
+        59
+      ],
+      "y": [
+        -18,
+        25
+      ],
+      "z": [
+        -40,
+        5
+      ]
+    },
+    "range": {
+      "x": 47,
+      "y": 43,
+      "z": 44
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand.quaternion"
+  },
+  "J_Bip_L_Thumb1": {
+    "limits": {
+      "x": [
+        1,
+        12
+      ],
+      "y": [
+        -16,
+        4
+      ],
+      "z": [
+        -19,
+        -4
+      ]
+    },
+    "range": {
+      "x": 10,
+      "y": 20,
+      "z": 15
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Thumb1.quaternion"
+  },
+  "J_Bip_L_Thumb2": {
+    "limits": {
+      "x": [
+        -7,
+        -4
+      ],
+      "y": [
+        10,
+        21
+      ],
+      "z": [
+        0,
+        2
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 12,
+      "z": 2
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Thumb1/Normalized_J_Bip_L_Thumb2.quaternion"
+  },
+  "J_Bip_L_Thumb3": {
+    "limits": {
+      "x": [
+        -6,
+        -1
+      ],
+      "y": [
+        7,
+        19
+      ],
+      "z": [
+        -1,
+        1
+      ]
+    },
+    "range": {
+      "x": 5,
+      "y": 12,
+      "z": 3
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Thumb1/Normalized_J_Bip_L_Thumb2/Normalized_J_Bip_L_Thumb3.quaternion"
+  },
+  "J_Bip_L_Index1": {
+    "limits": {
+      "x": [
+        0,
+        6
+      ],
+      "y": [
+        -6,
+        2
+      ],
+      "z": [
+        20,
+        38
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 9,
+      "z": 18
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Index1.quaternion"
+  },
+  "J_Bip_L_Index2": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        1,
+        4
+      ],
+      "z": [
+        10,
+        34
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 3,
+      "z": 24
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Index1/Normalized_J_Bip_L_Index2.quaternion"
+  },
+  "J_Bip_L_Index3": {
+    "limits": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        2,
+        3
+      ],
+      "z": [
+        13,
+        21
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 1,
+      "z": 8
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Index1/Normalized_J_Bip_L_Index2/Normalized_J_Bip_L_Index3.quaternion"
+  },
+  "J_Bip_L_Middle1": {
+    "limits": {
+      "x": [
+        -1,
+        2
+      ],
+      "y": [
+        -1,
+        5
+      ],
+      "z": [
+        15,
+        35
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 7,
+      "z": 20
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Middle1.quaternion"
+  },
+  "J_Bip_L_Middle2": {
+    "limits": {
+      "x": [
+        -3,
+        0
+      ],
+      "y": [
+        2,
+        5
+      ],
+      "z": [
+        21,
+        52
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 3,
+      "z": 31
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Middle1/Normalized_J_Bip_L_Middle2.quaternion"
+  },
+  "J_Bip_L_Middle3": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        2,
+        3
+      ],
+      "z": [
+        13,
+        27
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 2,
+      "z": 14
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Middle1/Normalized_J_Bip_L_Middle2/Normalized_J_Bip_L_Middle3.quaternion"
+  },
+  "J_Bip_L_Ring1": {
+    "limits": {
+      "x": [
+        -3,
+        -1
+      ],
+      "y": [
+        4,
+        9
+      ],
+      "z": [
+        19,
+        48
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 5,
+      "z": 29
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Ring1.quaternion"
+  },
+  "J_Bip_L_Ring2": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        2,
+        5
+      ],
+      "z": [
+        19,
+        44
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 3,
+      "z": 25
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Ring1/Normalized_J_Bip_L_Ring2.quaternion"
+  },
+  "J_Bip_L_Ring3": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        2,
+        3
+      ],
+      "z": [
+        16,
+        27
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 1,
+      "z": 11
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Ring1/Normalized_J_Bip_L_Ring2/Normalized_J_Bip_L_Ring3.quaternion"
+  },
+  "J_Bip_L_Little1": {
+    "limits": {
+      "x": [
+        -4,
+        2
+      ],
+      "y": [
+        0,
+        11
+      ],
+      "z": [
+        24,
+        51
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 11,
+      "z": 27
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Little1.quaternion"
+  },
+  "J_Bip_L_Little2": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -2,
+        0
+      ],
+      "z": [
+        16,
+        36
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 2,
+      "z": 20
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Little1/Normalized_J_Bip_L_Little2.quaternion"
+  },
+  "J_Bip_L_Little3": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        2,
+        3
+      ],
+      "z": [
+        14,
+        31
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 2,
+      "z": 17
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_C_Spine/Normalized_J_Bip_C_Chest/Normalized_J_Bip_C_UpperChest/Normalized_J_Bip_L_Shoulder/Normalized_J_Bip_L_UpperArm/Normalized_J_Bip_L_LowerArm/Normalized_J_Bip_L_Hand/Normalized_J_Bip_L_Little1/Normalized_J_Bip_L_Little2/Normalized_J_Bip_L_Little3.quaternion"
+  },
+  "J_Bip_R_UpperLeg": {
+    "limits": {
+      "x": [
+        1,
+        16
+      ],
+      "y": [
+        -14,
+        -12
+      ],
+      "z": [
+        3,
+        6
+      ]
+    },
+    "range": {
+      "x": 15,
+      "y": 2,
+      "z": 3
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_R_UpperLeg.quaternion"
+  },
+  "J_Bip_R_LowerLeg": {
+    "limits": {
+      "x": [
+        -27,
+        -14
+      ],
+      "y": [
+        -10,
+        -5
+      ],
+      "z": [
+        0,
+        2
+      ]
+    },
+    "range": {
+      "x": 13,
+      "y": 4,
+      "z": 2
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_R_UpperLeg/Normalized_J_Bip_R_LowerLeg.quaternion"
+  },
+  "J_Bip_R_Foot": {
+    "limits": {
+      "x": [
+        8,
+        14
+      ],
+      "y": [
+        -4,
+        0
+      ],
+      "z": [
+        -8,
+        -3
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 3,
+      "z": 4
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_R_UpperLeg/Normalized_J_Bip_R_LowerLeg/Normalized_J_Bip_R_Foot.quaternion"
+  },
+  "J_Bip_R_ToeBase": {
+    "limits": {
+      "x": [
+        0,
+        1
+      ],
+      "y": [
+        0,
+        0
+      ],
+      "z": [
+        0,
+        0
+      ]
+    },
+    "range": {
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_R_UpperLeg/Normalized_J_Bip_R_LowerLeg/Normalized_J_Bip_R_Foot/Normalized_J_Bip_R_ToeBase.quaternion"
+  },
+  "J_Bip_L_UpperLeg": {
+    "limits": {
+      "x": [
+        1,
+        16
+      ],
+      "y": [
+        14,
+        17
+      ],
+      "z": [
+        -16,
+        -8
+      ]
+    },
+    "range": {
+      "x": 15,
+      "y": 3,
+      "z": 8
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_L_UpperLeg.quaternion"
+  },
+  "J_Bip_L_LowerLeg": {
+    "limits": {
+      "x": [
+        -28,
+        -16
+      ],
+      "y": [
+        10,
+        10
+      ],
+      "z": [
+        -2,
+        2
+      ]
+    },
+    "range": {
+      "x": 13,
+      "y": 1,
+      "z": 4
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_L_UpperLeg/Normalized_J_Bip_L_LowerLeg.quaternion"
+  },
+  "J_Bip_L_Foot": {
+    "limits": {
+      "x": [
+        6,
+        12
+      ],
+      "y": [
+        4,
+        12
+      ],
+      "z": [
+        7,
+        11
+      ]
+    },
+    "range": {
+      "x": 6,
+      "y": 8,
+      "z": 4
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_L_UpperLeg/Normalized_J_Bip_L_LowerLeg/Normalized_J_Bip_L_Foot.quaternion"
+  },
+  "J_Bip_L_ToeBase": {
+    "limits": {
+      "x": [
+        0,
+        3
+      ],
+      "y": [
+        0,
+        0
+      ],
+      "z": [
+        0,
+        0
+      ]
+    },
+    "range": {
+      "x": 3,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_J_Bip_C_Hips/Normalized_J_Bip_L_UpperLeg/Normalized_J_Bip_L_LowerLeg/Normalized_J_Bip_L_Foot/Normalized_J_Bip_L_ToeBase.quaternion"
+  },
+  "upperChest": {
+    "limits": {
+      "x": [
+        -10,
+        1
+      ],
+      "y": [
+        -4,
+        2
+      ],
+      "z": [
+        -4,
+        2
+      ]
+    },
+    "range": {
+      "x": 11,
+      "y": 6,
+      "z": 6
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest.quaternion"
+  },
+  "rightShoulder": {
+    "limits": {
+      "x": [
+        -1,
+        0
+      ],
+      "y": [
+        -11,
+        10
+      ],
+      "z": [
+        -12,
+        5
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 22,
+      "z": 17
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder.quaternion"
+  },
+  "rightUpperArm": {
+    "limits": {
+      "x": [
+        -25,
+        99
+      ],
+      "y": [
+        20,
+        66
+      ],
+      "z": [
+        -105,
+        -18
+      ]
+    },
+    "range": {
+      "x": 124,
+      "y": 46,
+      "z": 87
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm.quaternion"
+  },
+  "rightLoweArm": {
+    "limits": {
+      "x": [
+        -180,
+        180
+      ],
+      "y": [
+        5,
+        89
+      ],
+      "z": [
+        0,
+        180
+      ]
+    },
+    "range": {
+      "x": 360,
+      "y": 84,
+      "z": 180
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm.quaternion"
+  },
+  "rightHand": {
+    "limits": {
+      "x": [
+        -40,
+        -10
+      ],
+      "y": [
+        -26,
+        7
+      ],
+      "z": [
+        -3,
+        34
+      ]
+    },
+    "range": {
+      "x": 31,
+      "y": 33,
+      "z": 37
+    },
+    "primaryAxis": "z",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand.quaternion"
+  },
+  "rightThumbMetacarpal": {
+    "limits": {
+      "x": [
+        -44,
+        -44
+      ],
+      "y": [
+        3,
+        3
+      ],
+      "z": [
+        -3,
+        -3
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightThumbMetacarpal.quaternion"
+  },
+  "rightThumbProximal": {
+    "limits": {
+      "x": [
+        -62,
+        -62
+      ],
+      "y": [
+        -20,
+        -20
+      ],
+      "z": [
+        -19,
+        -19
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightThumbMetacarpal/Normalized_rightThumbProximal.quaternion"
+  },
+  "rightThumbDistal": {
+    "limits": {
+      "x": [
+        -26,
+        -26
+      ],
+      "y": [
+        -12,
+        -12
+      ],
+      "z": [
+        -7,
+        -7
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightThumbMetacarpal/Normalized_rightThumbProximal/Normalized_rightThumbDistal.quaternion"
+  },
+  "rightIndexProximal": {
+    "limits": {
+      "x": [
+        -9,
+        -9
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightIndexProximal.quaternion"
+  },
+  "rightIndexIntermediate": {
+    "limits": {
+      "x": [
+        -9,
+        -9
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightIndexProximal/Normalized_rightIndexIntermediate.quaternion"
+  },
+  "rightIndexDistal": {
+    "limits": {
+      "x": [
+        -3,
+        -3
+      ],
+      "y": [
+        -5,
+        -5
+      ],
+      "z": [
+        -51,
+        -51
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightIndexProximal/Normalized_rightIndexIntermediate/Normalized_rightIndexDistal.quaternion"
+  },
+  "rightMiddleProximal": {
+    "limits": {
+      "x": [
+        -9,
+        -9
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightMiddleProximal.quaternion"
+  },
+  "rightMiddleIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightMiddleProximal/Normalized_rightMiddleIntermediate.quaternion"
+  },
+  "rightMiddleDistal": {
+    "limits": {
+      "x": [
+        -3,
+        -3
+      ],
+      "y": [
+        -5,
+        -5
+      ],
+      "z": [
+        -51,
+        -51
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightMiddleProximal/Normalized_rightMiddleIntermediate/Normalized_rightMiddleDistal.quaternion"
+  },
+  "rightRingProximal": {
+    "limits": {
+      "x": [
+        -9,
+        -9
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightRingProximal.quaternion"
+  },
+  "rightRingIntermediate": {
+    "limits": {
+      "x": [
+        -9,
+        -9
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightRingProximal/Normalized_rightRingIntermediate.quaternion"
+  },
+  "rightRingDistal": {
+    "limits": {
+      "x": [
+        -3,
+        -3
+      ],
+      "y": [
+        -5,
+        -5
+      ],
+      "z": [
+        -51,
+        -51
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightRingProximal/Normalized_rightRingIntermediate/Normalized_rightRingDistal.quaternion"
+  },
+  "rightLittleProximal": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightLittleProximal.quaternion"
+  },
+  "rightLittleIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        -7,
+        -7
+      ],
+      "z": [
+        -103,
+        -103
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightLittleProximal/Normalized_rightLittleIntermediate.quaternion"
+  },
+  "rightLittleDistal": {
+    "limits": {
+      "x": [
+        -3,
+        -3
+      ],
+      "y": [
+        -6,
+        -6
+      ],
+      "z": [
+        -51,
+        -51
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_rightShoulder/Normalized_rightUpperArm/Normalized_rightLoweArm/Normalized_rightHand/Normalized_rightLittleProximal/Normalized_rightLittleIntermediate/Normalized_rightLittleDistal.quaternion"
+  },
+  "leftShoulder": {
+    "limits": {
+      "x": [
+        -2,
+        0
+      ],
+      "y": [
+        -16,
+        4
+      ],
+      "z": [
+        -6,
+        12
+      ]
+    },
+    "range": {
+      "x": 2,
+      "y": 20,
+      "z": 18
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder.quaternion"
+  },
+  "leftUpperArm": {
+    "limits": {
+      "x": [
+        -32,
+        82
+      ],
+      "y": [
+        -57,
+        -10
+      ],
+      "z": [
+        27,
+        92
+      ]
+    },
+    "range": {
+      "x": 114,
+      "y": 46,
+      "z": 66
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm.quaternion"
+  },
+  "leftLowerArm": {
+    "limits": {
+      "x": [
+        0,
+        180
+      ],
+      "y": [
+        -89,
+        -24
+      ],
+      "z": [
+        0,
+        180
+      ]
+    },
+    "range": {
+      "x": 180,
+      "y": 65,
+      "z": 180
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm.quaternion"
+  },
+  "leftHand": {
+    "limits": {
+      "x": [
+        -48,
+        -16
+      ],
+      "y": [
+        -1,
+        35
+      ],
+      "z": [
+        -5,
+        27
+      ]
+    },
+    "range": {
+      "x": 32,
+      "y": 36,
+      "z": 32
+    },
+    "primaryAxis": "y",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand.quaternion"
+  },
+  "leftThumbMetacarpal": {
+    "limits": {
+      "x": [
+        -34,
+        -34
+      ],
+      "y": [
+        14,
+        14
+      ],
+      "z": [
+        1,
+        1
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftThumbMetacarpal.quaternion"
+  },
+  "leftThumbProximal": {
+    "limits": {
+      "x": [
+        -45,
+        -45
+      ],
+      "y": [
+        53,
+        53
+      ],
+      "z": [
+        38,
+        38
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftThumbMetacarpal/Normalized_leftThumbProximal.quaternion"
+  },
+  "leftThumbDistal": {
+    "limits": {
+      "x": [
+        -10,
+        -10
+      ],
+      "y": [
+        27,
+        27
+      ],
+      "z": [
+        8,
+        8
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftThumbMetacarpal/Normalized_leftThumbProximal/Normalized_leftThumbDistal.quaternion"
+  },
+  "leftIndexProximal": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        98,
+        98
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftIndexProximal.quaternion"
+  },
+  "leftIndexIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        99,
+        99
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftIndexProximal/Normalized_leftIndexIntermediate.quaternion"
+  },
+  "leftIndexDistal": {
+    "limits": {
+      "x": [
+        -2,
+        -2
+      ],
+      "y": [
+        5,
+        5
+      ],
+      "z": [
+        49,
+        49
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftIndexProximal/Normalized_leftIndexIntermediate/Normalized_leftIndexDistal.quaternion"
+  },
+  "leftMiddleProximal": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        98,
+        98
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftMiddleProximal.quaternion"
+  },
+  "leftMiddleIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        99,
+        99
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftMiddleProximal/Normalized_leftMiddleIntermediate.quaternion"
+  },
+  "leftMiddleDistal": {
+    "limits": {
+      "x": [
+        -2,
+        -2
+      ],
+      "y": [
+        5,
+        5
+      ],
+      "z": [
+        49,
+        49
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftMiddleProximal/Normalized_leftMiddleIntermediate/Normalized_leftMiddleDistal.quaternion"
+  },
+  "leftRingProximal": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        98,
+        98
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftRingProximal.quaternion"
+  },
+  "leftRingIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        7,
+        7
+      ],
+      "z": [
+        99,
+        99
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftRingProximal/Normalized_leftRingIntermediate.quaternion"
+  },
+  "leftRingDistal": {
+    "limits": {
+      "x": [
+        -2,
+        -2
+      ],
+      "y": [
+        5,
+        5
+      ],
+      "z": [
+        49,
+        49
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftRingProximal/Normalized_leftRingIntermediate/Normalized_leftRingDistal.quaternion"
+  },
+  "leftLittleProximal": {
+    "limits": {
+      "x": [
+        -12,
+        -12
+      ],
+      "y": [
+        6,
+        6
+      ],
+      "z": [
+        98,
+        98
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftLittleProximal.quaternion"
+  },
+  "leftLittleIntermediate": {
+    "limits": {
+      "x": [
+        -8,
+        -8
+      ],
+      "y": [
+        2,
+        2
+      ],
+      "z": [
+        99,
+        99
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftLittleProximal/Normalized_leftLittleIntermediate.quaternion"
+  },
+  "leftLittleDistal": {
+    "limits": {
+      "x": [
+        -3,
+        -3
+      ],
+      "y": [
+        5,
+        5
+      ],
+      "z": [
+        49,
+        49
+      ]
+    },
+    "range": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_upperChest/Normalized_leftShoulder/Normalized_leftUpperArm/Normalized_leftLowerArm/Normalized_leftHand/Normalized_leftLittleProximal/Normalized_leftLittleIntermediate/Normalized_leftLittleDistal.quaternion"
+  },
+  "rightUpperLeg": {
+    "limits": {
+      "x": [
+        -1,
+        37
+      ],
+      "y": [
+        -16,
+        3
+      ],
+      "z": [
+        2,
+        23
+      ]
+    },
+    "range": {
+      "x": 38,
+      "y": 19,
+      "z": 20
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_rightUpperLeg.quaternion"
+  },
+  "rightLowerLeg": {
+    "limits": {
+      "x": [
+        -69,
+        -19
+      ],
+      "y": [
+        -10,
+        9
+      ],
+      "z": [
+        1,
+        10
+      ]
+    },
+    "range": {
+      "x": 50,
+      "y": 19,
+      "z": 9
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_rightUpperLeg/Normalized_rightLowerLeg.quaternion"
+  },
+  "rightFoot": {
+    "limits": {
+      "x": [
+        -21,
+        34
+      ],
+      "y": [
+        -4,
+        23
+      ],
+      "z": [
+        -21,
+        -4
+      ]
+    },
+    "range": {
+      "x": 55,
+      "y": 28,
+      "z": 17
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_rightUpperLeg/Normalized_rightLowerLeg/Normalized_rightFoot.quaternion"
+  },
+  "rightToes": {
+    "limits": {
+      "x": [
+        0,
+        25
+      ],
+      "y": [
+        0,
+        0
+      ],
+      "z": [
+        0,
+        2
+      ]
+    },
+    "range": {
+      "x": 25,
+      "y": 0,
+      "z": 2
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_rightUpperLeg/Normalized_rightLowerLeg/Normalized_rightFoot/Normalized_rightToes.quaternion"
+  },
+  "leftUpperLeg": {
+    "limits": {
+      "x": [
+        -2,
+        38
+      ],
+      "y": [
+        -2,
+        21
+      ],
+      "z": [
+        -30,
+        -8
+      ]
+    },
+    "range": {
+      "x": 40,
+      "y": 23,
+      "z": 22
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_leftUpperLeg.quaternion"
+  },
+  "leftLowerLeg": {
+    "limits": {
+      "x": [
+        -69,
+        -12
+      ],
+      "y": [
+        -9,
+        4
+      ],
+      "z": [
+        -9,
+        2
+      ]
+    },
+    "range": {
+      "x": 57,
+      "y": 13,
+      "z": 11
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_leftUpperLeg/Normalized_leftLowerLeg.quaternion"
+  },
+  "leftFoot": {
+    "limits": {
+      "x": [
+        -45,
+        36
+      ],
+      "y": [
+        -10,
+        5
+      ],
+      "z": [
+        11,
+        23
+      ]
+    },
+    "range": {
+      "x": 80,
+      "y": 14,
+      "z": 12
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_leftUpperLeg/Normalized_leftLowerLeg/Normalized_leftFoot.quaternion"
+  },
+  "leftToes": {
+    "limits": {
+      "x": [
+        0,
+        29
+      ],
+      "y": [
+        0,
+        0
+      ],
+      "z": [
+        -1,
+        0
+      ]
+    },
+    "range": {
+      "x": 29,
+      "y": 0,
+      "z": 1
+    },
+    "primaryAxis": "x",
+    "fullPath": "VRMHumanoidRig/Normalized_hips/Normalized_leftUpperLeg/Normalized_leftLowerLeg/Normalized_leftFoot/Normalized_leftToes.quaternion"
+  }
+}

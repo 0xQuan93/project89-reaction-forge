@@ -1,0 +1,12 @@
+{
+  "fingers": {
+    "indexToMiddle": 0.31812285713459243,
+    "middleToRing": 0.7523710497278806,
+    "ringToLittle": 0.5891967365240667,
+    "thumbToIndex": 0
+  },
+  "legs": {
+    "hipsY_vs_LegFlexion": -0.3494126735333215
+  },
+  "samples": 5
+}

@@ -1,0 +1,65 @@
+{
+  "sceneRotation": {
+    "y": 180
+  },
+  "vrmPose": {
+    "hips": {
+      "position": [0, 0.85, 0],
+      "rotation": [0, 0, 0, 1]
+    },
+    "spine": {
+      "rotation": [0.0174524, 0, 0, 0.9998477]
+    },
+    "chest": {
+      "rotation": [0.0174524, 0, 0, 0.9998477]
+    },
+    "neck": {
+      "rotation": [-0.0174524, 0, 0, 0.9998477]
+    },
+    "head": {
+      "rotation": [0, 0.0436194, 0, 0.9990482]
+    },
+    "rightShoulder": {
+      "rotation": [0, 0.2164396, 0.0436194, 0.9753444]
+    },
+    "rightUpperArm": {
+      "rotation": [0.7047477, -0.061727, 0.061727, 0.7047477]
+    },
+    "rightLowerArm": {
+      "rotation": [0, 0.7660444, 0, 0.6427876]
+    },
+    "rightHand": {
+      "rotation": [0, 0, -0.1736482, 0.9848078]
+    },
+    "leftShoulder": {
+      "rotation": [0, 0, -0.0436194, 0.9990482]
+    },
+    "leftUpperArm": {
+      "rotation": [0, 0.0436194, 0.6427876, 0.7648422]
+    },
+    "leftLowerArm": {
+      "rotation": [0, -0.0436194, 0, 0.9990482]
+    },
+    "leftHand": {
+      "rotation": [0, 0, 0, 1]
+    },
+    "rightUpperLeg": {
+      "rotation": [0, 0, 0.0261769, 0.9996573]
+    },
+    "rightLowerLeg": {
+      "rotation": [0.0174524, 0, 0, 0.9998477]
+    },
+    "rightFoot": {
+      "rotation": [-0.0174524, 0, 0, 0.9998477]
+    },
+    "leftUpperLeg": {
+      "rotation": [0, 0, -0.0261769, 0.9996573]
+    },
+    "leftLowerLeg": {
+      "rotation": [0.0174524, 0, 0, 0.9998477]
+    },
+    "leftFoot": {
+      "rotation": [-0.0174524, 0, 0, 0.9998477]
+    }
+  }
+}

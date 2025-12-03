@@ -1,0 +1,9 @@
+{
+  "headStabilization": 0,
+  "lags": {
+    "spineToHead": 0.22000000000000003,
+    "shoulderToHand": 0.20666666666666664,
+    "hipsToChest": 0.26
+  },
+  "samples": 5
+}

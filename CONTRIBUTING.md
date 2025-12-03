@@ -347,7 +347,7 @@ export type BackgroundId =
 
 ## 📞 Questions?
 
-- Open a [Discussion](https://github.com/yourusername/reaction-forge/discussions)
+- Open a [Discussion](https://github.com/0xQuan93/reaction-forge/discussions)
 - Check [Documentation](docs/)
 - Review [Troubleshooting](TROUBLESHOOTING.md)
 
@@ -359,5 +359,5 @@ Your contributions make Reaction Forge better for everyone. We appreciate your t
 
 ---
 
-**Happy coding! 🎭✨**
+**Happy creating! 🎭✨**
 

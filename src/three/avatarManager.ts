@@ -263,13 +263,6 @@ class AvatarManager {
     animationManager.playAnimation(clip, loop);
   }
 
-  /**
-   * Stop the current animation
-   */
-  stopAnimation() {
-    this.isAnimated = false;
-    animationManager.stopAnimation(true);
-  }
 
   /**
    * Set animation loop mode

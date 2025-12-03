@@ -7,6 +7,11 @@ import signalReverie from './signal-reverie.json';
 import typing from './typing.json';
 import agentTaunt from './agent-taunt.json';
 import agentDance from './agent-dance.json';
+import agentClapping from './agent-clapping.json';
+import sillyAgent from './silly-agent.json';
+import victoryCelebration from './victory-celebration.json';
+import simpleWave from './simple-wave.json';
+import point from './point.json';
 import type { PoseId } from '../types/reactions';
 import type { VRMPose } from '@pixiv/three-vrm';
 
@@ -35,6 +40,11 @@ const poseLibrary: Record<PoseId, PoseDefinition> = {
   'typing': typing as PoseDefinition,
   'agent-taunt': agentTaunt as PoseDefinition,
   'agent-dance': agentDance as PoseDefinition,
+  'agent-clapping': agentClapping as PoseDefinition,
+  'silly-agent': sillyAgent as PoseDefinition,
+  'victory-celebration': victoryCelebration as PoseDefinition,
+  'simple-wave': simpleWave as PoseDefinition,
+  'point': point as PoseDefinition,
 };
 
 /**

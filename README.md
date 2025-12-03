@@ -2,21 +2,28 @@
 
 **Create custom VRM avatar reactions with poses, expressions, and animations**
 
-A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models.
+A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models. Now featuring the **Motion Engine**, a procedural animation synthesis system.
 
 ---
 
 ## ✨ Features
 
+### 🧠 **Motion Engine** (New!)
+- **Procedural Synthesis**: Generates natural animations on the fly using bio-mechanical constraints.
+- **Kinetic Lag**: Simulates realistic body mechanics with core-to-extremity propagation.
+- **Hand Synergy**: Automatic finger articulation based on grip/relax patterns.
+- **New Gestures**: "Simple Wave", "Point", "Victory Celebration".
+
 ### 🎨 **Reaction Forge** - Create & Export Reactions
 - Load custom VRM avatars
-- 8 pre-made reaction presets
+- 13 pre-made reaction presets (including new procedural poses)
 - Custom pose/animation JSON support
 - Expression controls (Joy, Surprise, Calm)
 - 8 themed backgrounds
 - Export PNG images with logo overlay
 - Export WebM animations
 - Real-time 3D preview with orbit controls
+- **About Page**: Quick access to version info and documentation.
 
 ### 🛠️ **Pose Lab** - Create Custom Poses
 - Retarget Mixamo FBX animations to VRM format
@@ -38,7 +45,7 @@ A powerful web-based tool for creating and exporting VRM avatar reactions. Perfe
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/reaction-forge.git
+git clone https://github.com/0xQuan93/reaction-forge.git
 cd reaction-forge
 
 # Install dependencies
@@ -59,17 +66,18 @@ npm run dev
 ### Reaction Forge
 
 #### **Step 1: Load Avatar**
-1. Click **"📦 Load VRM Avatar"**
+1. Click **"Load VRM Avatar"**
 2. Select your `.vrm` file
 3. Avatar loads in 3D viewport
 
 #### **Step 2: Choose Reaction**
-- **Option A**: Select from 8 presets (Dawn Runner, Sunset Call, etc.)
+- **Option A**: Select from presets (Dawn Runner, Simple Wave, etc.)
 - **Option B**: Drag & drop custom pose JSON from Pose Lab
 
 #### **Step 3: Customize**
-- Set **Animation Mode**: Static / Loop / Play Once
+- **Animation Mode**: Static / Loop / Play Once
 - Adjust camera with mouse (orbit, zoom)
+- Use camera presets (Front, Face, ¾ View)
 
 #### **Step 4: Export**
 - **PNG**: Click "Save PNG" for static image
@@ -107,26 +115,22 @@ npm run dev
 reaction-forge/
 ├── src/
 │   ├── components/          # React components
+│   │   ├── AboutModal.tsx   # Project info
 │   │   ├── CanvasStage.tsx  # 3D viewport
-│   │   └── ReactionPanel.tsx # Control panel
+│   │   └── ControlPanel.tsx # Main UI controller
 │   ├── pose-lab/            # Pose Lab tool
-│   │   └── PoseLab.tsx      # Main component
-│   ├── poses/               # Pose definitions
-│   │   ├── *.json           # Static poses
-│   │   ├── *-animation.json # Animation clips
-│   │   └── fbx/             # Source FBX files
+│   ├── poses/               # Pose definitions & Motion Engine
+│   │   ├── motionEngine.ts  # Procedural animation solver
+│   │   ├── skeleton_*.json  # Bio-mechanical data
+│   │   └── *.json           # Pose/Animation files
 │   ├── three/               # Three.js managers
-│   │   ├── sceneManager.ts  # Scene & rendering
-│   │   ├── avatarManager.ts # VRM loading & posing
-│   │   └── animationManager.ts # Animation playback
 │   ├── state/               # Zustand stores
 │   └── utils/               # Utilities
 ├── public/
 │   ├── backgrounds/         # SVG backgrounds
-│   ├── logo/                # Logo files
 │   └── vrm/                 # Sample VRM files
 ├── docs/                    # Documentation
-└── scripts/                 # Build scripts
+└── scripts/                 # Analysis & Generation scripts
 ```
 
 ---
@@ -143,35 +147,9 @@ reaction-forge/
 | **Agent Dance** | Dancing | Joy | Cyber Waves |
 | **Agent Taunt** | Taunting | Joy | Signal Breach |
 | **Silly Agent** | Silly dance | Joy | Protocol Dawn |
-
----
-
-## 🎯 Workflows
-
-### **Create Custom Reaction**
-```
-1. Pose Lab: Load VRM + Mixamo FBX
-2. Pose Lab: Export pose.json + animation.json
-3. Reaction Forge: Load VRM
-4. Reaction Forge: Drag animation.json
-5. Reaction Forge: Export WebM
-```
-
-### **Quick Content Creation**
-```
-1. Reaction Forge: Load VRM
-2. Reaction Forge: Select preset
-3. Reaction Forge: Export PNG/WebM
-4. Share on social media!
-```
-
-### **Batch Export Poses**
-```
-1. Pose Lab: Load VRM
-2. Pose Lab: Click "Batch Export All Poses"
-3. All 8 poses export automatically
-4. Use in your own projects
-```
+| **Victory** | V-Sign | Joy | Midnight Circuit |
+| **Simple Wave** | Procedural Wave | Joy | Protocol Sunset |
+| **Point** | Procedural Point | Calm | Neural Grid |
 
 ---
 

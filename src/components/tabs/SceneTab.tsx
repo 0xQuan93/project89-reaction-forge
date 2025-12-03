@@ -10,8 +10,9 @@ export function SceneTab() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
 
   useEffect(() => {
-    // Get current background from scene manager if available
-    // This would need to be implemented in sceneManager
+    // Initialize aspect ratio from sceneManager
+    const currentRatio = sceneManager.getAspectRatio();
+    setAspectRatio(currentRatio);
   }, []);
 
   const handleBackgroundSelect = async (backgroundId: string) => {

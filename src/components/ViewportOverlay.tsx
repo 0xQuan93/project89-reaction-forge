@@ -9,12 +9,19 @@ interface ViewportOverlayProps {
 
 export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: ViewportOverlayProps) {
   const handleResetCamera = () => {
-    // Reset camera to default position
-    const canvas = sceneManager.getCanvas();
-    if (canvas) {
-      // This would need to be implemented in sceneManager
-      console.log('Reset camera');
-    }
+    sceneManager.resetCamera();
+  };
+
+  const handleFrontView = () => {
+    sceneManager.setCameraPreset('front');
+  };
+
+  const handleQuarterView = () => {
+    sceneManager.setCameraPreset('quarter');
+  };
+
+  const handleSideView = () => {
+    sceneManager.setCameraPreset('side');
   };
 
   return (
@@ -25,9 +32,30 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
           <button
             className="icon-button"
             onClick={handleResetCamera}
-            title="Reset camera"
+            title="Reset camera to default"
           >
-            🎥
+            🏠
+          </button>
+          <button
+            className="icon-button"
+            onClick={handleFrontView}
+            title="Front view"
+          >
+            👤
+          </button>
+          <button
+            className="icon-button"
+            onClick={handleQuarterView}
+            title="3/4 view"
+          >
+            📐
+          </button>
+          <button
+            className="icon-button"
+            onClick={handleSideView}
+            title="Side view"
+          >
+            👁️
           </button>
         </div>
       </div>

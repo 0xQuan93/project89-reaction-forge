@@ -33,7 +33,7 @@ class SceneManager {
     this.canvas = canvas;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(35, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    this.camera.position.set(0, 1.4, 2.3);
+    this.camera.position.set(0, 1.4, 1.6); // Closer default distance
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -55,7 +55,7 @@ class SceneManager {
     this.controls.target.set(0, 1.4, 0);
     this.controls.enablePan = false;
     this.controls.enableDamping = true;
-    this.controls.minDistance = 1.2;
+    this.controls.minDistance = 0.8; // Allow getting closer
     this.controls.maxDistance = 3;
 
     this.handleResize = this.handleResize.bind(this);
@@ -63,6 +63,11 @@ class SceneManager {
     this.startLoop();
 
     applyBackground(this.scene, 'midnight');
+    
+    // Apply initial aspect ratio after a short delay to ensure canvas is in DOM
+    setTimeout(() => {
+      this.handleResize();
+    }, 100);
   }
 
   private startLoop() {
@@ -78,10 +83,52 @@ class SceneManager {
 
   private handleResize() {
     if (!this.renderer || !this.camera || !this.canvas) return;
-    const { clientWidth, clientHeight } = this.canvas;
-    this.camera.aspect = clientWidth / clientHeight;
+    
+    // Get the container (viewport) dimensions
+    const container = this.canvas.parentElement;
+    if (!container) return;
+    
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Calculate target aspect ratio
+    const targetRatio = this.getAspectRatioValue(this.currentAspectRatio);
+    
+    // Calculate canvas size to fit container while maintaining aspect ratio
+    let canvasWidth = containerWidth;
+    let canvasHeight = containerHeight;
+    
+    const containerRatio = containerWidth / containerHeight;
+    
+    if (containerRatio > targetRatio) {
+      // Container is wider than target, constrain by height
+      canvasWidth = containerHeight * targetRatio;
+      canvasHeight = containerHeight;
+    } else {
+      // Container is taller than target, constrain by width
+      canvasWidth = containerWidth;
+      canvasHeight = containerWidth / targetRatio;
+    }
+    
+    // Update canvas CSS size (visual size)
+    this.canvas.style.width = `${canvasWidth}px`;
+    this.canvas.style.height = `${canvasHeight}px`;
+    
+    // Update renderer and camera to match
+    this.renderer.setSize(canvasWidth, canvasHeight, false);
+    this.camera.aspect = targetRatio;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(clientWidth, clientHeight);
+    
+    console.log('[SceneManager] Canvas resized to:', canvasWidth, 'x', canvasHeight, 'Aspect:', targetRatio);
+  }
+  
+  private getAspectRatioValue(ratio: AspectRatio): number {
+    switch (ratio) {
+      case '16:9': return 16 / 9;
+      case '1:1': return 1;
+      case '9:16': return 9 / 16;
+      default: return 16 / 9;
+    }
   }
 
   registerTick(handler: TickHandler) {
@@ -135,38 +182,14 @@ class SceneManager {
 
   /**
    * Set the aspect ratio for the scene
-   * This will adjust the camera to match the desired aspect ratio
+   * This will adjust the camera and visually resize the canvas to match the desired aspect ratio
    */
   setAspectRatio(ratio: AspectRatio) {
     this.currentAspectRatio = ratio;
     console.log('[SceneManager] Aspect ratio set to:', ratio);
     
-    if (!this.camera || !this.renderer || !this.canvas) return;
-    
-    // Calculate the aspect ratio value
-    let aspectValue: number;
-    switch (ratio) {
-      case '16:9':
-        aspectValue = 16 / 9;
-        break;
-      case '1:1':
-        aspectValue = 1;
-        break;
-      case '9:16':
-        aspectValue = 9 / 16;
-        break;
-      default:
-        aspectValue = 16 / 9;
-    }
-    
-    // Update camera aspect ratio
-    this.camera.aspect = aspectValue;
-    this.camera.updateProjectionMatrix();
-    
-    // Note: We don't resize the canvas here, we just adjust the camera
-    // The canvas will maintain its container size, but the rendered view
-    // will respect the aspect ratio
-    console.log('[SceneManager] Camera aspect updated to:', aspectValue);
+    // Trigger resize to apply the new aspect ratio visually
+    this.handleResize();
   }
 
   /**
@@ -360,6 +383,45 @@ class SceneManager {
       };
       img.src = LOGO_CONFIG.path;
     });
+  }
+
+  /**
+   * Reset camera to default position
+   */
+  resetCamera() {
+    if (!this.controls || !this.camera) return;
+    
+    // Reset to default position (closer)
+    this.camera.position.set(0, 1.4, 1.6);
+    this.controls.target.set(0, 1.4, 0);
+    this.controls.update();
+    
+    console.log('[SceneManager] Camera reset to default position');
+  }
+
+  /**
+   * Set camera to a preset view
+   */
+  setCameraPreset(preset: 'front' | 'quarter' | 'side') {
+    if (!this.controls || !this.camera) return;
+    
+    switch (preset) {
+      case 'front':
+        this.camera.position.set(0, 1.4, 1.6); // Closer front view
+        this.controls.target.set(0, 1.4, 0);
+        break;
+      case 'quarter':
+        this.camera.position.set(1.2, 1.5, 1.4); // Closer quarter view
+        this.controls.target.set(0, 1.4, 0);
+        break;
+      case 'side':
+        this.camera.position.set(1.6, 1.4, 0); // Closer side view
+        this.controls.target.set(0, 1.4, 0);
+        break;
+    }
+    
+    this.controls.update();
+    console.log('[SceneManager] Camera set to', preset, 'view');
   }
 
   dispose() {

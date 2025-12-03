@@ -6,7 +6,12 @@ export type PoseId =
   | 'signal-reverie'
   | 'typing'
   | 'agent-taunt'
-  | 'agent-dance';
+  | 'agent-dance'
+  | 'agent-clapping'
+  | 'silly-agent'
+  | 'victory-celebration'
+  | 'simple-wave'
+  | 'point';
 
 export type ExpressionId = 'calm' | 'joy' | 'surprise';
 

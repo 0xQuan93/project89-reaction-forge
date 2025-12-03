@@ -1,0 +1,602 @@
+{
+  "hips": {
+    "maxSpeedDeg": 815,
+    "avgSpeedDeg": 187
+  },
+  "spine": {
+    "maxSpeedDeg": 176,
+    "avgSpeedDeg": 47
+  },
+  "chest": {
+    "maxSpeedDeg": 49,
+    "avgSpeedDeg": 15
+  },
+  "neck": {
+    "maxSpeedDeg": 75,
+    "avgSpeedDeg": 20
+  },
+  "head": {
+    "maxSpeedDeg": 216,
+    "avgSpeedDeg": 73
+  },
+  "shoulderR": {
+    "maxSpeedDeg": 307,
+    "avgSpeedDeg": 33
+  },
+  "upper_armR": {
+    "maxSpeedDeg": 405,
+    "avgSpeedDeg": 123
+  },
+  "lower_armR": {
+    "maxSpeedDeg": 708,
+    "avgSpeedDeg": 76
+  },
+  "handR": {
+    "maxSpeedDeg": 971,
+    "avgSpeedDeg": 184
+  },
+  "thumb_proximalR": {
+    "maxSpeedDeg": 413,
+    "avgSpeedDeg": 78
+  },
+  "thumb_intermediateR": {
+    "maxSpeedDeg": 255,
+    "avgSpeedDeg": 44
+  },
+  "thumb_distalR": {
+    "maxSpeedDeg": 139,
+    "avgSpeedDeg": 25
+  },
+  "index_proximalR": {
+    "maxSpeedDeg": 428,
+    "avgSpeedDeg": 67
+  },
+  "index_intermediateR": {
+    "maxSpeedDeg": 285,
+    "avgSpeedDeg": 44
+  },
+  "index_distalR": {
+    "maxSpeedDeg": 154,
+    "avgSpeedDeg": 29
+  },
+  "middle_proximalR": {
+    "maxSpeedDeg": 232,
+    "avgSpeedDeg": 49
+  },
+  "middle_intermediateR": {
+    "maxSpeedDeg": 273,
+    "avgSpeedDeg": 41
+  },
+  "middle_distalR": {
+    "maxSpeedDeg": 193,
+    "avgSpeedDeg": 35
+  },
+  "ring_proximalR": {
+    "maxSpeedDeg": 258,
+    "avgSpeedDeg": 58
+  },
+  "ring_intermediateR": {
+    "maxSpeedDeg": 278,
+    "avgSpeedDeg": 51
+  },
+  "ring_distalR": {
+    "maxSpeedDeg": 209,
+    "avgSpeedDeg": 41
+  },
+  "little_proximalR": {
+    "maxSpeedDeg": 293,
+    "avgSpeedDeg": 69
+  },
+  "little_intermediateR": {
+    "maxSpeedDeg": 266,
+    "avgSpeedDeg": 45
+  },
+  "little_distalR": {
+    "maxSpeedDeg": 343,
+    "avgSpeedDeg": 46
+  },
+  "shoulderL": {
+    "maxSpeedDeg": 166,
+    "avgSpeedDeg": 28
+  },
+  "upper_armL": {
+    "maxSpeedDeg": 356,
+    "avgSpeedDeg": 120
+  },
+  "lower_armL": {
+    "maxSpeedDeg": 716,
+    "avgSpeedDeg": 85
+  },
+  "handL": {
+    "maxSpeedDeg": 910,
+    "avgSpeedDeg": 174
+  },
+  "thumb_proximalL": {
+    "maxSpeedDeg": 939,
+    "avgSpeedDeg": 91
+  },
+  "thumb_intermediateL": {
+    "maxSpeedDeg": 484,
+    "avgSpeedDeg": 63
+  },
+  "thumb_distalL": {
+    "maxSpeedDeg": 288,
+    "avgSpeedDeg": 40
+  },
+  "index_proximalL": {
+    "maxSpeedDeg": 749,
+    "avgSpeedDeg": 54
+  },
+  "index_intermediateL": {
+    "maxSpeedDeg": 168,
+    "avgSpeedDeg": 23
+  },
+  "index_distalL": {
+    "maxSpeedDeg": 385,
+    "avgSpeedDeg": 20
+  },
+  "middle_proximalL": {
+    "maxSpeedDeg": 647,
+    "avgSpeedDeg": 50
+  },
+  "middle_intermediateL": {
+    "maxSpeedDeg": 315,
+    "avgSpeedDeg": 41
+  },
+  "middle_distalL": {
+    "maxSpeedDeg": 460,
+    "avgSpeedDeg": 37
+  },
+  "ring_proximalL": {
+    "maxSpeedDeg": 659,
+    "avgSpeedDeg": 54
+  },
+  "ring_intermediateL": {
+    "maxSpeedDeg": 373,
+    "avgSpeedDeg": 43
+  },
+  "ring_distalL": {
+    "maxSpeedDeg": 541,
+    "avgSpeedDeg": 40
+  },
+  "little_proximalL": {
+    "maxSpeedDeg": 753,
+    "avgSpeedDeg": 66
+  },
+  "little_intermediateL": {
+    "maxSpeedDeg": 367,
+    "avgSpeedDeg": 47
+  },
+  "little_distalL": {
+    "maxSpeedDeg": 766,
+    "avgSpeedDeg": 49
+  },
+  "upper_legR": {
+    "maxSpeedDeg": 604,
+    "avgSpeedDeg": 75
+  },
+  "lower_legR": {
+    "maxSpeedDeg": 636,
+    "avgSpeedDeg": 104
+  },
+  "footR": {
+    "maxSpeedDeg": 685,
+    "avgSpeedDeg": 109
+  },
+  "toesR": {
+    "maxSpeedDeg": 1258,
+    "avgSpeedDeg": 113
+  },
+  "upper_legL": {
+    "maxSpeedDeg": 385,
+    "avgSpeedDeg": 67
+  },
+  "lower_legL": {
+    "maxSpeedDeg": 725,
+    "avgSpeedDeg": 119
+  },
+  "footL": {
+    "maxSpeedDeg": 596,
+    "avgSpeedDeg": 88
+  },
+  "toesL": {
+    "maxSpeedDeg": 632,
+    "avgSpeedDeg": 56
+  },
+  "J_Bip_C_Hips": {
+    "maxSpeedDeg": 23,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_C_Spine": {
+    "maxSpeedDeg": 12,
+    "avgSpeedDeg": 2
+  },
+  "J_Bip_C_Chest": {
+    "maxSpeedDeg": 20,
+    "avgSpeedDeg": 4
+  },
+  "J_Bip_C_UpperChest": {
+    "maxSpeedDeg": 20,
+    "avgSpeedDeg": 4
+  },
+  "J_Bip_C_Neck": {
+    "maxSpeedDeg": 37,
+    "avgSpeedDeg": 11
+  },
+  "J_Bip_C_Head": {
+    "maxSpeedDeg": 135,
+    "avgSpeedDeg": 46
+  },
+  "J_Bip_R_Shoulder": {
+    "maxSpeedDeg": 89,
+    "avgSpeedDeg": 14
+  },
+  "J_Bip_R_UpperArm": {
+    "maxSpeedDeg": 319,
+    "avgSpeedDeg": 42
+  },
+  "J_Bip_R_LowerArm": {
+    "maxSpeedDeg": 628,
+    "avgSpeedDeg": 31
+  },
+  "J_Bip_R_Hand": {
+    "maxSpeedDeg": 411,
+    "avgSpeedDeg": 43
+  },
+  "J_Bip_R_Thumb1": {
+    "maxSpeedDeg": 115,
+    "avgSpeedDeg": 12
+  },
+  "J_Bip_R_Thumb2": {
+    "maxSpeedDeg": 2,
+    "avgSpeedDeg": 1
+  },
+  "J_Bip_R_Thumb3": {
+    "maxSpeedDeg": 47,
+    "avgSpeedDeg": 5
+  },
+  "J_Bip_R_Index1": {
+    "maxSpeedDeg": 116,
+    "avgSpeedDeg": 15
+  },
+  "J_Bip_R_Index2": {
+    "maxSpeedDeg": 157,
+    "avgSpeedDeg": 16
+  },
+  "J_Bip_R_Index3": {
+    "maxSpeedDeg": 64,
+    "avgSpeedDeg": 5
+  },
+  "J_Bip_R_Middle1": {
+    "maxSpeedDeg": 190,
+    "avgSpeedDeg": 14
+  },
+  "J_Bip_R_Middle2": {
+    "maxSpeedDeg": 146,
+    "avgSpeedDeg": 16
+  },
+  "J_Bip_R_Middle3": {
+    "maxSpeedDeg": 34,
+    "avgSpeedDeg": 5
+  },
+  "J_Bip_R_Ring1": {
+    "maxSpeedDeg": 172,
+    "avgSpeedDeg": 14
+  },
+  "J_Bip_R_Ring2": {
+    "maxSpeedDeg": 129,
+    "avgSpeedDeg": 20
+  },
+  "J_Bip_R_Ring3": {
+    "maxSpeedDeg": 54,
+    "avgSpeedDeg": 7
+  },
+  "J_Bip_R_Little1": {
+    "maxSpeedDeg": 175,
+    "avgSpeedDeg": 14
+  },
+  "J_Bip_R_Little2": {
+    "maxSpeedDeg": 157,
+    "avgSpeedDeg": 18
+  },
+  "J_Bip_R_Little3": {
+    "maxSpeedDeg": 79,
+    "avgSpeedDeg": 10
+  },
+  "J_Bip_L_Shoulder": {
+    "maxSpeedDeg": 99,
+    "avgSpeedDeg": 12
+  },
+  "J_Bip_L_UpperArm": {
+    "maxSpeedDeg": 287,
+    "avgSpeedDeg": 38
+  },
+  "J_Bip_L_LowerArm": {
+    "maxSpeedDeg": 763,
+    "avgSpeedDeg": 38
+  },
+  "J_Bip_L_Hand": {
+    "maxSpeedDeg": 546,
+    "avgSpeedDeg": 43
+  },
+  "J_Bip_L_Thumb1": {
+    "maxSpeedDeg": 165,
+    "avgSpeedDeg": 17
+  },
+  "J_Bip_L_Thumb2": {
+    "maxSpeedDeg": 80,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_L_Thumb3": {
+    "maxSpeedDeg": 64,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_L_Index1": {
+    "maxSpeedDeg": 106,
+    "avgSpeedDeg": 13
+  },
+  "J_Bip_L_Index2": {
+    "maxSpeedDeg": 49,
+    "avgSpeedDeg": 10
+  },
+  "J_Bip_L_Index3": {
+    "maxSpeedDeg": 53,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_L_Middle1": {
+    "maxSpeedDeg": 128,
+    "avgSpeedDeg": 14
+  },
+  "J_Bip_L_Middle2": {
+    "maxSpeedDeg": 78,
+    "avgSpeedDeg": 13
+  },
+  "J_Bip_L_Middle3": {
+    "maxSpeedDeg": 64,
+    "avgSpeedDeg": 9
+  },
+  "J_Bip_L_Ring1": {
+    "maxSpeedDeg": 122,
+    "avgSpeedDeg": 16
+  },
+  "J_Bip_L_Ring2": {
+    "maxSpeedDeg": 59,
+    "avgSpeedDeg": 12
+  },
+  "J_Bip_L_Ring3": {
+    "maxSpeedDeg": 49,
+    "avgSpeedDeg": 7
+  },
+  "J_Bip_L_Little1": {
+    "maxSpeedDeg": 131,
+    "avgSpeedDeg": 15
+  },
+  "J_Bip_L_Little2": {
+    "maxSpeedDeg": 70,
+    "avgSpeedDeg": 13
+  },
+  "J_Bip_L_Little3": {
+    "maxSpeedDeg": 84,
+    "avgSpeedDeg": 10
+  },
+  "J_Bip_R_UpperLeg": {
+    "maxSpeedDeg": 33,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_R_LowerLeg": {
+    "maxSpeedDeg": 33,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_R_Foot": {
+    "maxSpeedDeg": 20,
+    "avgSpeedDeg": 5
+  },
+  "J_Bip_R_ToeBase": {
+    "maxSpeedDeg": 7,
+    "avgSpeedDeg": 1
+  },
+  "J_Bip_L_UpperLeg": {
+    "maxSpeedDeg": 40,
+    "avgSpeedDeg": 7
+  },
+  "J_Bip_L_LowerLeg": {
+    "maxSpeedDeg": 35,
+    "avgSpeedDeg": 6
+  },
+  "J_Bip_L_Foot": {
+    "maxSpeedDeg": 30,
+    "avgSpeedDeg": 7
+  },
+  "J_Bip_L_ToeBase": {
+    "maxSpeedDeg": 14,
+    "avgSpeedDeg": 2
+  },
+  "upperChest": {
+    "maxSpeedDeg": 46,
+    "avgSpeedDeg": 22
+  },
+  "rightShoulder": {
+    "maxSpeedDeg": 148,
+    "avgSpeedDeg": 51
+  },
+  "rightUpperArm": {
+    "maxSpeedDeg": 360,
+    "avgSpeedDeg": 182
+  },
+  "rightLoweArm": {
+    "maxSpeedDeg": 590,
+    "avgSpeedDeg": 249
+  },
+  "rightHand": {
+    "maxSpeedDeg": 207,
+    "avgSpeedDeg": 98
+  },
+  "rightThumbMetacarpal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightThumbProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightThumbDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightIndexProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightIndexIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightIndexDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightMiddleProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightMiddleIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightMiddleDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightRingProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightRingIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightRingDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightLittleProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightLittleIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightLittleDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftShoulder": {
+    "maxSpeedDeg": 117,
+    "avgSpeedDeg": 50
+  },
+  "leftUpperArm": {
+    "maxSpeedDeg": 336,
+    "avgSpeedDeg": 198
+  },
+  "leftLowerArm": {
+    "maxSpeedDeg": 507,
+    "avgSpeedDeg": 240
+  },
+  "leftHand": {
+    "maxSpeedDeg": 259,
+    "avgSpeedDeg": 104
+  },
+  "leftThumbMetacarpal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftThumbProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftThumbDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftIndexProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftIndexIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftIndexDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftMiddleProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftMiddleIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftMiddleDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftRingProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftRingIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftRingDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftLittleProximal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftLittleIntermediate": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "leftLittleDistal": {
+    "maxSpeedDeg": 0,
+    "avgSpeedDeg": null
+  },
+  "rightUpperLeg": {
+    "maxSpeedDeg": 173,
+    "avgSpeedDeg": 74
+  },
+  "rightLowerLeg": {
+    "maxSpeedDeg": 220,
+    "avgSpeedDeg": 81
+  },
+  "rightFoot": {
+    "maxSpeedDeg": 270,
+    "avgSpeedDeg": 85
+  },
+  "rightToes": {
+    "maxSpeedDeg": 187,
+    "avgSpeedDeg": 33
+  },
+  "leftUpperLeg": {
+    "maxSpeedDeg": 191,
+    "avgSpeedDeg": 74
+  },
+  "leftLowerLeg": {
+    "maxSpeedDeg": 265,
+    "avgSpeedDeg": 89
+  },
+  "leftFoot": {
+    "maxSpeedDeg": 350,
+    "avgSpeedDeg": 91
+  },
+  "leftToes": {
+    "maxSpeedDeg": 248,
+    "avgSpeedDeg": 42
+  }
+}

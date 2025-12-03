@@ -189,12 +189,14 @@
 }
 
 .canvas-stage {
-  width: 100%;
-  height: 100%;
+  /* Width and height will be set dynamically by sceneManager based on aspect ratio */
+  max-width: 100%;
+  max-height: 100%;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  display: block;
 }
 
 .viewport-overlay {
@@ -217,6 +219,9 @@
 .viewport-overlay.bottom-right {
   bottom: 1.5rem;
   right: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .camera-controls,
@@ -252,6 +257,11 @@
   height: auto;
   opacity: 0.85;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  display: block;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  vertical-align: bottom;
 }
 
 /* =====================
@@ -914,4 +924,93 @@ button {
   .background-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* =====================
+   Modal
+   ===================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+}
+
+.modal-content {
+  background: rgba(17, 21, 32, 0.95);
+  border: 1px solid rgba(0, 255, 214, 0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #fff;
+}
+
+.modal-body {
+  color: #e6f3ff;
+  line-height: 1.6;
+}
+
+.modal-body h3 {
+  color: #00ffd6;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-body ul {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-body li {
+  margin-bottom: 0.5rem;
+  color: rgba(230, 243, 255, 0.8);
+}
+
+.lead {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: rgba(230, 243, 255, 0.9);
+}
+
+.version-info {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
 }

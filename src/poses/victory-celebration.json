@@ -1,0 +1,164 @@
+{
+  "sceneRotation": {
+    "y": 180
+  },
+  "vrmPose": {
+    "hips": {
+      "position": [
+        0,
+        0.7,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "spine": {
+      "rotation": [
+        0.0436194,
+        0,
+        0,
+        0.9990482
+      ]
+    },
+    "chest": {
+      "rotation": [
+        0.0436194,
+        0,
+        0,
+        0.9990482
+      ]
+    },
+    "neck": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "rightShoulder": {
+      "rotation": [
+        0,
+        0,
+        0.1305262,
+        0.9914449
+      ]
+    },
+    "rightUpperArm": {
+      "rotation": [
+        0,
+        0,
+        0.5,
+        0.8660254
+      ]
+    },
+    "rightLowerArm": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "rightHand": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "leftShoulder": {
+      "rotation": [
+        0,
+        0,
+        -0.1305262,
+        0.9914449
+      ]
+    },
+    "leftUpperArm": {
+      "rotation": [
+        0,
+        0,
+        -0.5,
+        0.8660254
+      ]
+    },
+    "leftLowerArm": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "leftHand": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "rightUpperLeg": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "rightLowerLeg": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "rightFoot": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "leftUpperLeg": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "leftLowerLeg": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "leftFoot": {
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  }
+}
