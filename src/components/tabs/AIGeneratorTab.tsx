@@ -25,7 +25,6 @@ export function AIGeneratorTab() {
   
   // State for user-provided API key (for web demo)
   const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [showKeyInput, setShowKeyInput] = useState(false);
 
   // Effective API key
   const apiKey = envApiKey || userApiKey;
@@ -39,13 +38,11 @@ export function AIGeneratorTab() {
   const handleSaveKey = (key: string) => {
     localStorage.setItem('gemini_api_key', key);
     setUserApiKey(key);
-    setShowKeyInput(false);
   };
 
   const handleClearKey = () => {
     localStorage.removeItem('gemini_api_key');
     setUserApiKey('');
-    setShowKeyInput(true);
   };
 
   const handleCheckModels = async () => {
