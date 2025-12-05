@@ -1,14 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
-import type { AnimationMode, ExpressionId } from '../../types/reactions';
+import type { AnimationMode } from '../../types/reactions';
 
 export function PoseExpressionTab() {
   const { isAvatarReady, animationMode, setAnimationMode } = useReactionStore();
   const [customPose, setCustomPose] = useState<any>(null);
   const [customPoseName, setCustomPoseName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeExpression, setActiveExpression] = useState<ExpressionId | 'neutral'>('neutral');
   const poseInputRef = useRef<HTMLInputElement>(null);
 
   // Expression State
@@ -93,7 +92,7 @@ export function PoseExpressionTab() {
     }
     
     // Create a fake input event to reuse the upload handler
-    const fakeInput = { target: { files: [file] } } as any;
+    const fakeInput = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
     await handlePoseUpload(fakeInput);
   };
 
@@ -112,6 +111,7 @@ export function PoseExpressionTab() {
   const handleClearPose = () => {
     setCustomPose(null);
     setCustomPoseName(null);
+    avatarManager.resetPose();
   };
 
   return (

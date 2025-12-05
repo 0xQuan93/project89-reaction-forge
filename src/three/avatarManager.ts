@@ -314,6 +314,37 @@ class AvatarManager {
   }
 
   /**
+   * Reset the avatar to its default pose (T-pose or A-pose)
+   */
+  resetPose() {
+    if (!this.vrm) return;
+    
+    console.log('[AvatarManager] Resetting pose');
+    this.stopAnimation();
+    
+    if (this.vrm.humanoid?.resetNormalizedPose) {
+      this.vrm.humanoid.resetNormalizedPose();
+    } else {
+      this.vrm.humanoid?.resetPose();
+    }
+    
+    // Reset all expressions
+    if (this.vrm.expressionManager) {
+      const exprs = this.getAvailableExpressions();
+      exprs.forEach(name => this.vrm!.expressionManager!.setValue(name, 0));
+      this.vrm.expressionManager.update();
+    }
+    
+    // Reset scene rotation
+    this.vrm.scene.rotation.set(0, 0, 0);
+    
+    // Force update
+    this.vrm.humanoid?.update();
+    this.vrm.update(0);
+    this.vrm.scene.updateMatrixWorld(true);
+  }
+
+  /**
    * Stop any currently playing animation
    */
   stopAnimation() {
