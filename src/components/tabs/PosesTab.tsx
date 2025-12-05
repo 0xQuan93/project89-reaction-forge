@@ -136,7 +136,7 @@ export function PosesTab() {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `${pose.name.replace(/\s+/g, '-').toLowerCase()}.json`;
+      anchor.download = `PoseLab_${pose.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
       anchor.click();
       URL.revokeObjectURL(url);
 
@@ -151,12 +151,12 @@ export function PosesTab() {
         const animUrl = URL.createObjectURL(animBlob);
         const animAnchor = document.createElement('a');
         animAnchor.href = animUrl;
-        animAnchor.download = `${pose.name.replace(/\s+/g, '-').toLowerCase()}-animation.json`;
+        animAnchor.download = `PoseLab_${pose.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_animation.json`;
         animAnchor.click();
         URL.revokeObjectURL(animUrl);
-        alert(`✅ Exported 2 files: ${pose.name}.json and ${pose.name}-animation.json`);
+        alert(`✅ Exported 2 files for ${pose.name}`);
       } else {
-        alert(`✅ Exported: ${pose.name}.json`);
+        alert(`✅ Exported: ${pose.name}`);
       }
     } catch (error) {
       console.error('Failed to export pose:', error);

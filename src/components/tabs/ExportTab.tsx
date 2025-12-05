@@ -115,10 +115,11 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     if (!dataUrl) return;
     
     // Generate filename with aspect ratio (unless it's the default 16:9 or square resolution)
-    // Format: {preset-id}-{resolution}-{aspect-ratio}-{transparent}.png
-    const aspectSuffix = resolution === 'square' ? '' : currentAspectRatio !== '16:9' ? `-${currentAspectRatio.replace(':', 'x')}` : '';
-    const transparentSuffix = transparentBg ? '-transparent' : '';
-    const filename = `${activePreset.id}-${resolution}${aspectSuffix}${transparentSuffix}.png`;
+    // Format: PoseLab_{preset-id}_{resolution}_{aspect-ratio}.png
+    const poseName = activePreset.label.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const aspectSuffix = resolution === 'square' ? '' : currentAspectRatio !== '16:9' ? `_${currentAspectRatio.replace(':', 'x')}` : '';
+    const transparentSuffix = transparentBg ? '_transparent' : '';
+    const filename = `PoseLab_${poseName}_${resolution}${aspectSuffix}${transparentSuffix}.png`;
     
     const link = document.createElement('a');
     link.href = dataUrl;
