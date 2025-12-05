@@ -1,14 +1,32 @@
 import { useState, useRef } from 'react';
 import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
-import type { AnimationMode } from '../../types/reactions';
+import type { AnimationMode, ExpressionId } from '../../types/reactions';
 
 export function PoseExpressionTab() {
   const { isAvatarReady, animationMode, setAnimationMode } = useReactionStore();
   const [customPose, setCustomPose] = useState<any>(null);
   const [customPoseName, setCustomPoseName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeExpression, setActiveExpression] = useState<ExpressionId | 'neutral'>('neutral');
   const poseInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExpressionChange = (expr: ExpressionId | 'neutral') => {
+    setActiveExpression(expr);
+    if (!isAvatarReady) return;
+    
+    if (expr === 'neutral') {
+      // Reset all expressions
+      const vrm = avatarManager.getVRM();
+      if (vrm?.expressionManager) {
+        vrm.expressionManager.setValue('Joy', 0);
+        vrm.expressionManager.setValue('Surprised', 0);
+        vrm.expressionManager.setValue('Angry', 0);
+      }
+    } else {
+      avatarManager.applyExpression(expr);
+    }
+  };
 
   const handlePoseUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,6 +140,26 @@ export function PoseExpressionTab() {
             Clear Custom Pose
           </button>
         )}
+      </div>
+
+      <div className="tab-section">
+        <h3>Facial Expression</h3>
+        <div className="button-group">
+          {(['neutral', 'joy', 'surprise', 'calm'] as const).map((expr) => (
+            <button
+              key={expr}
+              className={activeExpression === expr ? 'secondary active' : 'secondary'}
+              onClick={() => handleExpressionChange(expr)}
+              disabled={!isAvatarReady}
+              title={expr.charAt(0).toUpperCase() + expr.slice(1)}
+            >
+              {expr === 'neutral' && '😐'}
+              {expr === 'joy' && '😄'}
+              {expr === 'surprise' && '😲'}
+              {expr === 'calm' && '😌'}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="tab-section">

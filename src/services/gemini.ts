@@ -168,6 +168,28 @@ CRITICAL ANIMATION GUIDELINES:
 Output raw JSON only.
 `;
 
+// Standard Humanoid Limits (Symmetric & Physically Reasonable)
+// Overrides the potentially restrictive/asymmetric data from skeleton_limits.json
+const HUMANOID_LIMITS: Record<string, { x: [number, number], y: [number, number], z: [number, number] }> = {
+  // LEGS
+  'upper_legL': { x: [-30, 130], y: [-45, 45], z: [-30, 50] },
+  'upper_legR': { x: [-30, 130], y: [-45, 45], z: [-30, 50] },
+  'lower_legL': { x: [-160, 0], y: [-20, 20], z: [-10, 10] },
+  'lower_legR': { x: [-160, 0], y: [-20, 20], z: [-10, 10] },
+  
+  // ARMS
+  'upper_armL': { x: [-180, 180], y: [-180, 180], z: [-180, 180] },
+  'upper_armR': { x: [-180, 180], y: [-180, 180], z: [-180, 180] },
+  'lower_armL': { x: [-10, 10], y: [-160, 0], z: [-20, 20] }, // Elbows bend on Y usually in VRM, sometimes X depending on T-pose
+  'lower_armR': { x: [-10, 10], y: [0, 160], z: [-20, 20] },
+
+  // SPINE/HEAD
+  'spine': { x: [-30, 30], y: [-45, 45], z: [-20, 20] },
+  'chest': { x: [-30, 30], y: [-45, 45], z: [-20, 20] },
+  'neck': { x: [-40, 40], y: [-60, 60], z: [-30, 30] },
+  'head': { x: [-40, 40], y: [-60, 60], z: [-30, 30] },
+};
+
 export class GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   private model: any = null;
@@ -323,13 +345,23 @@ export class GeminiService {
       let z = transform.rotation[2];
       
       const limitKey = this.getLimitKey(boneName);
-      if (limitKey && this.limits[limitKey]) {
+      let limits = null;
+
+      // Prefer hardcoded sane limits for major bones
+      if (limitKey && HUMANOID_LIMITS[limitKey]) {
+        const hl = HUMANOID_LIMITS[limitKey];
+        limits = { x: hl.x, y: hl.y, z: hl.z };
+      } else if (limitKey && this.limits[limitKey]) {
+        // Fallback to loaded JSON
         const l = this.limits[limitKey].limits;
-        
+        limits = { x: l.x, y: l.y, z: l.z };
+      }
+
+      if (limits) {
         // Clamp (with wrapping handling)
-        const cx = this.clamp(x, l.x[0], l.x[1]);
-        const cy = this.clamp(y, l.y[0], l.y[1]);
-        const cz = this.clamp(z, l.z[0], l.z[1]);
+        const cx = this.clamp(x, limits.x[0], limits.x[1]);
+        const cy = this.clamp(y, limits.y[0], limits.y[1]);
+        const cz = this.clamp(z, limits.z[0], limits.z[1]);
         
         // Log significant corrections
         if (Math.abs(cx - x) > 10 || Math.abs(cy - y) > 10 || Math.abs(cz - z) > 10) {
