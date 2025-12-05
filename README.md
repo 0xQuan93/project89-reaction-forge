@@ -14,7 +14,7 @@ A powerful web-based tool for creating and exporting VRM avatar reactions. Perfe
 - **Kinetic Lag**: Simulates realistic body mechanics with core-to-extremity propagation.
 - **Hand Synergy**: Automatic finger articulation based on grip/relax patterns.
 
-### 🎨 **PoseLab** - Create & Export Reactions
+### 🎨 **Reaction** - Create & Export Reactions
 - Load custom VRM avatars (VRM 0.0 & 1.0 supported)
 - 13 pre-made reaction presets (including new procedural poses)
 - Custom pose/animation JSON support
