@@ -1,29 +1,29 @@
-# 🎭 Reaction Forge
+# 🎭 PoseLab
 
 **Create custom VRM avatar reactions with poses, expressions, and animations**
 
-A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models. Now featuring the **Motion Engine**, a procedural animation synthesis system.
+A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models. Now featuring the **Motion Engine**, a procedural animation synthesis system, and **AI-Driven Pose Generation**.
 
 ---
 
 ## ✨ Features
 
-### 🧠 **Motion Engine** (New!)
+### 🧠 **Motion Engine & AI** (New!)
+- **AI Pose Generation**: Generate poses from text descriptions using Google Gemini.
 - **Procedural Synthesis**: Generates natural animations on the fly using bio-mechanical constraints.
 - **Kinetic Lag**: Simulates realistic body mechanics with core-to-extremity propagation.
 - **Hand Synergy**: Automatic finger articulation based on grip/relax patterns.
-- **New Gestures**: "Simple Wave", "Point", "Victory Celebration".
 
-### 🎨 **Reaction Forge** - Create & Export Reactions
-- Load custom VRM avatars
+### 🎨 **PoseLab** - Create & Export Reactions
+- Load custom VRM avatars (VRM 0.0 & 1.0 supported)
 - 13 pre-made reaction presets (including new procedural poses)
 - Custom pose/animation JSON support
 - Expression controls (Joy, Surprise, Calm)
-- 8 themed backgrounds
-- Export PNG images with logo overlay
+- 8 themed backgrounds + **Custom Background Upload**
+- Export PNG images with logo overlay (hidden in UI, visible in export)
 - Export WebM animations
 - Real-time 3D preview with orbit controls
-- **About Page**: Quick access to version info and documentation.
+- **Mobile Optimized**: Fully responsive layout for creating on the go.
 
 ### 🛠️ **Pose Lab** - Create Custom Poses
 - Retarget Mixamo FBX animations to VRM format
@@ -45,8 +45,8 @@ A powerful web-based tool for creating and exporting VRM avatar reactions. Perfe
 
 ```bash
 # Clone the repository
-git clone https://github.com/0xQuan93/reaction-forge.git
-cd reaction-forge
+git clone https://github.com/0xQuan93/project89-reaction-forge.git
+cd project89-reaction-forge
 
 # Install dependencies
 npm install
@@ -56,14 +56,14 @@ npm run dev
 ```
 
 ### Open in Browser
-- **Reaction Forge**: http://localhost:5173/
-- **Pose Lab**: http://localhost:5173/?mode=pose-lab
+- **PoseLab**: http://localhost:5173/
+- **Pose Lab (Dev Mode)**: http://localhost:5173/?mode=pose-lab
 
 ---
 
 ## 📖 Usage Guide
 
-### Reaction Forge
+### PoseLab
 
 #### **Step 1: Load Avatar**
 1. Click **"Load VRM Avatar"**
@@ -73,46 +73,25 @@ npm run dev
 #### **Step 2: Choose Reaction**
 - **Option A**: Select from presets (Dawn Runner, Simple Wave, etc.)
 - **Option B**: Drag & drop custom pose JSON from Pose Lab
+- **Option C**: Use **AI Gen** to create a pose from text.
 
 #### **Step 3: Customize**
 - **Animation Mode**: Static / Loop / Play Once
 - Adjust camera with mouse (orbit, zoom)
 - Use camera presets (Front, Face, ¾ View)
+- **Backgrounds**: Select a preset or upload your own image.
 
 #### **Step 4: Export**
-- **PNG**: Click "Save PNG" for static image
+- **PNG**: Click "Save PNG" for static image (includes watermark)
 - **WebM**: Click "Export Animation" for video
 - **Share**: Click "Share" to open in new tab
-
----
-
-### Pose Lab
-
-#### **Step 1: Load VRM**
-1. Drag & drop `.vrm` file into **Step 1** zone
-2. Avatar appears facing forward
-
-#### **Step 2: Load Animation**
-1. Download FBX from [Mixamo](https://www.mixamo.com/)
-2. Drag & drop `.fbx` file into **Step 2** zone
-3. Animation retargets to VRM automatically
-
-#### **Step 3: Preview**
-- Use playback controls: ▶️ Play, ⏸️ Pause, ⏹️ Stop, 🔄 Restart
-- Toggle 🔁 Loop or 1️⃣ Play Once
-- Adjust camera with mouse
-
-#### **Step 4: Export**
-- **Export Pose JSON**: Static pose data
-- **Export Animation JSON**: Full animation clip
-- Save both files for use in Reaction Forge
 
 ---
 
 ## 📁 Project Structure
 
 ```
-reaction-forge/
+poselab/
 ├── src/
 │   ├── components/          # React components
 │   │   ├── AboutModal.tsx   # Project info
@@ -128,6 +107,7 @@ reaction-forge/
 │   └── utils/               # Utilities
 ├── public/
 │   ├── backgrounds/         # SVG backgrounds
+│   ├── logo/                # App branding
 │   └── vrm/                 # Sample VRM files
 ├── docs/                    # Documentation
 └── scripts/                 # Analysis & Generation scripts
@@ -210,8 +190,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/reaction-forge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/reaction-forge/discussions)
+- **Issues**: [GitHub Issues](https://github.com/0xQuan93/project89-reaction-forge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/0xQuan93/project89-reaction-forge/discussions)
 
 ---
 
