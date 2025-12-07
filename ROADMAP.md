@@ -8,19 +8,19 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 
 ### 1. 🎞️ Animated Backgrounds (GIF & Video Support)
 **Goal:** Allow users to upload animated content for backgrounds to create dynamic scenes.
-- [ ] **Video Support (.mp4, .webm):** Implement `THREE.VideoTexture` to handle video files natively.
-- [ ] **GIF Support (.gif):** Integrate a GIF decoder (e.g., `omggif` or `gif.js`) to support animated GIF textures in the 3D scene.
-- [ ] **Export Logic:** Ensure `MediaRecorder` captures the animated background frame-by-frame during export.
+- [x] **Video Support (.mp4, .webm):** Implement `THREE.VideoTexture` to handle video files natively.
+- [x] **GIF Support (.gif):** Integrate a GIF decoder (e.g., `omggif` or `gif.js`) to support animated GIF textures in the 3D scene.
+- [x] **Export Logic:** Ensure `MediaRecorder` captures the animated background frame-by-frame during export.
 
 ### 2. 🎬 Timeline & Keyframing (Basic)
 **Goal:** Move beyond static poses and simple loops to custom sequences.
-- [ ] **Keyframe Editor:** A simple timeline interface to set poses at specific timestamps.
-- [ ] **Interpolation Control:** Options for Linear, Ease-In/Out, and Step interpolation between poses.
-- [ ] **Sequence Export:** Export the full timeline as a `.json` animation clip or `.webm` video.
+- [x] **Keyframe Editor:** A simple timeline interface to set poses at specific timestamps. (Implemented v1.2)
+- [x] **Interpolation Control:** Basic Linear interpolation between poses. (Implemented v1.2)
+- [x] **Sequence Export:** Export the full timeline as a `.json` animation clip or `.webm` video. (Implemented v1.2)
 
 ### 3. 🕹️ Advanced IK Controls
 **Goal:** Provide more precise control over limbs without relying solely on presets.
-- [ ] **Transform Gizmos:** Interactive Translate/Rotate gizmos attached to hands, feet, and hips.
+- [x] **Transform Gizmos:** Interactive Translate/Rotate gizmos attached to hands, feet, and hips. (Implemented v1.2)
 - [ ] **IK Solver Upgrade:** Integrate a more robust IK solver (e.g., `three-ik` or `closed-chain-ik`) for better joint constraints.
 - [ ] **Finger Poser:** A dedicated UI for individual finger phalanx control.
 
@@ -64,7 +64,10 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 
 | Request | Status | Priority |
 |---------|--------|----------|
-| GIF Background Uploads | 🚧 Planned | High |
+| GIF/Video Background Uploads | ✅ Done (v1.1) | High |
 | Export Content (Video/GIF) | ✅ Done (WebM) | High |
 | Mobile Uploads | ✅ Done | High |
-| Better IK/Gizmos | 📝 Backlog | Medium |
+| Smart Export Presets | ✅ Done | High |
+| Better IK/Gizmos | ✅ Done (Basic FK) | Medium |
+| Expressions UI | ✅ Done | High |
+| AI Pose Gen (Gemini) | ✅ Done | High |

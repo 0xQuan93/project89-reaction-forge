@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
+import { interactionManager } from '../../three/interactionManager';
 import type { AnimationMode } from '../../types/reactions';
 
 export function PoseExpressionTab() {
@@ -14,6 +15,38 @@ export function PoseExpressionTab() {
   const [availableExpressions, setAvailableExpressions] = useState<string[]>([]);
   const [expressionWeights, setExpressionWeights] = useState<Record<string, number>>({});
   const [showExpressions, setShowExpressions] = useState(false);
+
+  // Gizmo State
+  const [isGizmoEnabled, setIsGizmoEnabled] = useState(false);
+  const [gizmoMode, setGizmoMode] = useState<'rotate' | 'translate'>('rotate');
+  const [gizmoSpace, setGizmoSpace] = useState<'local' | 'world'>('local');
+
+  useEffect(() => {
+    return () => {
+      // Cleanup gizmos on unmount
+      interactionManager.toggle(false);
+    };
+  }, []);
+
+  const handleGizmoToggle = (enabled: boolean) => {
+    setIsGizmoEnabled(enabled);
+    interactionManager.toggle(enabled);
+    if (enabled) {
+      // Force static mode to prevent fighting with animation mixer
+      setAnimationMode('static');
+      avatarManager.stopAnimation();
+    }
+  };
+
+  const handleGizmoModeChange = (mode: 'rotate' | 'translate') => {
+    setGizmoMode(mode);
+    interactionManager.setGizmoMode(mode);
+  };
+
+  const handleGizmoSpaceChange = (space: 'local' | 'world') => {
+    setGizmoSpace(space);
+    interactionManager.setGizmoSpace(space);
+  };
 
   useEffect(() => {
     if (isAvatarReady) {
@@ -30,9 +63,28 @@ export function PoseExpressionTab() {
   }, [isAvatarReady]);
 
   const handleExpressionChange = (name: string, value: number) => {
+    // 1. Update React state immediately for UI responsiveness
     setExpressionWeights(prev => ({ ...prev, [name]: value }));
-    avatarManager.setExpressionWeight(name, value);
+    
+    // 2. Throttle the expensive Three.js update using requestAnimationFrame
+    if (!activeUpdateRef.current) {
+      activeUpdateRef.current = requestAnimationFrame(() => {
+        avatarManager.setExpressionWeight(name, value);
+        activeUpdateRef.current = null;
+      });
+    }
   };
+
+  const activeUpdateRef = useRef<number | null>(null);
+
+  // Cleanup pending updates on unmount
+  useEffect(() => {
+    return () => {
+      if (activeUpdateRef.current) {
+        cancelAnimationFrame(activeUpdateRef.current);
+      }
+    };
+  }, []);
 
   const handleResetExpressions = () => {
     const newWeights: Record<string, number> = {};
@@ -161,6 +213,62 @@ export function PoseExpressionTab() {
           >
             Clear Custom Pose
           </button>
+        )}
+      </div>
+
+      <div className="tab-section">
+        <h3>Manual Posing</h3>
+        <p className="muted small">Click points on the avatar to rotate joints</p>
+        
+        <label className="checkbox-option" style={{ marginBottom: '1rem' }}>
+          <input
+            type="checkbox"
+            checked={isGizmoEnabled}
+            onChange={(e) => handleGizmoToggle(e.target.checked)}
+            disabled={!isAvatarReady}
+          />
+          <span>Enable Joint Controls</span>
+        </label>
+
+        {isGizmoEnabled && (
+          <div className="gizmo-controls" style={{ 
+            padding: '1rem', 
+            background: 'rgba(0, 255, 214, 0.05)', 
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 255, 214, 0.2)' 
+          }}>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '0.5rem' }}>Gizmo Mode</label>
+              <div className="button-group small">
+                <button 
+                  className={gizmoMode === 'rotate' ? 'secondary active' : 'secondary'}
+                  onClick={() => handleGizmoModeChange('rotate')}
+                  style={{ fontSize: '0.8rem' }}
+                >Rotate</button>
+                <button 
+                  className={gizmoMode === 'translate' ? 'secondary active' : 'secondary'}
+                  onClick={() => handleGizmoModeChange('translate')}
+                  style={{ fontSize: '0.8rem' }}
+                >Translate</button>
+              </div>
+            </div>
+            
+            <div>
+              <label style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '0.5rem' }}>Axis Space</label>
+              <div className="button-group small">
+                <button 
+                  className={gizmoSpace === 'local' ? 'secondary active' : 'secondary'}
+                  onClick={() => handleGizmoSpaceChange('local')}
+                  style={{ fontSize: '0.8rem' }}
+                >Local</button>
+                <button 
+                  className={gizmoSpace === 'world' ? 'secondary active' : 'secondary'}
+                  onClick={() => handleGizmoSpaceChange('world')}
+                  style={{ fontSize: '0.8rem' }}
+                >World</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 

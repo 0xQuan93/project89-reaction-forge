@@ -6,13 +6,14 @@ import { ExportTab } from './tabs/ExportTab';
 import { AnimationsTab } from './tabs/AnimationsTab';
 import { PosesTab } from './tabs/PosesTab';
 import { AIGeneratorTab } from './tabs/AIGeneratorTab';
+import { TimelineTab } from './tabs/TimelineTab';
 
 interface ControlPanelProps {
   mode: 'reactions' | 'poselab';
 }
 
 type ReactionTab = 'presets' | 'pose' | 'scene' | 'export';
-type PoseLabTab = 'animations' | 'poses' | 'ai' | 'export';
+type PoseLabTab = 'animations' | 'poses' | 'ai' | 'timeline' | 'export';
 
 export function ControlPanel({ mode }: ControlPanelProps) {
   const [reactionTab, setReactionTab] = useState<ReactionTab>('presets');
@@ -81,6 +82,12 @@ export function ControlPanel({ mode }: ControlPanelProps) {
           AI Gen
         </button>
         <button
+          className={poseLabTab === 'timeline' ? 'active' : ''}
+          onClick={() => setPoseLabTab('timeline')}
+        >
+          Timeline
+        </button>
+        <button
           className={poseLabTab === 'export' ? 'active' : ''}
           onClick={() => setPoseLabTab('export')}
         >
@@ -92,6 +99,7 @@ export function ControlPanel({ mode }: ControlPanelProps) {
         {poseLabTab === 'animations' && <AnimationsTab />}
         {poseLabTab === 'poses' && <PosesTab />}
         {poseLabTab === 'ai' && <AIGeneratorTab />}
+        {poseLabTab === 'timeline' && <TimelineTab />}
         {poseLabTab === 'export' && <ExportTab mode="poselab" />}
       </div>
     </aside>

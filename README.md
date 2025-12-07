@@ -1,216 +1,128 @@
 # 🎭 PoseLab
 
-**Create custom VRM avatar reactions with poses, expressions, and animations**
+**The ultimate browser-based toolkit for VRM avatar animation, posing, and reaction generation.**
 
-A powerful web-based tool for creating and exporting VRM avatar reactions. Perfect for content creators, VTubers, and developers working with VRM models. Now featuring the **Motion Engine**, a procedural animation synthesis system, and **AI-Driven Pose Generation**.
+Turn your 3D avatar into endless content—thumbnails, reaction GIFs, and animation clips—directly in your browser. Powered by procedural motion synthesis and AI.
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-00ffd6?style=for-the-badge)](https://poselab.project89.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 ---
 
 ## ✨ Features
 
-### 🧠 **Motion Engine & AI** (New!)
-- **AI Pose Generation**: Generate poses from text descriptions using Google Gemini.
-### 🤖 **AI Pose & Animation Generator** (New!)
-- **Natural Language Prompts**: Describe a pose ("Superhero landing", "Looking pensive") and watch it happen.
-- **Generative Animation**: Create looping or one-shot animations from text descriptions.
-- **Bio-Limits**: Smart skeleton constraints ensure physically impossible poses are corrected automatically.
-- **Powered by Google Gemini**: Leverages state-of-the-art LLMs for spatial reasoning.
+### 🎨 **Reaction Studio**
+*Create instant content with one click.*
+- **Smart Presets**: 13+ pre-made reactions like "Dawn Runner", "Victory", and "Silly Dance".
+- **Expression Control**: Fine-tune emotions with "Joy", "Surprise", and "Calm" sliders.
+- **Dynamic Backgrounds**: 8 themes + **GIF/Video Uploads** for animated scenes.
+- **Auto-Looping**: Perfectly seamless animation loops for streaming overlays.
 
-### 🧠 **Motion Engine**
-- **Procedural Synthesis**: Generates natural animations on the fly using bio-mechanical constraints.
-- **Kinetic Lag**: Simulates realistic body mechanics with core-to-extremity propagation.
-- **Hand Synergy**: Automatic finger articulation based on grip/relax patterns.
+### 🛠️ **Pose Lab**
+*Deep dive into character posing and animation.*
+- **Timeline Editor**: Create sequences by capturing keyframes and interpolating between them.
+- **AI Pose Gen**: Describe a pose ("ninja landing", "thinking hard") and let Gemini AI create it.
+- **Manual Posing**: Fine-tune joints with interactive Gizmos (Rotate/Translate).
+- **Full Expression Control**: Access every blendshape your avatar supports (A, I, U, E, O, Blink, etc.).
+- **Retargeting Engine**: Import Mixamo FBX animations and automatically retarget them to your VRM.
+- **Keyframe Export**: Save poses and animations as lightweight JSON files.
 
-### 🎨 **Reaction** - Create & Export Reactions
-- Load custom VRM avatars (VRM 0.0 & 1.0 supported)
-- 13 pre-made reaction presets (including new procedural poses)
-- Custom pose/animation JSON support
-- Expression controls (Joy, Surprise, Calm)
-- 8 themed backgrounds + **Custom Background Upload**
-- Export PNG images with logo overlay (hidden in UI, visible in export)
-- Export WebM animations
-- Real-time 3D preview with orbit controls
-- **Mobile Optimized**: Fully responsive layout for creating on the go.
-
-### 🛠️ **Pose Lab** - Create Custom Poses
-- Retarget Mixamo FBX animations to VRM format
-- Real-time animation preview
-- Export pose JSON files
-- Export animation JSON files
-- Batch export multiple poses
-- Playback controls (play/pause/loop)
+### 🚀 **Production Ready**
+- **Smart Exports**: One-click presets for YouTube Thumbnails (720p), TikToks (9:16), and Square (1:1).
+- **Transparent PNGs**: Export clean cutouts for Photoshop or OBS.
+- **Mobile Optimized**: Fully responsive UI for creating content on the go.
+- **Privacy First**: All processing happens locally in your browser. No avatars are uploaded to a server.
 
 ---
 
-## 🚀 Quick Start
+## 👩‍🍳 Quickstart Recipes
+
+### 🎬 **For Animators (New!)**
+**Goal: Create a custom emote.**
+1.  **Pose Lab**: Open **Timeline** tab.
+2.  **Frame 0**: Use AI to generate "start pose", click **Add Keyframe**.
+3.  **Frame 1.0**: Move scrubber to 1s, use Gizmos to change pose, click **Add Keyframe**.
+4.  **Preview**: Hit **Play** to see the smooth transition.
+5.  **Export**: Click **Export** to save the animation JSON.
+
+### 📸 **For YouTubers & Streamers**
+**Goal: Create a clean thumbnail asset.**
+1.  **Load Avatar**: Click "Load VRM" or use the sample.
+2.  **Pose**: Go to **Pose Lab** → **AI Gen** → Type "shocked pointing finger".
+3.  **Refine**: Switch to **Reactions** tab, adjust "Surprise" slider to 1.0.
+4.  **Export**: Go to **Export** → Select **Transparent Background** → Click **Thumbnail (HD)**.
+
+### 💃 **For VTubers**
+**Goal: Create a "BRB" screen loop.**
+1.  **Scene**: Go to **Scene** tab → Upload a looping `.mp4` background.
+2.  **Action**: Select the **Simple Wave** preset.
+3.  **Camera**: Set camera to **¾ View**.
+4.  **Export**: Go to **Export** → Select **WebM** → Click **Vertical (9:16)**.
+
+### 👨‍💻 **For Developers**
+**Goal: Extract animation data for a game.**
+1.  **Import**: Drag & drop a Mixamo FBX file into **Pose Lab**.
+2.  **Preview**: Check the retargeting in the viewport.
+3.  **Export**: Click **Export Animation JSON** to get raw track data compatible with `three-vrm`.
+
+---
+
+## ⚙️ Installation & Development
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Modern web browser (Chrome, Firefox, Edge)
+- Node.js 18+
+- npm / yarn / pnpm
 
-### Installation
+### Setup
 
 ```bash
-# Clone the repository
+# 1. Clone the repo
 git clone https://github.com/0xQuan93/project89-reaction-forge.git
 cd project89-reaction-forge
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Configure Environment
-# Create a .env file in the root directory
-# Add your Google Gemini API Key:
-# VITE_GEMINI_API_KEY=your_api_key_here
-
-# Start development server
+# 3. Start dev server
 npm run dev
 ```
 
-### Open in Browser
-- **PoseLab**: http://localhost:5173/
-- **Pose Lab (Dev Mode)**: http://localhost:5173/?mode=pose-lab
-
----
-
-## 📖 Usage Guide
-
-### PoseLab
-
-#### **Step 1: Load Avatar**
-1. Click **"Load VRM Avatar"**
-2. Select your `.vrm` file
-3. Avatar loads in 3D viewport
-
-#### **Step 2: Choose Reaction**
-- **Option A**: Select from presets (Dawn Runner, Simple Wave, etc.)
-- **Option B**: Drag & drop custom pose JSON from Pose Lab
-- **Option C**: Use **AI Gen** to create a pose from text.
-
-#### **Step 3: Customize**
-- **Animation Mode**: Static / Loop / Play Once
-- Adjust camera with mouse (orbit, zoom)
-- Use camera presets (Front, Face, ¾ View)
-- **Backgrounds**: Select a preset or upload your own image.
-
-#### **Step 4: Export**
-- **PNG**: Click "Save PNG" for static image (includes watermark)
-- **WebM**: Click "Export Animation" for video
-- **Share**: Click "Share" to open in new tab
-
----
-
-## 📁 Project Structure
-
-```
-poselab/
-├── src/
-│   ├── components/          # React components
-│   │   ├── AboutModal.tsx   # Project info
-│   │   ├── CanvasStage.tsx  # 3D viewport
-│   │   └── ControlPanel.tsx # Main UI controller
-│   ├── pose-lab/            # Pose Lab tool
-│   ├── poses/               # Pose definitions & Motion Engine
-│   │   ├── motionEngine.ts  # Procedural animation solver
-│   │   ├── skeleton_*.json  # Bio-mechanical data
-│   │   └── *.json           # Pose/Animation files
-│   ├── three/               # Three.js managers
-│   ├── state/               # Zustand stores
-│   └── utils/               # Utilities
-├── public/
-│   ├── backgrounds/         # SVG backgrounds
-│   ├── logo/                # App branding
-│   └── vrm/                 # Sample VRM files
-├── docs/                    # Documentation
-└── scripts/                 # Analysis & Generation scripts
+### Environment Variables
+Create a `.env` file in the root for AI features:
+```env
+VITE_GEMINI_API_KEY=your_api_key_here
 ```
 
 ---
 
-## 🎨 Available Presets
+## 🗺️ Roadmap & Vision
 
-| Preset | Pose | Expression | Background |
-|--------|------|------------|------------|
-| **Dawn Runner** | Dynamic stance | Joy | Protocol Sunset |
-| **Sunset Call** | Standing wave | Joy | Protocol Sunset |
-| **Cipher Whisper** | Sitting pose | Calm | Neural Grid |
-| **Nebula Drift** | Walking | Calm | Quantum Field |
-| **Signal Reverie** | Crouching | Surprise | Signal Breach |
-| **Agent Dance** | Dancing | Joy | Cyber Waves |
-| **Agent Taunt** | Taunting | Joy | Signal Breach |
-| **Silly Agent** | Silly dance | Joy | Protocol Dawn |
-| **Victory** | V-Sign | Joy | Midnight Circuit |
-| **Simple Wave** | Procedural Wave | Joy | Protocol Sunset |
-| **Point** | Procedural Point | Calm | Neural Grid |
-
----
-
-## 🔧 Development
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Preview Production Build
-```bash
-npm run preview
-```
-
-### Type Checking
-```bash
-npm run type-check
-```
-
----
-
-## 📚 Documentation
-
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues
-- **[ROADMAP.md](ROADMAP.md)** - Future features
-- **[docs/](docs/)** - Technical guides
+We are building the standard open-source tool for VRM content creation. Check out our **[ROADMAP.md](ROADMAP.md)** to see what's coming next:
+- 🎬 **Timeline Editor**: Keyframe animation support.
+- 🕹️ **Advanced IK**: Interactive gizmos for precise posing.
+- 👥 **Multi-Avatar**: Scenes with multiple characters.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+We welcome contributions from developers, animators, and AI researchers!
+Please read our **[CONTRIBUTING.md](CONTRIBUTING.md)** for details on how to submit pull requests, report issues, and shape the future of PoseLab.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **[three-vrm](https://github.com/pixiv/three-vrm)** - VRM support for Three.js
-- **[Mixamo](https://www.mixamo.com/)** - Free character animations
-- **[VRoid Studio](https://vroid.com/)** - VRM avatar creation
+- **[three-vrm](https://github.com/pixiv/three-vrm)**: The backbone of VRM on the web.
+- **[Mixamo](https://www.mixamo.com/)**: For the animation library support.
+- **[Google Gemini](https://deepmind.google/technologies/gemini/)**: Powering our text-to-pose engine.
 
 ---
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/0xQuan93/project89-reaction-forge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/0xQuan93/project89-reaction-forge/discussions)
-
----
-
-## 🌟 Show Your Support
-
-If this project helped you, please give it a ⭐️!
-
----
-
-**Made with 💚 for the VRM community**
+<div align="center">
+  <p>Built with 💚 by <strong>Project 89</strong></p>
+  <p>
+    <a href="https://github.com/0xQuan93/project89-reaction-forge/issues">Report Bug</a> ·
+    <a href="https://github.com/0xQuan93/project89-reaction-forge/discussions">Request Feature</a>
+  </p>
+</div>

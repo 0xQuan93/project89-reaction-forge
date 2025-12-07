@@ -1,363 +1,93 @@
-# Contributing to Reaction Forge
+# 🤝 Contributing to PoseLab
 
-Thank you for your interest in contributing to Reaction Forge! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to PoseLab! We are building the ultimate open-source tool for VRM content creation, and we need your help to make it happen.
 
----
-
-## 🎯 Ways to Contribute
-
-- 🐛 Report bugs
-- 💡 Suggest new features
-- 📝 Improve documentation
-- 🎨 Add new pose presets
-- 🔧 Fix issues
-- ✨ Implement new features
+Whether you're a developer, 3D artist, or UI designer, there's a place for you here.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Development Setup
 
-### 1. Fork & Clone
+### Prerequisites
+- **Node.js**: v18 or higher
+- **Package Manager**: npm (v9+)
+- **Git**
 
-```bash
-# Fork the repository on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/reaction-forge.git
-cd reaction-forge
-```
+### Step-by-Step Guide
 
-### 2. Install Dependencies
+1.  **Fork the Repository**
+    Click the "Fork" button on the top right of the GitHub page.
 
-```bash
-npm install
-```
+2.  **Clone Your Fork**
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/project89-reaction-forge.git
+    cd project89-reaction-forge
+    ```
 
-### 3. Create a Branch
+3.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/your-bug-fix
-```
+4.  **Set Up Environment Variables**
+    Create a `.env` file in the root directory:
+    ```env
+    VITE_GEMINI_API_KEY=your_api_key_here
+    ```
+    *(Note: You can run the app without an API key, but the AI Pose Generation feature will not work.)*
 
-### 4. Start Development Server
-
-```bash
-npm run dev
-```
-
----
-
-## 📋 Development Guidelines
-
-### Code Style
-
-- **TypeScript**: Use strict typing, avoid `any` when possible
-- **React**: Functional components with hooks
-- **Naming**: 
-  - Components: `PascalCase`
-  - Functions: `camelCase`
-  - Constants: `UPPER_SNAKE_CASE`
-- **Formatting**: Run `npm run format` before committing
-
-### File Organization
-
-```
-src/
-├── components/     # React UI components
-├── three/          # Three.js managers (scene, avatar, animation)
-├── state/          # Zustand stores
-├── poses/          # Pose definitions & animations
-├── utils/          # Utility functions
-└── types/          # TypeScript type definitions
-```
-
-### Commit Messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add new pose preset "Victory Dance"
-fix: resolve animation loop issue in Pose Lab
-docs: update README with new features
-style: format code with prettier
-refactor: simplify avatarManager logic
-test: add tests for pose serialization
-```
+5.  **Start the Development Server**
+    ```bash
+    npm run dev
+    ```
+    Open `http://localhost:5173` in your browser.
 
 ---
 
-## 🎨 Adding New Pose Presets
+## 📂 Project Structure
 
-### 1. Create Pose in Pose Lab
-
-1. Open Pose Lab: http://localhost:5173/?mode=pose-lab
-2. Load a VRM avatar
-3. Load a Mixamo FBX animation
-4. Export both `pose.json` and `pose-animation.json`
-
-### 2. Add Files to Project
-
-```bash
-# Add to src/poses/
-src/poses/
-├── your-pose-name.json           # Static pose
-└── your-pose-name-animation.json # Animation (optional)
-```
-
-### 3. Register in Code
-
-**src/poses/index.ts**:
-```typescript
-import yourPoseName from './your-pose-name.json';
-import yourPoseNameAnimation from './your-pose-name-animation.json';
-
-export const poseLibrary = {
-  // ... existing poses
-  'your-pose-name': yourPoseName,
-};
-
-export const animationLibrary = {
-  // ... existing animations
-  'your-pose-name': yourPoseNameAnimation,
-};
-```
-
-**src/types/reactions.ts**:
-```typescript
-export type PoseId =
-  | 'dawn-runner'
-  // ... existing poses
-  | 'your-pose-name';
-```
-
-**src/data/reactions.ts**:
-```typescript
-export const reactionPresets: ReactionPreset[] = [
-  // ... existing presets
-  {
-    id: 'your-pose-name',
-    label: 'Your Pose Name',
-    description: 'A brief description',
-    pose: 'your-pose-name',
-    expression: 'joy',
-    background: 'midnight-circuit',
-    animated: true,
-    animationMode: 'loop',
-  },
-];
-```
-
-### 4. Test Your Pose
-
-1. Restart dev server
-2. Open Reaction Forge
-3. Select your new preset
-4. Verify it works in all animation modes
+- **`src/components/`**: React UI components (Tabs, Overlays, Modals).
+- **`src/three/`**: Core Three.js logic (`SceneManager`, `AvatarManager`, `Backgrounds`).
+- **`src/poses/`**: Motion engine logic, IK solvers, and pose definitions.
+- **`src/state/`**: Zustand stores for global app state (`useReactionStore`).
+- **`public/`**: Static assets (icons, background SVGs, sample VRMs).
 
 ---
 
-## 🐛 Reporting Bugs
+## 🧩 How to Contribute
 
-### Before Reporting
+### 1. 🐛 Reporting Bugs
+Found a glitch? Please open an [Issue](https://github.com/0xQuan93/project89-reaction-forge/issues) with:
+- A clear title.
+- Steps to reproduce.
+- Browser/Device details.
+- Screenshots or console errors if possible.
 
-1. Check [existing issues](https://github.com/yourusername/reaction-forge/issues)
-2. Try the latest version
-3. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+### 2. ✨ Submitting Features
+1.  Check the [ROADMAP.md](ROADMAP.md) to see what's planned.
+2.  Open an Issue to discuss your idea *before* writing code (saves you time!).
+3.  Create a branch: `git checkout -b feature/my-cool-feature`.
+4.  Commit your changes: `git commit -m "Add cool feature"`.
+5.  Push to your fork and submit a **Pull Request**.
 
-### Bug Report Template
-
-```markdown
-**Describe the bug**
-A clear description of what the bug is.
-
-**To Reproduce**
-Steps to reproduce:
-1. Go to '...'
-2. Click on '...'
-3. See error
-
-**Expected behavior**
-What you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots.
-
-**Environment:**
-- OS: [e.g. Windows 11]
-- Browser: [e.g. Chrome 120]
-- Version: [e.g. 1.0.0]
-
-**Additional context**
-Any other relevant information.
-```
+### 3. 🎨 Visual & UX Improvements
+We value polish. If you see a misaligned pixel, a confusing button, or a way to make an animation smoother, fix it!
 
 ---
 
-## 💡 Suggesting Features
+## 📏 Coding Standards
 
-### Feature Request Template
-
-```markdown
-**Is your feature request related to a problem?**
-A clear description of the problem.
-
-**Describe the solution you'd like**
-What you want to happen.
-
-**Describe alternatives you've considered**
-Other solutions you've thought about.
-
-**Additional context**
-Any other relevant information, mockups, or examples.
-```
+- **TypeScript**: We use strict typing. Avoid `any` whenever possible.
+- **Components**: Functional React components with Hooks.
+- **Styling**: Pure CSS modules or standard CSS (we are migrating to a cleaner structure).
+- **Three.js**: Keep 3D logic separate from UI logic where possible (use the Managers pattern).
 
 ---
 
-## 🔧 Pull Request Process
+## 📜 License
 
-### 1. Ensure Quality
-
-- ✅ Code builds without errors: `npm run build`
-- ✅ No TypeScript errors: `npm run type-check`
-- ✅ Code is formatted: `npm run format`
-- ✅ All features work in both Reaction Forge and Pose Lab
-
-### 2. Update Documentation
-
-- Update README.md if adding features
-- Add comments to complex code
-- Update CHANGELOG.md
-
-### 3. Submit PR
-
-```markdown
-**Description**
-Brief description of changes.
-
-**Type of Change**
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-**Testing**
-How you tested the changes.
-
-**Screenshots**
-If applicable.
-
-**Checklist**
-- [ ] Code builds successfully
-- [ ] No TypeScript errors
-- [ ] Documentation updated
-- [ ] Tested in both tools
-```
-
-### 4. Review Process
-
-- Maintainers will review your PR
-- Address any requested changes
-- Once approved, it will be merged
+By contributing, you agree that your contributions will be licensed under the MIT License of this project.
 
 ---
 
-## 🎨 Adding Custom Backgrounds
-
-### 1. Create SVG
-
-- Size: 1920x1080 recommended
-- Keep file size under 500KB
-- Use web-safe colors
-
-### 2. Add to Project
-
-```bash
-# Add to public/backgrounds/
-public/backgrounds/your-background.svg
-```
-
-### 3. Register Background
-
-**src/three/backgrounds.ts**:
-```typescript
-const backgroundDefinitions: BackgroundDefinition[] = [
-  // ... existing backgrounds
-  {
-    id: 'your-background',
-    label: 'Your Background Name',
-    color: '#fallback-hex-color',
-    image: '/backgrounds/your-background.svg',
-  },
-];
-```
-
-**src/types/reactions.ts**:
-```typescript
-export type BackgroundId =
-  | 'midnight-circuit'
-  // ... existing backgrounds
-  | 'your-background';
-```
-
----
-
-## 📚 Code Architecture
-
-### Three.js Managers
-
-- **sceneManager**: Handles Three.js scene, camera, lighting, rendering
-- **avatarManager**: Loads VRM, applies poses, manages expressions
-- **animationManager**: Plays animation clips, manages mixer
-
-### State Management
-
-- **useReactionStore**: Active preset, animation mode, avatar readiness
-- **useAvatarSource**: Current VRM URL and source management
-
-### Pose System
-
-- **Static Poses**: JSON with VRM bone rotations
-- **Animation Clips**: JSON with keyframe tracks
-- **Hybrid System**: Supports both static and animated poses
-
----
-
-## 🧪 Testing Guidelines
-
-### Manual Testing Checklist
-
-**Reaction Forge:**
-- [ ] Load custom VRM
-- [ ] Select each preset
-- [ ] Test all animation modes (Static/Loop/Once)
-- [ ] Export PNG
-- [ ] Export WebM
-- [ ] Drag & drop custom pose JSON
-- [ ] Drag & drop animation JSON
-
-**Pose Lab:**
-- [ ] Load custom VRM
-- [ ] Load FBX animation
-- [ ] Preview animation
-- [ ] Test playback controls
-- [ ] Export pose JSON
-- [ ] Batch export
-
----
-
-## 📞 Questions?
-
-- Open a [Discussion](https://github.com/0xQuan93/reaction-forge/discussions)
-- Check [Documentation](docs/)
-- Review [Troubleshooting](TROUBLESHOOTING.md)
-
----
-
-## 🙏 Thank You!
-
-Your contributions make Reaction Forge better for everyone. We appreciate your time and effort!
-
----
-
-**Happy creating! 🎭✨**
-
+**Thank you for building with us! 💚**

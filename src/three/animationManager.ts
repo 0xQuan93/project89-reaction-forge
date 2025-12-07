@@ -115,6 +115,17 @@ class AnimationManager {
   }
 
   /**
+   * Seek to a specific time in the current animation
+   */
+  seek(time: number) {
+    if (this.currentAction && this.mixer) {
+      this.currentAction.time = time;
+      // Force mixer to update visual state immediately
+      this.mixer.update(0);
+    }
+  }
+
+  /**
    * Get the current action (for external access if needed)
    */
   getCurrentAction(): THREE.AnimationAction | undefined {

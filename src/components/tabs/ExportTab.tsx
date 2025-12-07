@@ -5,7 +5,34 @@ import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
 import { exportAsWebM, canExportVideo } from '../../utils/gifExporter';
 
-type AspectRatio = '16:9' | '1:1' | '9:16';
+// Simple Toast Component
+function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="toast-notification" style={{
+      position: 'fixed',
+      bottom: '2rem',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: 'rgba(0, 255, 214, 0.1)',
+      border: '1px solid #00ffd6',
+      color: '#00ffd6',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '25px',
+      backdropFilter: 'blur(10px)',
+      zIndex: 2000,
+      fontWeight: 600,
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+      animation: 'slideUp 0.3s ease-out'
+    }}>
+      {message}
+    </div>
+  );
+}
 
 interface ExportTabProps {
   mode?: 'reactions' | 'poselab';
@@ -16,9 +43,12 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportFormat, setExportFormat] = useState<'png' | 'webm'>('png');
-  const [resolution, setResolution] = useState<'720p' | '1080p' | 'square'>('1080p');
+  const [resolution, setResolution] = useState<'720p' | '1080p' | 'square'>('720p');
   const [includeLogo, setIncludeLogo] = useState(true);
   const [transparentBg, setTransparentBg] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => setToastMessage(msg);
   
   // Set aspect ratio from sceneManager on mount to ensure consistent state
   useEffect(() => {
@@ -28,59 +58,15 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
   }, []);
 
   const getExportDimensions = (): { width: number; height: number } => {
-    // Always get the current aspect ratio from sceneManager (not from state)
-    // This ensures we use the latest value set in Scene tab
-    const currentAspectRatio = sceneManager.getAspectRatio();
-    
-    // Get base resolution
-    let baseWidth: number;
-    let baseHeight: number;
-    
     switch (resolution) {
       case '720p':
-        baseWidth = 1280;
-        baseHeight = 720;
-        break;
-      case '1080p':
-        baseWidth = 1920;
-        baseHeight = 1080;
-        break;
+        return { width: 1280, height: 720 };
       case 'square':
-        baseWidth = 1080;
-        baseHeight = 1080;
-        break;
+        return { width: 1080, height: 1080 };
+      case '1080p': // Re-purposed as Vertical/Mobile
+        return { width: 1080, height: 1920 };
       default:
-        baseWidth = 1920;
-        baseHeight = 1080;
-    }
-
-    // If resolution is 'square', always use square dimensions regardless of aspect ratio
-    if (resolution === 'square') {
-      return { width: 1080, height: 1080 };
-    }
-
-    // Calculate dimensions based on aspect ratio from Scene tab
-    const targetAspect = getAspectRatioValue(currentAspectRatio);
-    
-    if (targetAspect > 1) {
-      // Landscape (16:9) - use width as base
-      return { width: baseWidth, height: Math.round(baseWidth / targetAspect) };
-    } else if (targetAspect < 1) {
-      // Portrait (9:16) - use height as base
-      return { width: Math.round(baseHeight * targetAspect), height: baseHeight };
-    } else {
-      // Square (1:1)
-      const size = Math.min(baseWidth, baseHeight);
-      return { width: size, height: size };
-    }
-  };
-
-  const getAspectRatioValue = (ratio: AspectRatio): number => {
-    switch (ratio) {
-      case '16:9': return 16 / 9;
-      case '1:1': return 1;
-      case '9:16': return 9 / 16;
-      default: return 16 / 9;
+        return { width: 1920, height: 1080 };
     }
   };
 
@@ -125,6 +111,7 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     link.href = dataUrl;
     link.download = filename;
     link.click();
+    showToast('✅ PNG Saved Successfully!');
   };
 
   const handleExportWebM = async () => {
@@ -231,7 +218,7 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
           },
           { width: dimensions.width, height: dimensions.height }
         );
-        alert('Export complete! For Twitter: convert at ezgif.com/webm-to-gif');
+        showToast('✅ WebM Exported Successfully!');
       } finally {
         // Always restore original renderer size and camera aspect
         // The renderer.setSize() will automatically restore canvas element dimensions
@@ -289,29 +276,29 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
       </div>
 
       <div className="tab-section">
-        <h3>Resolution</h3>
-        <p className="muted small">Select export resolution (uses current canvas render)</p>
-        <div className="button-group">
+        <h3>Smart Presets</h3>
+        <p className="muted small">Quickly set resolution for common platforms</p>
+        <div className="actions" style={{ marginBottom: '1rem' }}>
           <button
             className={resolution === '720p' ? 'secondary active' : 'secondary'}
             onClick={() => setResolution('720p')}
-            title="1280×720 pixels"
+            title="1280x720 (YouTube Thumbnail)"
           >
-            HD
-          </button>
-          <button
-            className={resolution === '1080p' ? 'secondary active' : 'secondary'}
-            onClick={() => setResolution('1080p')}
-            title="1920×1080 pixels"
-          >
-            Full HD
+            Thumbnail (HD)
           </button>
           <button
             className={resolution === 'square' ? 'secondary active' : 'secondary'}
             onClick={() => setResolution('square')}
-            title="1080×1080 pixels"
+            title="1080x1080 (Instagram/Twitter)"
           >
-            Square
+            Square (1:1)
+          </button>
+          <button
+            className={resolution === '1080p' ? 'secondary active' : 'secondary'}
+            onClick={() => setResolution('1080p')}
+            title="1080x1920 (TikTok/Shorts/Reels)"
+          >
+            Vertical (9:16)
           </button>
         </div>
       </div>
@@ -355,6 +342,8 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
           </div>
         )}
       </div>
+      
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
 }

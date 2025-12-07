@@ -43,7 +43,7 @@ export function ReactionPanel() {
     setStatusMessage('Animation stopped');
   };
 
-  const handleVRMUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVRMUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -52,8 +52,12 @@ export function ReactionPanel() {
       return;
     }
     
-    setFileSource(file);
-    setStatusMessage(`✅ Loading custom VRM: ${file.name}`);
+    setStatusMessage(`⏳ Loading VRM: ${file.name}...`);
+    
+    // Use a small timeout to allow UI to update with "Loading..." before the heavy load starts
+    setTimeout(() => {
+      setFileSource(file);
+    }, 50);
   };
 
   const handleResetAvatar = () => {

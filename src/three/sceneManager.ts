@@ -158,6 +158,10 @@ class SceneManager {
     return this.camera;
   }
 
+  getControls() {
+    return this.controls;
+  }
+
   frameObject(object: THREE.Object3D, padding = 1.2) {
     if (!this.camera || !this.controls) return;
     this.box.setFromObject(object);

@@ -52,7 +52,17 @@ class AvatarManager {
     console.log('[AvatarManager] Fetching GLTF...');
     const gltf = await this.loader.loadAsync(url);
     const vrm = gltf.userData.vrm as VRM | undefined;
-    if (!vrm) throw new Error('VRM payload missing');
+    if (!vrm) {
+      console.error('[AvatarManager] VRM payload missing in GLTF');
+      throw new Error('Invalid VRM file: Missing VRM data');
+    }
+    
+    // Safety check for skeletal structure
+    if (!vrm.humanoid) {
+      console.error('[AvatarManager] Malformed VRM: No humanoid definition found');
+      throw new Error('Malformed VRM: No humanoid structure found. Please check your model export settings.');
+    }
+
     console.log('[AvatarManager] VRM extracted, optimizing...');
     VRMUtils.removeUnnecessaryVertices(vrm.scene);
     VRMUtils.removeUnnecessaryJoints(vrm.scene);
@@ -394,6 +404,15 @@ class AvatarManager {
   setAnimationSpeed(speed: number) {
     if (this.isAnimated && animationManager.isPlaying()) {
       animationManager.setSpeed(speed);
+    }
+  }
+
+  /**
+   * Seek to a specific time in the current animation
+   */
+  seekAnimation(time: number) {
+    if (this.isAnimated) {
+      animationManager.seek(time);
     }
   }
 
