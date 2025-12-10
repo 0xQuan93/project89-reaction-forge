@@ -126,6 +126,55 @@ class AnimationManager {
   }
 
   /**
+   * Pause the current animation
+   */
+  pause() {
+    if (this.currentAction) {
+      this.currentAction.paused = true;
+    }
+  }
+
+  /**
+   * Resume the current animation
+   */
+  resume() {
+    if (this.currentAction) {
+      this.currentAction.paused = false;
+    }
+  }
+
+  /**
+   * Play a transition clip, then crossfade to target clip
+   */
+  playTransitionAndFade(fromClip: THREE.AnimationClip, toClip: THREE.AnimationClip, loop = true, duration = 0.5) {
+     if (!this.mixer) return;
+     
+     // 1. Play "from" clip (Current Pose)
+     // We use a separate action to ensure it doesn't get messed up
+     const fromAction = this.mixer.clipAction(fromClip);
+     fromAction.reset();
+     fromAction.setLoop(THREE.LoopOnce, 1);
+     fromAction.clampWhenFinished = true;
+     fromAction.play();
+     fromAction.weight = 1;
+     
+     // 2. Play "to" clip (Target Animation)
+     const toAction = this.mixer.clipAction(toClip);
+     toAction.reset();
+     toAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+     toAction.clampWhenFinished = !loop;
+     toAction.play();
+     toAction.weight = 0;
+     
+     // 3. Crossfade
+     // warp=false to avoid timescale distortion between static pose (0.1s) and animation
+     fromAction.crossFadeTo(toAction, duration, false);
+     
+     // Update current action tracker
+     this.currentAction = toAction;
+  }
+
+  /**
    * Get the current action (for external access if needed)
    */
   getCurrentAction(): THREE.AnimationAction | undefined {

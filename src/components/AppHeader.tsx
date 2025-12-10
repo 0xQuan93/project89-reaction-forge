@@ -2,7 +2,9 @@
 import { useRef, useState } from 'react';
 import { useAvatarSource } from '../state/useAvatarSource';
 import { useReactionStore } from '../state/useReactionStore';
+import { useToastStore } from '../state/useToastStore';
 import { AboutModal } from './AboutModal';
+import { SettingsModal } from './SettingsModal';
 
 interface AppHeaderProps {
   mode: 'reactions' | 'poselab';
@@ -12,15 +14,17 @@ interface AppHeaderProps {
 export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
   const vrmInputRef = useRef<HTMLInputElement>(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { currentUrl, setFileSource, sourceLabel } = useAvatarSource();
   const isAvatarReady = useReactionStore((state) => state.isAvatarReady);
+  const { addToast } = useToastStore();
 
   const handleVRMUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
     if (!file.name.toLowerCase().endsWith('.vrm')) {
-      alert('Please select a VRM file');
+      addToast('Please select a VRM file', 'error');
       return;
     }
     
@@ -87,15 +91,24 @@ export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
           </div>
           <button 
             className="icon-button"
-            style={{ width: '32px', height: '32px', fontSize: '0.9rem', marginLeft: '1rem' }}
+            style={{ width: '32px', height: '32px', fontSize: '1.1rem', marginLeft: '0.5rem' }}
+            onClick={() => setShowSettings(true)}
+            title="Settings"
+          >
+            ⚙️
+          </button>
+          <button 
+            className="icon-button"
+            style={{ width: '32px', height: '32px', fontSize: '0.9rem', marginLeft: '0.5rem' }}
             onClick={() => setShowAbout(true)}
-            title="About Reaction Forge"
+            title="About PoseLab"
           >
             ?
           </button>
         </div>
       </header>
       <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>
   );
 }

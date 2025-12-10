@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import PoseLab from './pose-lab/PoseLab'
 import { setupAvatarBridge } from './bridge/avatarBridge'
+import { CommandPalette } from './ui/CommandPalette'
 
 console.log('[main] Starting PoseLab');
 
@@ -22,7 +23,9 @@ const render = () => {
 
   root.render(
     <StrictMode>
-      {mode === 'pose-lab' ? <PoseLab /> : <App />}
+      <CommandPalette>
+        {mode === 'pose-lab' ? <PoseLab /> : <App />}
+      </CommandPalette>
     </StrictMode>
   );
 };

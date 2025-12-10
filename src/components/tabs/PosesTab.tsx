@@ -3,6 +3,7 @@ import { avatarManager } from '../../three/avatarManager';
 import { animationManager } from '../../three/animationManager';
 import { serializeAnimationClip } from '../../poses/animationClipSerializer';
 import type { VRMPose } from '@pixiv/three-vrm';
+import { useToastStore } from '../../state/useToastStore';
 
 interface SavedPose {
   id: string;
@@ -18,18 +19,19 @@ interface SavedPose {
 }
 
 export function PosesTab() {
+  const { addToast } = useToastStore();
   const [savedPoses, setSavedPoses] = useState<SavedPose[]>([]);
   const [poseName, setPoseName] = useState('');
 
   const handleCapturePose = async () => {
     const vrm = avatarManager.getVRM();
     if (!vrm) {
-      alert('Please load a VRM avatar first');
+      addToast('Please load a VRM avatar first', 'warning');
       return;
     }
 
     if (!poseName.trim()) {
-      alert('Please enter a name for the pose');
+      addToast('Please enter a name for the pose', 'warning');
       return;
     }
 
@@ -40,7 +42,7 @@ export function PosesTab() {
       // Capture VRM pose
       const vrmPose = vrm.humanoid?.getNormalizedPose();
       if (!vrmPose) {
-        alert('Failed to capture pose');
+        addToast('Failed to capture pose', 'error');
         return;
       }
 
@@ -77,17 +79,17 @@ export function PosesTab() {
 
       setSavedPoses([...savedPoses, newPose]);
       setPoseName('');
-      alert(`✅ Captured pose: ${newPose.name}${animationClip ? ' (with animation)' : ''}`);
+      addToast(`✅ Captured pose: ${newPose.name}${animationClip ? ' (with animation)' : ''}`, 'success');
     } catch (error) {
       console.error('Failed to capture pose:', error);
-      alert(`Failed to capture pose: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addToast(`Failed to capture pose: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
   const handleApplyPose = async (poseId: string) => {
     const pose = savedPoses.find((p) => p.id === poseId);
     if (!pose) {
-      alert('Pose not found');
+      addToast('Pose not found', 'error');
       return;
     }
 
@@ -107,10 +109,10 @@ export function PosesTab() {
         await avatarManager.applyRawPose(poseData, 'static');
       }
 
-      alert(`✅ Applied pose: ${pose.name}`);
+      addToast(`✅ Applied pose: ${pose.name}`, 'success');
     } catch (error) {
       console.error('Failed to apply pose:', error);
-      alert(`Failed to apply pose: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addToast(`Failed to apply pose: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
@@ -121,7 +123,7 @@ export function PosesTab() {
   const handleExportPose = (poseId: string) => {
     const pose = savedPoses.find((p) => p.id === poseId);
     if (!pose) {
-      alert('Pose not found');
+      addToast('Pose not found', 'error');
       return;
     }
 
@@ -154,19 +156,19 @@ export function PosesTab() {
         animAnchor.download = `PoseLab_${pose.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_animation.json`;
         animAnchor.click();
         URL.revokeObjectURL(animUrl);
-        alert(`✅ Exported 2 files for ${pose.name}`);
+        addToast(`✅ Exported 2 files for ${pose.name}`, 'success');
       } else {
-        alert(`✅ Exported: ${pose.name}`);
+        addToast(`✅ Exported: ${pose.name}`, 'success');
       }
     } catch (error) {
       console.error('Failed to export pose:', error);
-      alert(`Failed to export pose: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addToast(`Failed to export pose: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
   const handleExportAll = () => {
     if (savedPoses.length === 0) {
-      alert('No poses to export');
+      addToast('No poses to export', 'warning');
       return;
     }
 
@@ -186,10 +188,10 @@ export function PosesTab() {
       anchor.download = 'all-poses.json';
       anchor.click();
       URL.revokeObjectURL(url);
-      alert(`✅ Exported ${savedPoses.length} pose(s) to all-poses.json`);
+      addToast(`✅ Exported ${savedPoses.length} pose(s) to all-poses.json`, 'success');
     } catch (error) {
       console.error('Failed to export all poses:', error);
-      alert(`Failed to export poses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addToast(`Failed to export poses: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 

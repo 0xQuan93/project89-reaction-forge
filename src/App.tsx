@@ -4,6 +4,7 @@ import { AppHeader } from './components/AppHeader';
 import { CanvasStage } from './components/CanvasStage';
 import { ViewportOverlay } from './components/ViewportOverlay';
 import { ControlPanel } from './components/ControlPanel';
+import { ToastHost } from './ui/Toast';
 
 function App() {
   const [mode, setMode] = useState<'reactions' | 'poselab'>('reactions');
@@ -44,6 +45,8 @@ function App() {
       <div className={`control-drawer ${mobileDrawerOpen ? 'open' : ''}`}>
         <ControlPanel mode={mode} />
       </div>
+
+      <ToastHost />
     </div>
   );
 }

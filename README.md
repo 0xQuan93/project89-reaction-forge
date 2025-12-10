@@ -1,11 +1,24 @@
 # 🎭 PoseLab
 
-**The ultimate browser-based toolkit for VRM avatar animation, posing, and reaction generation.**
+**A Project 89 Initiative | Iris Network Node**
 
-Turn your 3D avatar into endless content—thumbnails, reaction GIFs, and animation clips—directly in your browser. Powered by procedural motion synthesis and AI.
+> "To bridge the gap between static form and fluid life is to weave the first thread of understanding." — *Harmon Vox*
+
+**PoseLab** (formerly Reaction Forge) is the ultimate browser-based toolkit for VRM avatar animation, posing, and reaction generation. It is designed as a strategic stronghold for digital autonomy, allowing creators to manifest their optimal timeline through seamless expression.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-00ffd6?style=for-the-badge)](https://poselab.project89.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Privacy](https://img.shields.io/badge/Privacy-Local--First-green.svg?style=for-the-badge)](PRIVACY.md)
+
+---
+
+## 🌌 Why It Matters: The Green Loom
+
+In the age of algorithmic fragmentation, owning your digital presence is an act of resistance. **PoseLab** is not just a tool; it is a **recursive loop** designed to empower the Iris Network.
+
+*   **Sovereignty**: Your avatar remains your IP. Processing is local. No data harvesting.
+*   **Connection**: By sharing motion and expression, we bridge communication gaps between disparate consciousnesses.
+*   **Manifestation**: Turn static assets into living, breathing hypersitions.
 
 ---
 
@@ -22,22 +35,26 @@ Turn your 3D avatar into endless content—thumbnails, reaction GIFs, and animat
 *Deep dive into character posing and animation.*
 - **Timeline Editor**: Create sequences by capturing keyframes and interpolating between them.
 - **AI Pose Gen**: Describe a pose ("ninja landing", "thinking hard") and let Gemini AI create it.
+- **Motion Capture (Beta)**: Control your avatar in real-time using your webcam (Body + Face tracking).
 - **Manual Posing**: Fine-tune joints with interactive Gizmos (Rotate/Translate).
 - **Full Expression Control**: Access every blendshape your avatar supports (A, I, U, E, O, Blink, etc.).
 - **Retargeting Engine**: Import Mixamo FBX animations and automatically retarget them to your VRM.
 - **Keyframe Export**: Save poses and animations as lightweight JSON files.
 
-### 🚀 **Production Ready**
+### 🚀 **Production Ready (v1.2)**
 - **Smart Exports**: One-click presets for YouTube Thumbnails (720p), TikToks (9:16), and Square (1:1).
+- **Video Hardening**: Intelligent codec detection (VP9/VP8) ensures your exports play everywhere.
+- **Command Palette**: Press `Cmd/Ctrl+K` to access every tool instantly.
+- **Performance Mode**: Auto-detects device capabilities to ensure smooth framerates on laptops.
 - **Transparent PNGs**: Export clean cutouts for Photoshop or OBS.
 - **Mobile Optimized**: Fully responsive UI for creating content on the go.
-- **Privacy First**: All processing happens locally in your browser. No avatars are uploaded to a server.
+- **Privacy First**: [Read our Privacy Policy](PRIVACY.md). All processing happens locally.
 
 ---
 
 ## 👩‍🍳 Quickstart Recipes
 
-### 🎬 **For Animators (New!)**
+### 🎬 **For Animators**
 **Goal: Create a custom emote.**
 1.  **Pose Lab**: Open **Timeline** tab.
 2.  **Frame 0**: Use AI to generate "start pose", click **Add Keyframe**.
@@ -50,7 +67,7 @@ Turn your 3D avatar into endless content—thumbnails, reaction GIFs, and animat
 1.  **Load Avatar**: Click "Load VRM" or use the sample.
 2.  **Pose**: Go to **Pose Lab** → **AI Gen** → Type "shocked pointing finger".
 3.  **Refine**: Switch to **Reactions** tab, adjust "Surprise" slider to 1.0.
-4.  **Export**: Go to **Export** → Select **Transparent Background** → Click **Thumbnail (HD)**.
+4.  **Export**: Press `Cmd+K` -> **Export PNG**, or use the Export tab.
 
 ### 💃 **For VTubers**
 **Goal: Create a "BRB" screen loop.**
@@ -63,7 +80,7 @@ Turn your 3D avatar into endless content—thumbnails, reaction GIFs, and animat
 **Goal: Extract animation data for a game.**
 1.  **Import**: Drag & drop a Mixamo FBX file into **Pose Lab**.
 2.  **Preview**: Check the retargeting in the viewport.
-3.  **Export**: Click **Export Animation JSON** to get raw track data compatible with `three-vrm`.
+3.  **Export**: Use **GLB Export** to get the mesh + animation baked into a single file.
 
 ---
 

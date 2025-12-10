@@ -3,12 +3,14 @@ import { sceneManager } from '../../three/sceneManager';
 import { backgroundOptions } from '../../three/backgrounds';
 import { avatarManager } from '../../three/avatarManager';
 import { useReactionStore } from '../../state/useReactionStore';
+import { useToastStore } from '../../state/useToastStore';
 import type { BackgroundId } from '../../types/reactions';
 
 type AspectRatio = '16:9' | '1:1' | '9:16';
 
 export function SceneTab() {
   const { isAvatarReady, setAvatarReady } = useReactionStore();
+  const { addToast } = useToastStore();
   const [selectedBackground, setSelectedBackground] = useState('midnight-circuit');
   const [customBackground, setCustomBackground] = useState<string | null>(null);
   const [showLogo, setShowLogo] = useState(true);
@@ -31,23 +33,24 @@ export function SceneTab() {
     try {
       await avatarManager.load(url);
       setAvatarReady(true);
+      addToast('Avatar loaded successfully', 'success');
     } catch (error) {
       console.error('Failed to load VRM:', error);
-      alert('Failed to load VRM file');
+      addToast('Failed to load VRM file', 'error');
     }
   };
 
-          const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-            const file = event.target.files?.[0];
-            if (!file) return;
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-            // Allow Images and Videos (and GIFs)
-            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-              alert('Please select an image (PNG, JPG, GIF) or video (MP4, WebM) file');
-              return;
-            }
+    // Allow Images and Videos (and GIFs)
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      addToast('Please select an image (PNG, JPG, GIF) or video (MP4, WebM) file', 'warning');
+      return;
+    }
 
-            const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
             // Append type info to hash for the background manager to detect
             const typeUrl = `${url}#type=${file.type}`;
             

@@ -3,9 +3,11 @@ import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
 import { interactionManager } from '../../three/interactionManager';
 import type { AnimationMode } from '../../types/reactions';
+import { useToastStore } from '../../state/useToastStore';
 
 export function PoseExpressionTab() {
   const { isAvatarReady, animationMode, setAnimationMode } = useReactionStore();
+  const { addToast } = useToastStore();
   const [customPose, setCustomPose] = useState<any>(null);
   const [customPoseName, setCustomPoseName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -107,7 +109,7 @@ export function PoseExpressionTab() {
     if (!file) return;
     
     if (!file.name.toLowerCase().endsWith('.json')) {
-      alert('Please select a JSON file');
+      addToast('Please select a JSON file', 'error');
       return;
     }
     
@@ -116,7 +118,7 @@ export function PoseExpressionTab() {
       const poseData = JSON.parse(text);
       
       if (!poseData.vrmPose && !poseData.tracks) {
-        alert('Invalid file (missing vrmPose or tracks)');
+        addToast('Invalid file (missing vrmPose or tracks)', 'error');
         return;
       }
       
@@ -131,9 +133,10 @@ export function PoseExpressionTab() {
       
       // Auto-apply the custom pose
       await avatarManager.applyRawPose(poseData, animationMode);
+      addToast('Pose applied successfully', 'success');
     } catch (error) {
       console.error('Failed to load pose:', error);
-      alert('Failed to parse JSON file');
+      addToast('Failed to parse JSON file', 'error');
     }
   };
 
@@ -146,7 +149,7 @@ export function PoseExpressionTab() {
     if (!file) return;
     
     if (!file.name.toLowerCase().endsWith('.json')) {
-      alert('Please drop a JSON file');
+      addToast('Please drop a JSON file', 'warning');
       return;
     }
     

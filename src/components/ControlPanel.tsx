@@ -7,13 +7,14 @@ import { AnimationsTab } from './tabs/AnimationsTab';
 import { PosesTab } from './tabs/PosesTab';
 import { AIGeneratorTab } from './tabs/AIGeneratorTab';
 import { TimelineTab } from './tabs/TimelineTab';
+import { MocapTab } from './tabs/MocapTab';
 
 interface ControlPanelProps {
   mode: 'reactions' | 'poselab';
 }
 
 type ReactionTab = 'presets' | 'pose' | 'scene' | 'export';
-type PoseLabTab = 'animations' | 'poses' | 'ai' | 'timeline' | 'export';
+type PoseLabTab = 'animations' | 'poses' | 'ai' | 'mocap' | 'timeline' | 'export';
 
 export function ControlPanel({ mode }: ControlPanelProps) {
   const [reactionTab, setReactionTab] = useState<ReactionTab>('presets');
@@ -82,6 +83,12 @@ export function ControlPanel({ mode }: ControlPanelProps) {
           AI
         </button>
         <button
+          className={poseLabTab === 'mocap' ? 'active' : ''}
+          onClick={() => setPoseLabTab('mocap')}
+        >
+          Mocap
+        </button>
+        <button
           className={poseLabTab === 'timeline' ? 'active' : ''}
           onClick={() => setPoseLabTab('timeline')}
         >
@@ -99,6 +106,7 @@ export function ControlPanel({ mode }: ControlPanelProps) {
         {poseLabTab === 'animations' && <AnimationsTab />}
         {poseLabTab === 'poses' && <PosesTab />}
         {poseLabTab === 'ai' && <AIGeneratorTab />}
+        {poseLabTab === 'mocap' && <MocapTab />}
         {poseLabTab === 'timeline' && <TimelineTab />}
         {poseLabTab === 'export' && <ExportTab mode="poselab" />}
       </div>

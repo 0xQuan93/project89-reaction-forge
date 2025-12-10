@@ -72,11 +72,13 @@ export const useTimelineStore = create<TimelineState>((set, get) => ({
   },
 
   setDuration: (duration) => {
+    const newDuration = Math.max(0.1, duration);
     set((state) => ({
       sequence: {
         ...state.sequence,
-        duration: Math.max(0.1, duration),
+        duration: newDuration,
       },
+      currentTime: Math.min(state.currentTime, newDuration),
     }));
   },
 

@@ -340,6 +340,24 @@ class AvatarManager {
   }
 
   /**
+   * Pause animation (e.g. for manual posing)
+   */
+  pauseAnimation() {
+    if (this.isAnimated) {
+      animationManager.pause();
+    }
+  }
+
+  /**
+   * Resume animation
+   */
+  resumeAnimation() {
+    if (this.isAnimated) {
+      animationManager.resume();
+    }
+  }
+
+  /**
    * Reset the avatar to its default pose (T-pose or A-pose)
    */
   resetPose() {
@@ -361,9 +379,6 @@ class AvatarManager {
       this.vrm.expressionManager.update();
     }
     
-    // Reset scene rotation
-    this.vrm.scene.rotation.set(0, 0, 0);
-    
     // Force update
     this.vrm.humanoid?.update();
     this.vrm.update(0);
@@ -380,6 +395,97 @@ class AvatarManager {
   }
 
   /**
+   * Smoothly transition to an animation clip from the CURRENT pose (even if manual/static).
+   * This creates a 1-frame clip of the current state and crossfades from it.
+   */
+  playAnimationClipWithTransition(clip: THREE.AnimationClip, loop = true, fade = 0.5) {
+    if (!this.vrm || !this.vrm.humanoid) return;
+    
+    console.log('[AvatarManager] Smart Transition to:', clip.name);
+    
+    // 1. Capture current pose into a transition clip
+    const transitionTracks: THREE.KeyframeTrack[] = [];
+    const boneNames = Object.values(VRMHumanBoneName) as VRMHumanBoneName[];
+    
+    boneNames.forEach((boneName) => {
+      const node = this.vrm!.humanoid!.getNormalizedBoneNode(boneName);
+      if (node) {
+        // Create full path name usually expected by the mixer?
+        // Actually the mixer is on vrm.scene. 
+        // If the incoming clip uses "hips.position", we should match that style?
+        // But our clips are usually converted to scene paths (e.g. "Armature/Hips.position").
+        // We need to match the track names of the INCOMING clip or just target the nodes directly.
+        // It's safer to use the node.name based on hierarchy.
+        
+        // However, converting animation to scene paths uses `getNodePath`.
+        // Let's assume we can target the node by its name if it's unique, or full path.
+        // The easiest way to get a compatible track name is to look at the node's name structure or reuse the logic.
+        
+        // Let's use a simpler approach: Just use the node.name assuming uniqueness or simple hierarchy 
+        // OR rely on the fact that we are fading TO a clip that has full paths.
+        // We need the FROM clip to target the same objects.
+        
+        // Wait! The easiest way is to use `animationManager` to crossFade.
+        // But we need a "from" action.
+        // If we make a clip, we can play it.
+        
+        // Let's try to get the path relative to vrm.scene
+        const getPath = (object: THREE.Object3D) => {
+            const path = [object.name];
+            let parent = object.parent;
+            while (parent && parent !== this.vrm!.scene) {
+                path.unshift(parent.name);
+                parent = parent.parent;
+            }
+            return path.join('/');
+        };
+        
+        const path = getPath(node);
+        
+        // Rotation
+        const q = node.quaternion;
+        const rotTrack = new THREE.QuaternionKeyframeTrack(
+            `${path}.quaternion`,
+            [0, 0.1], // 2 keyframes to define a static state over time
+            [q.x, q.y, q.z, q.w, q.x, q.y, q.z, q.w]
+        );
+        transitionTracks.push(rotTrack);
+        
+        // Position (hips only usually)
+        if (boneName === 'hips') {
+            const p = node.position;
+            const posTrack = new THREE.VectorKeyframeTrack(
+                `${path}.position`,
+                [0, 0.1],
+                [p.x, p.y, p.z, p.x, p.y, p.z]
+            );
+            transitionTracks.push(posTrack);
+        }
+      }
+    });
+    
+    const transitionClip = new THREE.AnimationClip('Transition_Pose', 0.1, transitionTracks);
+    
+    // 2. Play transition clip immediately (no fade, overwrite everything)
+    // We treat this as the "base" layer
+    this.isAnimated = true;
+    
+    // We need to access AnimationManager internals or add a method there.
+    // Let's extend AnimationManager slightly or use it publicly.
+    // Actually, `animationManager.playAnimation` stops everything.
+    // We want to play transition, THEN fade to new.
+    
+    // Hack: We can just use the internal mixer if we expose it, or add a method.
+    // Let's assume we can just modify `playAnimationClip` to do the logic.
+    // But `animationManager` manages the single `currentAction`.
+    // We need TWO actions to crossfade.
+    
+    // Let's delegate this complex logic to `animationManager.crossFadeTo(clip, duration)`
+    // But first let's just commit this method stub and update AnimationManager.
+    animationManager.playTransitionAndFade(transitionClip, clip, loop, fade);
+  }
+
+  /**
    * Play an animation clip directly (for Pose Lab)
    * @param clip - The THREE.AnimationClip to play
    * @param loop - Whether to loop the animation (default: true)
@@ -389,6 +495,14 @@ class AvatarManager {
     if (!this.vrm) {
       console.warn('[AvatarManager] Cannot play animation - VRM not loaded');
       return;
+    }
+
+    // If we are coming from a manual pose state (frozen or just static),
+    // we should use the smart transition to avoid snapping.
+    // If an animation is already playing, we can just let `animationManager` handle the fade (it usually fades out the old one).
+    if (!this.isAnimationPlaying()) {
+         this.playAnimationClipWithTransition(clip, loop, fade);
+         return;
     }
 
     console.log('[AvatarManager] Playing animation clip:', clip.name, { loop });

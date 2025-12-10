@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three-stdlib';
 import { applyBackground, type AnimatedBackground } from './backgrounds';
 import type { BackgroundId } from '../types/reactions';
+import { useSettingsStore } from '../state/useSettingsStore';
+import { perfMonitor } from '../perf/perfMonitor';
 
 type TickHandler = (delta: number) => void;
 
@@ -69,6 +71,52 @@ class SceneManager {
     setTimeout(() => {
       this.handleResize();
     }, 100);
+
+    // Subscribe to settings changes
+    useSettingsStore.subscribe((state) => {
+      this.updateSettings(state);
+    });
+    
+    // Apply initial settings
+    this.updateSettings(useSettingsStore.getState());
+    
+    // Start performance monitoring after a short delay to allow initial load/compilation
+    setTimeout(() => {
+        perfMonitor.start();
+    }, 3000);
+  }
+
+  private updateSettings(state: { quality: string; shadows: boolean }) {
+    if (!this.renderer || !this.scene) return;
+
+    // Resolution
+    let pixelRatio = 1;
+    switch(state.quality) {
+       case 'high': pixelRatio = Math.min(window.devicePixelRatio, 2); break;
+       case 'medium': pixelRatio = 0.8; break;
+       case 'low': pixelRatio = 0.5; break;
+    }
+    this.renderer.setPixelRatio(pixelRatio);
+
+    // Shadows
+    this.renderer.shadowMap.enabled = state.shadows;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Update lights to cast shadows
+    this.scene.traverse((obj) => {
+       if (obj instanceof THREE.DirectionalLight) {
+           obj.castShadow = state.shadows;
+           // Optimize shadow map
+           if (state.shadows) {
+               obj.shadow.mapSize.width = 1024;
+               obj.shadow.mapSize.height = 1024;
+               obj.shadow.bias = -0.001;
+           }
+       }
+    });
+    
+    // Note: Meshes need castShadow/receiveShadow set. 
+    // AvatarManager handles the VRM meshes.
   }
 
   private startLoop() {

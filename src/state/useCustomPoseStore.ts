@@ -18,6 +18,7 @@ interface CustomPoseState {
   addCustomPose: (pose: Omit<CustomPose, 'id' | 'createdAt'>) => void;
   removeCustomPose: (id: string) => void;
   updateCustomPose: (id: string, updates: Partial<CustomPose>) => void;
+  importPoses: (poses: CustomPose[]) => void;
 }
 
 export const useCustomPoseStore = create<CustomPoseState>()(
@@ -42,6 +43,24 @@ export const useCustomPoseStore = create<CustomPoseState>()(
           p.id === id ? { ...p, ...updates } : p
         ),
       })),
+      importPoses: (newPoses) => set((state) => {
+        // Avoid duplicates by ID, but generate new IDs if they clash or are missing
+        const imported = newPoses.map(p => ({
+            ...p,
+            id: p.id || crypto.randomUUID(),
+            createdAt: p.createdAt || Date.now()
+        }));
+        
+        // Filter out any that exactly match existing IDs to prevent React key issues, 
+        // though typically we might want to overwrite or merge. 
+        // Here we'll just append non-duplicates.
+        const existingIds = new Set(state.customPoses.map(p => p.id));
+        const uniqueNew = imported.filter(p => !existingIds.has(p.id));
+        
+        return {
+            customPoses: [...state.customPoses, ...uniqueNew]
+        };
+      }),
     }),
     {
       name: 'reaction-forge-custom-poses',

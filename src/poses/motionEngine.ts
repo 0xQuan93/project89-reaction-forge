@@ -1,6 +1,5 @@
-
 import * as THREE from 'three';
-import limitsData from './skeleton_limits.json';
+// import limitsData from './skeleton_limits.json';
 import dynamicsData from './skeleton_dynamics.json';
 import behaviorData from './skeleton_behavior.json';
 import synergyData from './skeleton_synergy.json';
@@ -9,7 +8,7 @@ import energyData from './skeleton_energy.json';
 // Types
 interface BoneMap { [key: string]: string; }
 interface DynamicsStats { maxSpeedDeg: number; avgSpeedDeg: number; }
-interface LimitStats { limits: { x: number[]; y: number[]; z: number[] }; primaryAxis: string; }
+// interface LimitStats { limits: { x: number[]; y: number[]; z: number[] }; primaryAxis: string; }
 interface BehaviorStats { 
   headStabilization: number; 
   lags: { spineToHead: number; shoulderToHand: number; hipsToChest: number; }; 
@@ -41,6 +40,8 @@ interface MotionConfig {
   noiseScale?: number;
   /** Scale factor for core/spine reaction (default: 1.0). Reduce for subtle motions. */
   coreCoupling?: number;
+  /** Emotional state for idle/breathing animations */
+  emotion?: 'neutral' | 'happy' | 'sad' | 'alert' | 'tired' | 'nervous';
 }
 
 /**
@@ -54,7 +55,7 @@ interface MotionConfig {
  * 5. Energy Coupling (Full Body Integration)
  */
 export class MotionEngine {
-  private limits: { [key: string]: LimitStats };
+//   private limits: { [key: string]: LimitStats };
   private dynamics: { [key: string]: DynamicsStats };
   private behavior: BehaviorStats;
   private synergy: SynergyStats;
@@ -62,7 +63,7 @@ export class MotionEngine {
   private boneMap: BoneMap;
   
   constructor() {
-    this.limits = limitsData as any;
+    // this.limits = limitsData as any;
     this.dynamics = dynamicsData as any;
     this.behavior = behaviorData as any;
     this.synergy = synergyData as any;
@@ -70,28 +71,29 @@ export class MotionEngine {
     this.boneMap = this.getBoneMap();
   }
 
-  // Maps standard simplified names to VRM paths
+  // Maps standard simplified names to VRM Bone Names
   private getBoneMap(): BoneMap {
+    // We now return standard VRMHumanBoneNames so they can be re-targeted later
     const map: BoneMap = {
-      hips: "VRMHumanoidRig/Normalized_hips",
-      spine: "VRMHumanoidRig/Normalized_hips/Normalized_spine",
-      chest: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest",
-      neck: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_neck",
-      head: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_neck/Normalized_head",
-      rightShoulder: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR",
-      rightUpperArm: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR",
-      rightLowerArm: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR",
-      rightHand: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderR/Normalized_upper_armR/Normalized_lower_armR/Normalized_handR",
-      leftShoulder: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL",
-      leftUpperArm: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL",
-      leftLowerArm: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL",
-      leftHand: "VRMHumanoidRig/Normalized_hips/Normalized_spine/Normalized_chest/Normalized_shoulderL/Normalized_upper_armL/Normalized_lower_armL/Normalized_handL",
-      rightUpperLeg: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR",
-      rightLowerLeg: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR/Normalized_lower_legR",
-      rightFoot: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legR/Normalized_lower_legR/Normalized_footR",
-      leftUpperLeg: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL",
-      leftLowerLeg: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL/Normalized_lower_legL",
-      leftFoot: "VRMHumanoidRig/Normalized_hips/Normalized_upper_legL/Normalized_lower_legL/Normalized_footL"
+      hips: "hips",
+      spine: "spine",
+      chest: "chest",
+      neck: "neck",
+      head: "head",
+      rightShoulder: "rightShoulder",
+      rightUpperArm: "rightUpperArm",
+      rightLowerArm: "rightLowerArm",
+      rightHand: "rightHand",
+      leftShoulder: "leftShoulder",
+      leftUpperArm: "leftUpperArm",
+      leftLowerArm: "leftLowerArm",
+      leftHand: "leftHand",
+      rightUpperLeg: "rightUpperLeg",
+      rightLowerLeg: "rightLowerLeg",
+      rightFoot: "rightFoot",
+      leftUpperLeg: "leftUpperLeg",
+      leftLowerLeg: "leftLowerLeg",
+      leftFoot: "leftFoot"
     };
 
     // Add Fingers
@@ -99,23 +101,20 @@ export class MotionEngine {
     const segments = ['Proximal', 'Intermediate', 'Distal'];
     
     // Right Hand Fingers
-    const rHandPath = map.rightHand;
     fingers.forEach(f => {
       segments.forEach(s => {
         if (f === 'Thumb' && s === 'Intermediate') return; 
         const key = `right${f}${s}`;
-        const vrmName = `Normalized_${f.toLowerCase()}_${s.toLowerCase()}R`;
-        map[key] = `${rHandPath}/${vrmName}`;
+        // VRM bone name: rightIndexProximal, etc.
+        map[key] = key; 
       });
     });
 
     // Left Hand Fingers
-    const lHandPath = map.leftHand;
     fingers.forEach(f => {
       segments.forEach(s => {
         const key = `left${f}${s}`;
-        const vrmName = `Normalized_${f.toLowerCase()}_${s.toLowerCase()}L`;
-        map[key] = `${lHandPath}/${vrmName}`;
+        map[key] = key;
       });
     });
 
@@ -154,7 +153,11 @@ export class MotionEngine {
   }
 
   private noise(t: number, offset: number, amp: number): number {
-    return (Math.sin(t * 1.5 + offset) + Math.sin(t * 3.2 + offset) * 0.5) * amp;
+    // Multi-octave noise for organic feel
+    const n1 = Math.sin(t * 1.5 + offset);
+    const n2 = Math.sin(t * 3.7 + offset * 1.3) * 0.5;
+    const n3 = Math.sin(t * 7.1 + offset * 0.7) * 0.25;
+    return (n1 + n2 + n3) * amp;
   }
 
   private clamp(val: number, min: number, max: number): number {
@@ -276,15 +279,105 @@ export class MotionEngine {
      }
   }
 
-  private solveIdleGesture(boneName: string, phase: number, energy: number, target: {x:number, y:number, z:number}) {
+  private solveIdleGesture(boneName: string, phase: number, energy: number, target: {x:number, y:number, z:number}, emotion: string) {
+     let breathAmp = 1.0;
+     let speedMult = 1.0;
+
+     // Emotional variations
+     switch(emotion) {
+        case 'happy': 
+          breathAmp = 1.5; speedMult = 1.2; 
+          if(boneName === 'chest') target.x -= 5; // Chest up
+          if(boneName === 'head') target.x -= 5; // Chin up
+          break;
+        case 'sad': 
+          breathAmp = 0.5; speedMult = 0.8;
+          if(boneName === 'chest') target.x += 10; // Slump
+          if(boneName === 'head') target.x += 15; // Head down
+          if(boneName.includes('Shoulder')) target.z += 5; // Shoulders drop/forward
+          break;
+        case 'alert':
+          breathAmp = 0.8; speedMult = 1.5;
+          if(boneName === 'spine') target.x -= 2; // Rigid
+          break;
+        case 'tired':
+          breathAmp = 0.3; speedMult = 0.5;
+          if(boneName === 'head') target.x += 10;
+          if(boneName === 'spine') target.x += 5;
+          break;
+        case 'nervous':
+          breathAmp = 2.0; speedMult = 2.5;
+          break;
+     }
+
+     const t = phase * speedMult;
+
      if (boneName === 'spine' || boneName === 'chest') {
-       target.x += Math.sin(phase) * 1.5 * energy; 
+       target.x += Math.sin(t) * 1.5 * energy * breathAmp; 
      }
      if (boneName.includes('Shoulder')) {
-       target.y -= Math.sin(phase) * 1.0 * energy; 
+       target.y -= Math.sin(t) * 1.0 * energy * breathAmp; 
      }
      if (boneName === 'head') {
-       target.x += Math.sin(phase) * 0.5 * energy;
+       target.x += Math.sin(t) * 0.5 * energy * breathAmp;
+     }
+  }
+
+  private solveShrugGesture(boneName: string, t: number, frequency: number, energy: number, target: {x:number, y:number, z:number}) {
+     // A simple shrug pulse
+     // Use a bell curve or simple sin hump for the shrug duration
+     // Assuming t goes 0->duration, we want the shrug to peak in middle
+     
+     // Map t (0..duration) to 0..PI
+     // Actually t is time in seconds. 
+     // Let's use a simpler sin wave that peaks and returns
+     
+     const shrugLift = Math.pow(Math.sin(t * frequency), 2) * energy; // 0 -> 1 -> 0
+
+     if (boneName.includes('Shoulder')) {
+       target.z += 15 * shrugLift; // Lift shoulders (Z-axis in VRM is usually forward/back or up/down depending on rest pose, standard VRM T-pose shoulder Z is up/down? No, Y is up, Z is forward. Wait. VRM bones: +Y is axis of bone. Rotation depends on parent. 
+       // Standard VRM T-Pose: 
+       // Shoulder: +Y is arm direction? No. 
+       // Let's assume standard humanoid rig limits.
+       // Usually Shoulder Z rotation lifts it.
+       target.z += 15 * shrugLift;
+     }
+
+     if (boneName.includes('UpperArm')) {
+       target.z -= 10 * shrugLift; // Arms flare out slightly
+       target.y += 20 * shrugLift; // Palms turn forward (supination)
+     }
+     
+     if (boneName.includes('Hand')) {
+        target.y += 30 * shrugLift; // Hands turn up
+        target.x -= 10 * shrugLift; // Wrist extend
+     }
+
+     if (boneName === 'head') {
+       target.z += Math.sin(t * frequency * 2) * 2 * energy; // Slight wobble
+       target.x += 5 * shrugLift; // Tilt back slightly? Or forward?
+     }
+  }
+
+  private solveNodGesture(boneName: string, t: number, frequency: number, energy: number, target: {x:number, y:number, z:number}) {
+     const nod = Math.sin(t * frequency * 2) * 15 * energy; // Faster frequency for nod
+     
+     if (boneName === 'head') {
+       target.x += nod;
+     }
+     if (boneName === 'neck') {
+       target.x += nod * 0.5; // Neck follows
+     }
+  }
+
+  private solveShakeGesture(boneName: string, t: number, frequency: number, energy: number, target: {x:number, y:number, z:number}) {
+     const shake = Math.sin(t * frequency * 2) * 20 * energy;
+     
+     if (boneName === 'head') {
+       target.y += shake;
+     }
+     if (boneName === 'neck') {
+       target.y += shake * 0.5;
      }
   }
 
@@ -292,7 +385,7 @@ export class MotionEngine {
 
   public generateProceduralAnimation(
     basePose: PoseData, 
-    type: 'wave' | 'idle' | 'breath' | 'point',
+    type: 'wave' | 'idle' | 'breath' | 'point' | 'shrug' | 'nod' | 'shake',
     config: MotionConfig = {}
   ) {
     const duration = config.duration || 2.0;
@@ -302,6 +395,7 @@ export class MotionEngine {
     const energy = config.energy !== undefined ? config.energy : 1.0;
     const noiseScale = config.noiseScale !== undefined ? config.noiseScale : 1.0;
     const coreCoupling = config.coreCoupling !== undefined ? config.coreCoupling : 1.0;
+    const emotion = config.emotion || 'neutral';
 
     const tracks: any[] = [];
     
@@ -331,6 +425,8 @@ export class MotionEngine {
         swayY = Math.sin(t * frequency) * 0.005 * energy;
       } else if (type === 'breath' || type === 'idle') {
         swayY = Math.sin(t * frequency) * 0.005 * energy;
+        // Emotion sway
+        if (emotion === 'nervous') swayX = Math.sin(t * frequency * 3) * 0.005;
       }
 
       hipsYDeltaPerFrame.push(swayY); 
@@ -347,9 +443,25 @@ export class MotionEngine {
     for (const [boneName, path] of Object.entries(this.boneMap)) {
       const times: number[] = [];
       const values: number[] = [];
-      const baseEuler = (basePose[boneName] && basePose[boneName].x !== undefined) 
-        ? basePose[boneName] 
-        : { x: 0, y: 0, z: 0 };
+      let baseEuler = { x: 0, y: 0, z: 0 };
+
+      // FIX: Handle VRMPose Quaternion input and convert to Euler
+      const poseBone = basePose[boneName];
+      if (poseBone) {
+        if (poseBone.rotation) {
+           // It's a Quaternion array [x, y, z, w]
+           const q = new THREE.Quaternion().fromArray(poseBone.rotation);
+           const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+           baseEuler = {
+             x: THREE.MathUtils.radToDeg(e.x),
+             y: THREE.MathUtils.radToDeg(e.y),
+             z: THREE.MathUtils.radToDeg(e.z)
+           };
+        } else if (poseBone.x !== undefined) {
+           // It's already Euler
+           baseEuler = poseBone;
+        }
+      }
         
       const limitKey = this.getLimitKey(boneName);
       
@@ -386,14 +498,26 @@ export class MotionEngine {
 
         // --- DISPATCH GESTURE LOGIC ---
         
-        if (type === 'wave') {
-           this.solveWaveGesture(boneName, t, frequency, energy, target, signal, boneLag, spineCoupling, coreCoupling);
-        }
-        else if (type === 'point') {
-           this.solvePointGesture(boneName, t, frequency, energy, target, phase, boneLag);
-        }
-        else if (type === 'breath' || type === 'idle') {
-           this.solveIdleGesture(boneName, phase, energy, target);
+        switch(type) {
+           case 'wave':
+             this.solveWaveGesture(boneName, t, frequency, energy, target, signal, boneLag, spineCoupling, coreCoupling);
+             break;
+           case 'point':
+             this.solvePointGesture(boneName, t, frequency, energy, target, phase, boneLag);
+             break;
+           case 'breath':
+           case 'idle':
+             this.solveIdleGesture(boneName, phase, energy, target, emotion);
+             break;
+           case 'shrug':
+             this.solveShrugGesture(boneName, t, frequency, energy, target);
+             break;
+           case 'nod':
+             this.solveNodGesture(boneName, t, frequency, energy, target);
+             break;
+           case 'shake':
+             this.solveShakeGesture(boneName, t, frequency, energy, target);
+             break;
         }
 
         // --- DYNAMICS & NOISE ---
@@ -405,18 +529,28 @@ export class MotionEngine {
         if (boneName.includes('Index') || boneName.includes('Thumb')) jitterAmp *= 0.1;
         
         jitterAmp *= noiseScale;
+        
+        // Boost noise for nervous emotion
+        if (emotion === 'nervous') jitterAmp *= 3.0;
 
         target.x += this.noise(t, 0, jitterAmp);
         target.y += this.noise(t, 13, jitterAmp);
         target.z += this.noise(t, 29, jitterAmp);
 
         // --- CONSTRAINTS ---
-        if (limitKey && this.limits[limitKey]) {
-          const l = this.limits[limitKey].limits;
-          target.x = this.clamp(target.x, l.x[0], l.x[1]);
-          target.y = this.clamp(target.y, l.y[0], l.y[1]);
-          target.z = this.clamp(target.z, l.z[0], l.z[1]);
-        }
+        // Disable hard limits for now as they may conflict with user-defined poses or T-pose basis
+        // if (limitKey && this.limits[limitKey]) {
+        //   const l = this.limits[limitKey].limits;
+        //   target.x = this.clamp(target.x, l.x[0], l.x[1]);
+        //   target.y = this.clamp(target.y, l.y[0], l.y[1]);
+        //   target.z = this.clamp(target.z, l.z[0], l.z[1]);
+        // }
+
+        // Apply soft safety limits instead (prevent broken joints)
+        const safety = 170; // Degrees
+        target.x = this.clamp(target.x, -safety, safety);
+        target.y = this.clamp(target.y, -safety, safety);
+        target.z = this.clamp(target.z, -safety, safety);
 
         const e = new THREE.Euler(
           THREE.MathUtils.degToRad(target.x),

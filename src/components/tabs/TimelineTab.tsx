@@ -27,7 +27,15 @@ export function TimelineTab() {
   // Re-generate clip when sequence changes
   useEffect(() => {
     const vrm = avatarManager.getVRM();
-    if (!vrm || sequence.keyframes.length === 0) return;
+    if (!vrm) return;
+
+    if (sequence.keyframes.length === 0) {
+      if (avatarManager.isAnimationPlaying()) {
+         avatarManager.stopAnimation();
+      }
+      setClip(null);
+      return;
+    }
 
     try {
       const newClip = timelineToAnimationClip(sequence, vrm);

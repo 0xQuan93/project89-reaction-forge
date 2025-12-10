@@ -39,6 +39,17 @@ class InteractionManager {
     this.transformControls.addEventListener('dragging-changed', (event: any) => {
       const controls = sceneManager.getControls();
       if (controls) controls.enabled = !event.value;
+      
+      // Auto-pause animation while dragging to prevent fighting
+      if (event.value) {
+         avatarManager.pauseAnimation();
+      } else {
+         // Optional: resume or stay paused? 
+         // For precise posing, we probably want to stay paused so the user sees their change.
+         // If we resume, the animation frame will instantly overwrite the user's pose.
+         // So we do NOT resume automatically.
+         // avatarManager.resumeAnimation();
+      }
     });
     
     // Set to rotate mode by default as that's what we mostly do with bones
@@ -58,6 +69,10 @@ class InteractionManager {
     if (this.transformControls) {
       this.transformControls.setSpace(space);
     }
+  }
+
+  get enabled() {
+    return this.isEnabled;
   }
 
   toggle(enable: boolean) {

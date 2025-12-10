@@ -6,8 +6,11 @@ import { avatarManager } from '../../three/avatarManager';
 import { getMixamoAnimation } from '../../pose-lab/getMixamoAnimation';
 import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToScenePaths';
 import { useReactionStore } from '../../state/useReactionStore';
+import { useToastStore } from '../../state/useToastStore';
+import { motionEngine } from '../../poses/motionEngine';
 
 export function AnimationsTab() {
+  const { addToast } = useToastStore();
   const [animations, setAnimations] = useState<Array<{ name: string; duration: number; clip: THREE.AnimationClip }>>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLooping, setIsLooping] = useState(true);
@@ -16,6 +19,13 @@ export function AnimationsTab() {
   const [statusMessage, setStatusMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isAvatarReady = useReactionStore((state) => state.isAvatarReady);
+
+  // Procedural Animation State
+  const [procType, setProcType] = useState<'wave' | 'idle' | 'breath' | 'point' | 'shrug' | 'nod' | 'shake'>('idle');
+  const [procEmotion, setProcEmotion] = useState<'neutral' | 'happy' | 'sad' | 'alert' | 'tired' | 'nervous'>('neutral');
+  const [procEnergy, setProcEnergy] = useState(1.0);
+  const [procFrequency, setProcFrequency] = useState(2.0);
+  const [procDuration, setProcDuration] = useState(2.0);
 
   const loadMixamoFromBuffer = async (arrayBuffer: ArrayBuffer, fileName: string) => {
     const ext = fileName.toLowerCase().split('.').pop();
@@ -42,12 +52,12 @@ export function AnimationsTab() {
     if (!file) return;
     
     if (!/\.(fbx|gltf|glb)$/i.test(file.name)) {
-      alert('Please select an FBX, GLTF, or GLB file');
+      addToast('Please select an FBX, GLTF, or GLB file', 'warning');
       return;
     }
 
     if (!isAvatarReady) {
-      alert('Please load a VRM avatar first');
+      addToast('Please load a VRM avatar first', 'warning');
       return;
     }
 
@@ -150,13 +160,142 @@ export function AnimationsTab() {
   };
 
   const handleStopAnimation = () => {
-    avatarManager.stopAnimation();
+    // Use freezeCurrentPose instead of stopAnimation to prevent snapping to T-pose
+    // This allows the user to keep the current posture and edit it
+    avatarManager.freezeCurrentPose();
     setCurrentAnimation(null);
-    setStatusMessage('⏹️ Animation stopped');
+    setStatusMessage('⏹️ Animation stopped (Pose Frozen)');
+  };
+
+  const handleGenerateProcedural = async () => {
+     const vrm = avatarManager.getVRM();
+     if (!vrm) {
+        addToast('Please load a VRM avatar first', 'warning');
+        return;
+     }
+
+     try {
+       // Capture current pose as base
+       // We cast to any because poseData in MotionEngine is loose
+       const basePose = (vrm.humanoid?.getNormalizedPose() || {}) as any; 
+
+       // Generate motion data
+       const motionData = motionEngine.generateProceduralAnimation(basePose, procType, {
+          duration: procDuration,
+          energy: procEnergy,
+          frequency: procFrequency,
+          emotion: procEmotion
+       });
+
+       // Convert to THREE.AnimationClip
+       const tracks: THREE.KeyframeTrack[] = [];
+       motionData.tracks.forEach((t: any) => {
+          if (t.type === 'quaternion') {
+             tracks.push(new THREE.QuaternionKeyframeTrack(t.name, t.times, t.values));
+          } else if (t.type === 'vector') {
+             tracks.push(new THREE.VectorKeyframeTrack(t.name, t.times, t.values));
+          }
+       });
+
+       const clip = new THREE.AnimationClip(motionData.name, motionData.duration, tracks);
+
+       // Retarget to Scene Paths
+       const scenePathClip = convertAnimationToScenePaths(clip, vrm);
+
+       const newAnimation = {
+         name: `Generated ${procType} (${procEmotion})`,
+         duration: scenePathClip.duration,
+         clip: scenePathClip
+       };
+
+       setAnimations([...animations, newAnimation]);
+       playAnimation(scenePathClip);
+       addToast(`Generated ${procType} animation`, 'success');
+
+     } catch (e) {
+       console.error(e);
+       addToast('Failed to generate animation', 'error');
+     }
   };
 
   return (
     <div className="tab-content">
+      {/* --- PROCEDURAL GENERATOR --- */}
+      <div className="tab-section">
+        <h3>✨ Motion Engine</h3>
+        <p className="muted small">Generate procedural animations</p>
+
+        <div className="setting-group">
+           <label>Type</label>
+           <select 
+             className="select-input"
+             value={procType} 
+             onChange={(e) => setProcType(e.target.value as any)}
+           >
+             <option value="idle">Idle</option>
+             <option value="breath">Breath</option>
+             <option value="wave">Wave</option>
+             <option value="point">Point</option>
+             <option value="shrug">Shrug</option>
+             <option value="nod">Nod</option>
+             <option value="shake">Shake Head</option>
+           </select>
+        </div>
+
+        {(procType === 'idle' || procType === 'breath') && (
+          <div className="setting-group">
+            <label>Emotion</label>
+            <select 
+              className="select-input"
+              value={procEmotion}
+              onChange={(e) => setProcEmotion(e.target.value as any)}
+            >
+              <option value="neutral">Neutral</option>
+              <option value="happy">Happy</option>
+              <option value="sad">Sad</option>
+              <option value="alert">Alert</option>
+              <option value="tired">Tired</option>
+              <option value="nervous">Nervous</option>
+            </select>
+          </div>
+        )}
+
+        <div className="setting-group">
+          <label>Energy ({procEnergy.toFixed(1)})</label>
+          <input 
+            type="range" min="0.1" max="2.0" step="0.1" 
+            value={procEnergy} onChange={(e) => setProcEnergy(parseFloat(e.target.value))}
+          />
+        </div>
+
+        <div className="setting-group">
+          <label>Speed/Freq ({procFrequency.toFixed(1)} Hz)</label>
+          <input 
+            type="range" min="0.5" max="5.0" step="0.1" 
+            value={procFrequency} onChange={(e) => setProcFrequency(parseFloat(e.target.value))}
+          />
+        </div>
+
+        <div className="setting-group">
+          <label>Duration ({procDuration.toFixed(1)}s)</label>
+          <input 
+            type="range" min="0.5" max="5.0" step="0.5" 
+            value={procDuration} onChange={(e) => setProcDuration(parseFloat(e.target.value))}
+          />
+        </div>
+
+        <button 
+          className="primary full-width"
+          onClick={handleGenerateProcedural}
+          disabled={!isAvatarReady}
+        >
+          Generate & Play
+        </button>
+      </div>
+
+      <hr className="separator" />
+
+      {/* --- IMPORT --- */}
       <div className="tab-section">
         <h3>Import Animation</h3>
         <p className="muted small">Import FBX or GLTF animation from Mixamo</p>
@@ -271,4 +410,3 @@ export function AnimationsTab() {
     </div>
   );
 }
-

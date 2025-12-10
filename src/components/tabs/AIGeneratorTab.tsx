@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { geminiService } from '../../services/gemini';
 import { useCustomPoseStore } from '../../state/useCustomPoseStore';
+import { useToastStore } from '../../state/useToastStore';
 import { avatarManager } from '../../three/avatarManager';
 import type { VRMPose } from '@pixiv/three-vrm';
 
 export function AIGeneratorTab() {
-  const { addCustomPose, customPoses, removeCustomPose } = useCustomPoseStore();
+  const { addCustomPose, customPoses, removeCustomPose, importPoses } = useCustomPoseStore();
+  const { addToast } = useToastStore();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,6 +150,42 @@ export function AIGeneratorTab() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportLibrary = () => {
+    const dataStr = JSON.stringify(customPoses, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `poselab-library-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportLibrary = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        if (Array.isArray(json)) {
+            importPoses(json);
+            addToast(`Successfully imported ${json.length} poses!`, 'success');
+        } else {
+            addToast('Invalid file format: Expected an array of poses.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        addToast('Failed to parse JSON file.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
   };
 
   if (!apiKey) {
@@ -361,9 +399,34 @@ export function AIGeneratorTab() {
         </div>
       )}
 
-      {customPoses.length > 0 && (
-        <div className="tab-section">
+      <div className="tab-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h3>Your Library ({customPoses.length})</h3>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <label className="secondary small button" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              📥 Import
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportLibrary}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <button 
+              className="secondary small"
+              onClick={handleExportLibrary}
+              disabled={customPoses.length === 0}
+            >
+              📤 Export All
+            </button>
+          </div>
+        </div>
+        
+        {customPoses.length === 0 ? (
+          <div className="muted small" style={{ textAlign: 'center', padding: '20px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+            No saved poses yet. Create one or import a library!
+          </div>
+        ) : (
           <div className="pose-list">
             {customPoses.map((pose) => (
               <div key={pose.id} className="pose-item">
@@ -399,8 +462,8 @@ export function AIGeneratorTab() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

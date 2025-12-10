@@ -3,7 +3,7 @@ import { useReactionStore } from '../state/useReactionStore';
 import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { reactionPresets } from '../data/reactions';
-import { exportAsWebM, canExportVideo } from '../utils/gifExporter';
+import { exportAsWebM, canExportVideo } from '../export/exportImage';
 import { useAvatarSource } from '../state/useAvatarSource';
 import type { AnimationMode } from '../types/reactions';
 
@@ -206,7 +206,7 @@ export function ReactionPanel() {
     setStatusMessage('Recording animation...');
 
     try {
-      await exportAsWebM(canvas, 3, `${activePreset.id}.webm`, (progress) => {
+      await exportAsWebM(canvas, 3, `${activePreset.id}.webm`, (progress: number) => {
         setExportProgress(Math.round(progress * 100));
         setStatusMessage(`Recording... ${Math.round(progress * 100)}%`);
       });

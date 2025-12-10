@@ -116,11 +116,22 @@ export async function exportAsWebM(
   ];
 
   let mimeType = mimeTypes[0];
+  let isSupported = false;
   for (const type of mimeTypes) {
     if (MediaRecorder.isTypeSupported(type)) {
       mimeType = type;
+      isSupported = true;
       break;
     }
+  }
+
+  // Fallback to whatever the browser supports if VP9/VP8 aren't explicit
+  if (!isSupported) {
+      if (MediaRecorder.isTypeSupported('video/webm')) {
+          mimeType = 'video/webm';
+      } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+          mimeType = 'video/mp4'; // Safari backup
+      }
   }
 
   console.log('[VideoExporter] Using codec:', mimeType);
@@ -222,5 +233,16 @@ async function loadLogoImage(): Promise<HTMLImageElement | null> {
 export function canExportVideo(): boolean {
   return typeof MediaRecorder !== 'undefined' && 
          typeof HTMLCanvasElement.prototype.captureStream === 'function';
+}
+
+// Re-export bestMime from a separate function if needed or integrate here
+export function bestMime(): string | null {
+  const prefs = [
+    "video/webm;codecs=vp9", 
+    "video/webm;codecs=vp8", 
+    "video/webm",
+    "video/mp4" // Safari fallback
+  ];
+  return prefs.find(p => (window as any).MediaRecorder?.isTypeSupported?.(p)) ?? null;
 }
 

@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import { useAvatarSource } from '../state/useAvatarSource';
+import { useToastStore } from '../state/useToastStore';
 
 export function OnboardingOverlay() {
   const { currentUrl, setFileSource } = useAvatarSource();
+  const { addToast } = useToastStore();
   const vrmInputRef = useRef<HTMLInputElement>(null);
 
   if (currentUrl) return null;
@@ -12,7 +14,7 @@ export function OnboardingOverlay() {
     if (!file) return;
     
     if (!file.name.toLowerCase().endsWith('.vrm')) {
-      alert('Please select a VRM file');
+      addToast('Please select a VRM file', 'error');
       return;
     }
     
@@ -25,9 +27,10 @@ export function OnboardingOverlay() {
       const blob = await response.blob();
       const file = new File([blob], 'HarmonVox_519.vrm', { type: 'model/gltf-binary' });
       setFileSource(file);
+      addToast('Sample avatar loaded', 'success');
     } catch (error) {
       console.error('Failed to load sample avatar:', error);
-      alert('Failed to load sample avatar. Please try uploading your own.');
+      addToast('Failed to load sample avatar. Please try uploading your own.', 'error');
     }
   };
 
