@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useUIStore } from '../state/useUIStore';
 import { PresetsTab } from './tabs/PresetsTab';
 import { PoseExpressionTab } from './tabs/PoseExpressionTab';
 import { SceneTab } from './tabs/SceneTab';
@@ -13,12 +13,8 @@ interface ControlPanelProps {
   mode: 'reactions' | 'poselab';
 }
 
-type ReactionTab = 'presets' | 'pose' | 'scene' | 'export';
-type PoseLabTab = 'animations' | 'poses' | 'ai' | 'mocap' | 'timeline' | 'export';
-
 export function ControlPanel({ mode }: ControlPanelProps) {
-  const [reactionTab, setReactionTab] = useState<ReactionTab>('presets');
-  const [poseLabTab, setPoseLabTab] = useState<PoseLabTab>('animations');
+  const { reactionTab, setReactionTab, poseLabTab, setPoseLabTab } = useUIStore();
 
   if (mode === 'reactions') {
     return (
@@ -63,7 +59,7 @@ export function ControlPanel({ mode }: ControlPanelProps) {
   // Pose Lab mode
   return (
     <aside className="control-panel">
-      <div className="control-panel__tabs">
+      <div className="control-panel__tabs" data-tutorial-id="poselab-tabs">
         <button
           className={poseLabTab === 'animations' ? 'active' : ''}
           onClick={() => setPoseLabTab('animations')}
@@ -91,6 +87,7 @@ export function ControlPanel({ mode }: ControlPanelProps) {
         <button
           className={poseLabTab === 'timeline' ? 'active' : ''}
           onClick={() => setPoseLabTab('timeline')}
+          data-tutorial-id="tab-seq"
         >
           Seq
         </button>

@@ -5,10 +5,10 @@ import { CanvasStage } from './components/CanvasStage';
 import { ViewportOverlay } from './components/ViewportOverlay';
 import { ControlPanel } from './components/ControlPanel';
 import { ToastHost } from './ui/Toast';
+import { useUIStore } from './state/useUIStore';
 
 function App() {
-  const [mode, setMode] = useState<'reactions' | 'poselab'>('reactions');
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen } = useUIStore();
 
   console.log('[App] Rendering App component, mode:', mode);
 

@@ -289,6 +289,28 @@
 }
 
 /* =====================
+   Tutorial Highlight
+   ===================== */
+.tutorial-highlight {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4px rgba(0, 255, 214, 0.6), 0 0 20px rgba(0, 255, 214, 0.4) !important;
+  animation: pulse-highlight 2s infinite;
+  border-color: #00ffd6 !important;
+}
+
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 0 4px rgba(0, 255, 214, 0.6), 0 0 20px rgba(0, 255, 214, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 255, 214, 0.8), 0 0 30px rgba(0, 255, 214, 0.6); }
+  100% { box-shadow: 0 0 0 4px rgba(0, 255, 214, 0.6), 0 0 20px rgba(0, 255, 214, 0.4); }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* =====================
    Onboarding Overlay
    ===================== */
 .onboarding-overlay {

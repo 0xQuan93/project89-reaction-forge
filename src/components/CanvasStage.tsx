@@ -131,7 +131,7 @@ export function CanvasStage() {
   };
 
   return (
-    <div className="canvas-container">
+    <div className="canvas-container" data-tutorial-id="canvas-stage">
       <OnboardingOverlay />
       
       {isLoading && (

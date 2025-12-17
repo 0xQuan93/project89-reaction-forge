@@ -86,6 +86,22 @@ export function SceneTab() {
         >
           {isAvatarReady ? '🔄 Change Avatar' : '📦 Load VRM Avatar'}
         </button>
+        
+        {isAvatarReady && (
+            <button
+              className="secondary full-width"
+              onClick={() => {
+                  const vrm = avatarManager.getVRM();
+                  if (vrm) {
+                      sceneManager.frameObject(vrm.scene);
+                  }
+              }}
+              style={{ marginTop: '0.5rem' }}
+            >
+              🔍 Fit Avatar to Screen
+            </button>
+        )}
+        
         <input
           ref={vrmInputRef}
           type="file"

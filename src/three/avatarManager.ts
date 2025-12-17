@@ -121,6 +121,9 @@ class AvatarManager {
 
     // Initialize animation manager with the new VRM
     animationManager.initialize(vrm);
+    
+    // Auto-fit camera to the new avatar
+    sceneManager.frameObject(vrm.scene);
 
     this.tickDispose = sceneManager.registerTick((delta) => {
       // Keep vrm.update running to ensure skeletal matrices and spring bones are calculated

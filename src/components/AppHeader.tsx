@@ -60,7 +60,7 @@ export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
             <img src="/logo/poselab.svg" alt="PoseLab" />
             <span>PoseLab</span>
           </div>
-          <div className="mode-switch">
+          <div className="mode-switch" data-tutorial-id="mode-switch">
             <button
               className={mode === 'reactions' ? 'active' : ''}
               onClick={() => onModeChange('reactions')}

@@ -225,11 +225,16 @@ class SceneManager {
     const dir = new THREE.Vector3(0, 0, 1);
     this.camera.position.copy(this.center).addScaledVector(dir, distance);
 
-    this.camera.near = distance / 10;
-    this.camera.far = distance * 10;
+    this.camera.near = distance / 100;
+    this.camera.far = distance * 100;
     this.camera.updateProjectionMatrix();
 
     this.controls.target.copy(this.center);
+    
+    // Scale controls limits to accommodate the object size
+    this.controls.maxDistance = distance * 10;
+    this.controls.minDistance = distance * 0.1;
+    
     this.controls.update();
   }
 

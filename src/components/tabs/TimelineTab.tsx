@@ -24,15 +24,22 @@ export function TimelineTab() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setClip] = useState<THREE.AnimationClip | null>(null);
 
+  // Reset animation speed on unmount to prevent "stuck" playback speed
+  useEffect(() => {
+    return () => {
+      avatarManager.setAnimationSpeed(1);
+    };
+  }, []);
+
   // Re-generate clip when sequence changes
   useEffect(() => {
     const vrm = avatarManager.getVRM();
     if (!vrm) return;
 
     if (sequence.keyframes.length === 0) {
-      if (avatarManager.isAnimationPlaying()) {
-         avatarManager.stopAnimation();
-      }
+      // Freeze current pose instead of resetting to T-pose
+      // This prevents the "T-Pose lock" when switching to an empty timeline
+      avatarManager.freezeCurrentPose();
       setClip(null);
       return;
     }
