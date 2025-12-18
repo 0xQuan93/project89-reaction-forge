@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-// import limitsData from './skeleton_limits.json';
+import limitsData from './skeleton_limits.json';
 import dynamicsData from './skeleton_dynamics.json';
 import behaviorData from './skeleton_behavior.json';
 import synergyData from './skeleton_synergy.json';
@@ -8,7 +8,7 @@ import energyData from './skeleton_energy.json';
 // Types
 interface BoneMap { [key: string]: string; }
 interface DynamicsStats { maxSpeedDeg: number; avgSpeedDeg: number; }
-// interface LimitStats { limits: { x: number[]; y: number[]; z: number[] }; primaryAxis: string; }
+interface LimitStats { limits: { x: number[]; y: number[]; z: number[] }; primaryAxis: string; }
 interface BehaviorStats { 
   headStabilization: number; 
   lags: { spineToHead: number; shoulderToHand: number; hipsToChest: number; }; 
@@ -58,7 +58,7 @@ interface MotionConfig {
  * 5. Energy Coupling (Full Body Integration)
  */
 export class MotionEngine {
-//   private limits: { [key: string]: LimitStats };
+  private limits: { [key: string]: LimitStats };
   private dynamics: { [key: string]: DynamicsStats };
   private behavior: BehaviorStats;
   private synergy: SynergyStats;
@@ -66,7 +66,7 @@ export class MotionEngine {
   private boneMap: BoneMap;
   
   constructor() {
-    // this.limits = limitsData as any;
+    this.limits = limitsData as any;
     this.dynamics = dynamicsData as any;
     this.behavior = behaviorData as any;
     this.synergy = synergyData as any;
@@ -74,8 +74,7 @@ export class MotionEngine {
     this.boneMap = this.getBoneMap();
   }
 
-  // Maps standard simplified names to VRM Bone Names
-  private getBoneMap(): BoneMap {
+  public getBoneMap(): BoneMap {
     // We now return standard VRMHumanBoneNames so they can be re-targeted later
     const map: BoneMap = {
       hips: "hips",
@@ -163,8 +162,39 @@ export class MotionEngine {
     return (n1 + n2 + n3) * amp;
   }
 
-  private clamp(val: number, min: number, max: number): number {
+  public clamp(val: number, min: number, max: number): number {
     return Math.min(Math.max(val, min), max);
+  }
+
+  /**
+   * Apply safety limits to a bone rotation
+   */
+  public constrainRotation(boneName: string, rotation: {x:number, y:number, z:number}): {x:number, y:number, z:number} {
+      // 1. Get mapped limit key (e.g. rightUpperArm -> upper_armR)
+      const limitKey = this.getLimitKey(boneName);
+      
+      // 2. Check if we have specific limits for this bone
+      if (limitKey && this.limits[limitKey]) {
+          const l = this.limits[limitKey].limits;
+          
+          // Apply strict limits from skeleton_limits.json
+          // We add a small buffer (5 degrees) to prevent hard robotic stops
+          const buffer = 5;
+          
+          return {
+              x: this.clamp(rotation.x, l.x[0] - buffer, l.x[1] + buffer),
+              y: this.clamp(rotation.y, l.y[0] - buffer, l.y[1] + buffer),
+              z: this.clamp(rotation.z, l.z[0] - buffer, l.z[1] + buffer)
+          };
+      }
+
+      // 3. Fallback to general safety limits
+      const safety = 170; // Degrees
+      return {
+          x: this.clamp(rotation.x, -safety, safety),
+          y: this.clamp(rotation.y, -safety, safety),
+          z: this.clamp(rotation.z, -safety, safety)
+      };
   }
 
   // --- SOLVERS ---

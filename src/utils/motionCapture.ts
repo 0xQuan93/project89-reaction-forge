@@ -3,6 +3,7 @@ import { Camera } from '@mediapipe/camera_utils';
 import { VRM, VRMHumanBoneName } from '@pixiv/three-vrm';
 import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
+import { motionEngine } from '../poses/motionEngine';
 
 interface RecordedFrame {
     time: number;
@@ -15,6 +16,9 @@ export class MotionCaptureManager {
   private vrm?: VRM;
   private videoElement: HTMLVideoElement;
   private isTracking = false;
+  
+  // Track available blendshapes on the current avatar for fuzzy matching
+  private availableBlendshapes: Set<string> = new Set();
   
   // Recording State
   private isRecording = false;
@@ -46,6 +50,28 @@ export class MotionCaptureManager {
 
   setVRM(vrm: VRM) {
     this.vrm = vrm;
+    this.updateAvailableBlendshapes();
+  }
+
+  private updateAvailableBlendshapes() {
+    this.availableBlendshapes.clear();
+    if (!this.vrm?.expressionManager) return;
+    
+    // Extract available expression names from VRM
+    // This supports both VRM 0.0 and 1.0 structures
+    const manager = this.vrm.expressionManager as any;
+    
+    if (manager.expressionMap) {
+       Object.keys(manager.expressionMap).forEach(name => this.availableBlendshapes.add(name));
+    } else if (manager.expressions) {
+       manager.expressions.forEach((expr: any) => {
+          if (expr.expressionName) this.availableBlendshapes.add(expr.expressionName);
+       });
+    } else if (manager._expressionMap) {
+       Object.keys(manager._expressionMap).forEach(name => this.availableBlendshapes.add(name));
+    }
+    
+    // console.log('[MotionCaptureManager] Updated available blendshapes:', Array.from(this.availableBlendshapes));
   }
 
   async start() {
@@ -229,13 +255,33 @@ export class MotionCaptureManager {
         if (node) {
             if (rotation.w !== undefined) {
                 // Create target quaternion from rig
-                const targetQ = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+                let targetQ = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
                 
                 // Apply Calibration Offset: Target = Measured * Inverse(Calibration)
                 if (this.calibrationOffsets[key]) {
                     const invCalibration = this.calibrationOffsets[key].clone().invert();
                     targetQ.multiply(invCalibration);
                 }
+
+                // Reference Motion Engine Limits
+                // Convert to Euler for clamping
+                const euler = new THREE.Euler().setFromQuaternion(targetQ, 'XYZ');
+                const deg = {
+                    x: THREE.MathUtils.radToDeg(euler.x),
+                    y: THREE.MathUtils.radToDeg(euler.y),
+                    z: THREE.MathUtils.radToDeg(euler.z)
+                };
+                
+                // Apply constraints
+                const constrained = motionEngine.constrainRotation(boneName, deg);
+                
+                // Convert back
+                targetQ.setFromEuler(new THREE.Euler(
+                    THREE.MathUtils.degToRad(constrained.x),
+                    THREE.MathUtils.degToRad(constrained.y),
+                    THREE.MathUtils.degToRad(constrained.z),
+                    'XYZ'
+                ));
                 
                 // Slerp for smooth transition
                 node.quaternion.slerp(targetQ, 0.3);
@@ -292,13 +338,22 @@ export class MotionCaptureManager {
       if (!this.vrm?.expressionManager) return;
 
       const em = this.vrm.expressionManager;
+      
+      // Helper function to find best matching expression and set it
+      // Prioritizes available blendshapes on the specific avatar
+      const setExpression = (candidates: string[], value: number) => {
+          const match = candidates.find(name => this.availableBlendshapes.has(name));
+          if (match) {
+              em.setValue(match, value);
+          }
+      };
 
       // 1. Head Rotation
       if (rig.head) {
           const headBone = this.vrm.humanoid?.getNormalizedBoneNode('head');
           if (headBone) {
               const q = rig.head;
-              // Mix head rotation from pose and face for stability (face tracking is usually smoother for rotation)
+              // Mix head rotation from pose and face for stability
               const targetQ = new THREE.Quaternion(q.x, q.y, q.z, q.w);
               headBone.quaternion.slerp(targetQ, 0.5); 
           }
@@ -309,89 +364,59 @@ export class MotionCaptureManager {
           const blinkL = 1 - rig.eye.l;
           const blinkR = 1 - rig.eye.r;
           
-          // Apply to individual eyes
-          em.setValue('BlinkLeft', blinkL);
-          em.setValue('BlinkRight', blinkR);
+          setExpression(['BlinkLeft', 'blink_l', 'eyeBlinkLeft', 'LeftEyeBlink'], blinkL);
+          setExpression(['BlinkRight', 'blink_r', 'eyeBlinkRight', 'RightEyeBlink'], blinkR);
           
           // Fallback/Sync for generic Blink
-          // Use maximum closedness to ensure blink registers visually
           const blinkMax = Math.max(blinkL, blinkR);
-          em.setValue('Blink', blinkMax);
+          setExpression(['Blink', 'blink', 'eyeBlink'], blinkMax);
       }
 
       // 3. Pupils (LookAt)
       if (rig.pupil) {
-          // rig.pupil.x is -1 (left) to 1 (right)
-          // rig.pupil.y is -1 (up) to 1 (down)
           const x = rig.pupil.x;
           const y = rig.pupil.y;
           
-          // Reset opposites to prevent conflict
           if (x > 0) {
-              em.setValue('LookLeft', 0);
-              em.setValue('LookRight', x);
+              setExpression(['LookLeft', 'lookLeft', 'eyeLookInLeft'], 0);
+              setExpression(['LookRight', 'lookRight', 'eyeLookInRight'], x);
           } else {
-              em.setValue('LookRight', 0);
-              em.setValue('LookLeft', -x);
+              setExpression(['LookRight', 'lookRight', 'eyeLookInRight'], 0);
+              setExpression(['LookLeft', 'lookLeft', 'eyeLookInLeft'], -x);
           }
           
           if (y > 0) {
-              em.setValue('LookUp', 0);
-              em.setValue('LookDown', y);
+              setExpression(['LookUp', 'lookUp', 'eyeLookUp'], 0);
+              setExpression(['LookDown', 'lookDown', 'eyeLookDown'], y);
           } else {
-              em.setValue('LookDown', 0);
-              em.setValue('LookUp', -y);
+              setExpression(['LookDown', 'lookDown', 'eyeLookDown'], 0);
+              setExpression(['LookUp', 'lookUp', 'eyeLookUp'], -y);
           }
       }
 
       // 4. Mouth
       if (rig.mouth) {
-          const shape = rig.mouth.shape; // { A: 0-1, E: 0-1 ... }
+          const shape = rig.mouth.shape; // { A, E, I, O, U }
           
-          em.setValue('Aa', shape.A);
-          em.setValue('Ee', shape.E);
-          em.setValue('Ih', shape.I);
-          em.setValue('Oh', shape.O);
-          em.setValue('Ou', shape.U);
+          // Standard Vowels
+          setExpression(['Aa', 'a', 'mouthOpen'], shape.A);
+          setExpression(['Ee', 'e'], shape.E);
+          setExpression(['Ih', 'i'], shape.I);
+          setExpression(['Oh', 'o', 'mouthPucker'], shape.O);
+          setExpression(['Ou', 'u', 'mouthFunnel'], shape.U);
           
-          // Drive ARKit jawOpen if available
-          // We use rig.mouth.open which Kalidokit calculates
+          // Extra ARKit support if available (jawOpen is calculated by Kalidokit)
           if (rig.mouth.open !== undefined) {
-              const jawOpen = rig.mouth.open;
-              em.setValue('jawOpen', jawOpen);
+              setExpression(['jawOpen', 'mouthOpen', 'A'], rig.mouth.open);
           }
       }
       
-      // 5. Brows (Experimental)
+      // 5. Brows
       if (rig.brow) {
-          // Map "brow" to ARKit browInnerUp if it exists
-          // This gives a "surprised" or "attentive" look when brows are raised
-          // We check if the expression manager supports custom keys
           const browValue = rig.brow;
-          
-          // Try typical ARKit keys
-          // Note: Some VRMs map this to "Surprised"
-          
-          // 1. Try "browInnerUp" (ARKit standard)
-          // We don't have a direct way to check existence without iterating map, 
-          // but setValue is usually safe to call (it might just do nothing).
-          // However, to be safe and avoid console noise, we can just try setting it.
-          
-          try {
-             // Map to "Surprised" for standard VRM 0.0 avatars as a fallback
-             // But usually "Surprised" includes mouth opening, which might conflict with mouth tracking.
-             // Ideally we want *only* brows.
-             
-             // If model has ARKit support, it should have "browInnerUp"
-             em.setValue('browInnerUp', browValue);
-             
-             // Also try "browOuterUpLeft" / "Right" if we want full raise
-             em.setValue('browOuterUpLeft', browValue);
-             em.setValue('browOuterUpRight', browValue);
-             
-          } catch (e) {
-             // ignore
-          }
+          // Priority: ARKit browInnerUp > Surprised
+          // Note: "Surprised" often includes mouth, so we prioritize brow-specific shapes
+          setExpression(['browInnerUp', 'BrowsUp', 'browOuterUpLeft', 'browOuterUpRight', 'Surprised', 'surprise'], browValue);
       }
 
       em.update();
