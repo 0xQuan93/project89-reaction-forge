@@ -175,7 +175,15 @@ export class MotionCaptureManager {
       
       // Only update if we are not recording (recording handles its own update/capture)
       // Actually we should always update visual model
+      
+      // CRITICAL: Force update the humanoid to apply these changes
+      // This ensures that our manual Slerp modifications are respected by the VRM solver
       this.vrm.humanoid.update();
+      
+      // IMPORTANT: In Face Only mode, if we are playing an animation, we need to ensure the animation mixer's 
+      // updates (which happen in AvatarManager's tick) are not overwritten by our lack of body updates here.
+      // Since we only touched head/neck bones in Face Mode, the body bones remain under control of the AnimationMixer.
+      // However, vrm.humanoid.update() might re-solve constraints.
   }
 
   startRecording() {

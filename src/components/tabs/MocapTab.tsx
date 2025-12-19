@@ -63,7 +63,10 @@ export function MocapTab() {
              addToast("Switched to Face Only (Keeping Animation)", "info");
           }
       } else {
-          addToast("Switched to Full Body mode", "info");
+          // Switching back to Full Body
+          // We should freeze the animation so the body doesn't fight the mocap
+          avatarManager.freezeCurrentPose();
+          addToast("Switched to Full Body mode (Animation Frozen)", "info");
       }
   };
 
@@ -125,9 +128,18 @@ export function MocapTab() {
                 throw new Error("Webcam access requires HTTPS (Secure Context).");
             }
 
-            // Freeze the current pose instead of resetting to T-pose
-            // This prevents the avatar from snapping to T-pose while the camera initializes
-            avatarManager.freezeCurrentPose();
+            // In Face Only mode, we WANT the animation to keep playing.
+            // In Full Body mode, we want to freeze so we can take over.
+            if (mocapMode === 'full') {
+                 // Freeze the current pose instead of resetting to T-pose
+                 // This prevents the avatar from snapping to T-pose while the camera initializes
+                 avatarManager.freezeCurrentPose();
+            } else {
+                 // Ensure we are playing something if idle
+                 if (!avatarManager.isAnimationPlaying()) {
+                     avatarManager.applyPose('sunset-call', true, 'loop');
+                 }
+            }
             
             managerRef.current.setVRM(vrm);
             await managerRef.current.start();
