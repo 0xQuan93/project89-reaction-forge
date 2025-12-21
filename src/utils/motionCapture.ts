@@ -571,19 +571,39 @@ export class MotionCaptureManager {
       // 3. Pupils (LookAt)
       if (rig.pupil) {
           const x = rig.pupil.x;
-          // Invert y because MediaPipe y is top-down (0 at top, 1 at bottom) 
-          // while VRM often expects positive for UP or needs correction.
-          // Actually, let's check standard. LookUp is usually positive.
-          // MediaPipe: y increases downwards. So looking UP decreases y.
-          // If rig.pupil.y is negative (looking up in cartesian?), wait.
-          // Kalidokit documentation says: x,y range -1 to 1.
-          // Let's assume standard normalization: 
-          // x: -1 (left) to 1 (right)
-          // y: -1 (up) to 1 (down)? Or standard cartesian?
+          // IMPORTANT: Mirror Correction for Eyes
+          // When looking at the screen (camera), if you look DOWN, the camera sees your pupils lower.
+          // MediaPipe gives +y for down (screen coordinates).
+          // Standard ARKit/VRM expects +y for LOOK DOWN.
+          // However, depending on the mirror effect of the video feed, the X axis might need inversion.
+          // Also, sometimes the "LookUp/LookDown" mapping feels inverted to the user.
+          // If the user says "when I look down, the avatar looks down" (which is correct), 
+          // but if they meant "the avatar looks UP", then we invert.
+          // User said: "the eyes are still not reflecting the users eyes, as so when the user looks down so does the avatar"
+          // This implies the user expected INVERTED behavior? Or maybe they meant "the avatar looks UP when I look DOWN"?
+          // Wait, "when the user looks down so does the avatar" is the CORRECT behavior for a mirror.
+          // If they are complaining about it, maybe they want the avatar to maintain eye contact or something else?
+          // OR, maybe they meant "when the user looks down, the avatar looks UP" (which is wrong) and they want it fixed?
+          // "eyes are still not reflecting the users eyes" -> imply current behavior is WRONG.
+          // "when user looks down so does avatar" -> This is the behavior they are seeing.
+          // If they cite this as the problem, then they want the avatar to look UP when they look DOWN? That makes no sense for mocap.
           
-          // EXPERIMENTAL: Invert Y for screen-look correction
-          // When looking at screen (down relative to camera), eyes should look down.
-          const y = rig.pupil.y; 
+          // Let's re-read: "eyes are still not reflecting the users eyes"
+          // Usually means: I look left, avatar looks right (mirroring issue).
+          // Or: I look down, avatar looks down (correct).
+          
+          // HYPOTHESIS: The user perceives the avatar's eye movement as "wrong" because the webcam is mounted ON TOP of the screen.
+          // When you look at the center of the screen (at the avatar), your eyes are physically looking DOWN relative to the webcam.
+          // So the avatar sees you looking down and looks down.
+          // But you are looking AT the avatar. So the avatar should be looking AT you (Straight).
+          // This is the classic "Webcam Eye Contact" problem.
+          
+          // SOLUTION: Apply an offset to the Y-axis to compensate for the webcam angle.
+          // We assume the user is looking at the screen center when their eyes are slightly down relative to camera.
+          // We shift the "neutral" point up.
+          
+          const webcamOffset = 0.2; // Shift neutral gaze up by 20%
+          const y = rig.pupil.y - webcamOffset; 
           
           // Helper for ARKit asymmetric mapping
           const setARKitGaze = (xVal: number, yVal: number) => {
@@ -602,8 +622,7 @@ export class MotionCaptureManager {
                  setExpressionTarget(['eyeLookInLeft', 'LookLeft'], 0);
              }
              
-             // Correct logic: y > 0 is Looking Down (if standard coordinate system holds)
-             // If user feels eyes rolling up, maybe our 'LookUp' is being triggered by positive y?
+             // Correct logic: y > 0 is Looking Down
              
              if (yVal > 0) { // Look Down
                  setExpressionTarget(['eyeLookDownRight', 'LookDown'], yVal);
