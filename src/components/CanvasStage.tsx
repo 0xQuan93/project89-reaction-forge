@@ -131,7 +131,7 @@ export function CanvasStage() {
   };
 
   return (
-    <div className="canvas-container" data-tutorial-id="canvas-stage">
+    <div className="canvas-container" data-tutorial-id="canvas-stage" style={{ position: 'relative', overflow: 'hidden' }}>
       <OnboardingOverlay />
       
       {isLoading && (
