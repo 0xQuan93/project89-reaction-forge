@@ -191,7 +191,7 @@ export class MotionCaptureManager {
               // For Head bone specifically, use a higher smoothing factor (lower lerp)
               let effectiveLerp = lerpFactor;
               if (boneName.toLowerCase().includes('head')) {
-                  effectiveLerp = 0.1; // Extra smooth for head (vs 0.16)
+                  effectiveLerp = 0.12; // Adjusted from 0.10 to 0.12 for slightly less lag
               }
               
               currentQ.slerp(targetQ, effectiveLerp);
@@ -528,29 +528,28 @@ export class MotionCaptureManager {
                 
                 // Dampen the head rotation amplitude significantly to mimic natural human range vs camera constraints.
                 // Humans rarely rotate head > 45 deg while looking at a screen.
-                // A factor of 0.5 or 0.6 is usually good.
-                // User requested "reduce further" from 0.3 dampening (which was 0.7 retained).
-                // Let's try retaining only 50% of the raw rotation (0.5 dampening).
+                // Adjusted to 0.6 (retain 60%) for better responsiveness while keeping it grounded.
                 const identityQ = new THREE.Quaternion();
-                headQ.slerp(identityQ, 0.5); // Dampens by 50%
+                headQ.slerp(identityQ, 0.4); // Dampens by 40% (retains 60%)
 
                 // Apply to target map for smoothing
                 this.targetBoneRotations.set('head', headQ);
 
                 // --- Derived Upper Body Movement (Face Mode Only) ---
                 // If we are in Face mode, we want the body to subtly follow the head
+                // Increased coupling factors to make the body feel more connected to the head movement.
                 if (this.mode === 'face') {
-                    // Dampen the rotation for the neck (e.g. 50% of head rotation)
-                    // Note: headQ is already dampened above, so these are relative to that
+                    // Neck follows head at 50%
                     const neckQ = new THREE.Quaternion().slerp(headQ, 0.5);
                     this.targetBoneRotations.set('neck', neckQ);
 
-                    // Dampen further for chest/spine (e.g. 20% of head rotation)
-                    const chestQ = new THREE.Quaternion().slerp(headQ, 0.2);
+                    // Chest follows head at 30% (was 20%)
+                    const chestQ = new THREE.Quaternion().slerp(headQ, 0.3);
                     this.targetBoneRotations.set('chest', chestQ);
                     this.targetBoneRotations.set('upperChest', chestQ);
                     
-                    const spineQ = new THREE.Quaternion().slerp(headQ, 0.1);
+                    // Spine follows head at 15% (was 10%)
+                    const spineQ = new THREE.Quaternion().slerp(headQ, 0.15);
                     this.targetBoneRotations.set('spine', spineQ);
                 }
              }
