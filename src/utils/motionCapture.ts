@@ -526,10 +526,13 @@ export class MotionCaptureManager {
                 // Create quaternion
                 const headQ = new THREE.Quaternion(q.x, q.y, q.z, q.w);
                 
-                // Dampen the head rotation amplitude by 30% to reduce sensitivity
-                // Slerp towards identity (no rotation) by 30% (t=0.7 keeps 70% of rotation)
+                // Dampen the head rotation amplitude significantly to mimic natural human range vs camera constraints.
+                // Humans rarely rotate head > 45 deg while looking at a screen.
+                // A factor of 0.5 or 0.6 is usually good.
+                // User requested "reduce further" from 0.3 dampening (which was 0.7 retained).
+                // Let's try retaining only 50% of the raw rotation (0.5 dampening).
                 const identityQ = new THREE.Quaternion();
-                headQ.slerp(identityQ, 0.3);
+                headQ.slerp(identityQ, 0.5); // Dampens by 50%
 
                 // Apply to target map for smoothing
                 this.targetBoneRotations.set('head', headQ);
