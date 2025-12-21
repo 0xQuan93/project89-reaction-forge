@@ -19,7 +19,71 @@ export function SceneTab() {
   const [showLogo, setShowLogo] = useState(true);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   
-  // ... (Upload handlers remain same)
+  const vrmInputRef = useRef<HTMLInputElement>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
+  const overlayInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Initialize aspect ratio from sceneManager
+    const currentRatio = sceneManager.getAspectRatio();
+    setAspectRatio(currentRatio);
+  }, []);
+
+  const handleVRMUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setAvatarReady(false);
+    try {
+      await avatarManager.load(url);
+      setAvatarReady(true);
+      addToast('Avatar loaded successfully', 'success');
+    } catch (error) {
+      console.error('Failed to load VRM:', error);
+      addToast('Failed to load VRM file', 'error');
+    }
+  };
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Allow Images and Videos (and GIFs)
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      addToast('Please select an image (PNG, JPG, GIF) or video (MP4, WebM) file', 'warning');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+            // Append type info to hash for the background manager to detect
+            const typeUrl = `${url}#type=${file.type}`;
+            
+            setCustomBackground(typeUrl);
+            setSelectedBackground('custom');
+            await sceneManager.setBackground(typeUrl);
+          };
+
+  const handleOverlayUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      addToast('Please select a PNG, WebM, or MP4 file', 'warning');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setCustomOverlay(url);
+    setShowOverlay(true);
+    await sceneManager.setOverlay(url);
+    addToast('Overlay loaded successfully', 'success');
+  };
+
+  const toggleOverlay = async (show: boolean) => {
+    setShowOverlay(show);
+    await sceneManager.setOverlay(show ? customOverlay : null);
+  };
 
   const handleCssOverlayChange = (overlay: string) => {
       // Toggle logic
