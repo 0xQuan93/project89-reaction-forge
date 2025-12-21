@@ -263,19 +263,19 @@ export function SceneTab() {
             <label style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '0.5rem' }}>FX Overlays</label>
             <div className="button-group small">
                 <button 
-                    className={cssOverlay === 'overlay-scanlines' ? 'secondary active' : 'secondary'}
+                    className={activeCssOverlay === 'overlay-scanlines' ? 'secondary active' : 'secondary'}
                     onClick={() => handleCssOverlayChange('overlay-scanlines')}
                 >Scanlines</button>
                 <button 
-                    className={cssOverlay === 'overlay-vignette' ? 'secondary active' : 'secondary'}
+                    className={activeCssOverlay === 'overlay-vignette' ? 'secondary active' : 'secondary'}
                     onClick={() => handleCssOverlayChange('overlay-vignette')}
                 >Vignette</button>
                 <button 
-                    className={cssOverlay === 'overlay-glitch' ? 'secondary active' : 'secondary'}
+                    className={activeCssOverlay === 'overlay-glitch' ? 'secondary active' : 'secondary'}
                     onClick={() => handleCssOverlayChange('overlay-glitch')}
                 >Glitch</button>
                 <button 
-                    className={cssOverlay === 'overlay-crt' ? 'secondary active' : 'secondary'}
+                    className={activeCssOverlay === 'overlay-crt' ? 'secondary active' : 'secondary'}
                     onClick={() => handleCssOverlayChange('overlay-crt')}
                 >CRT</button>
             </div>
