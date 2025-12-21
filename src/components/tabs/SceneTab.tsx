@@ -105,6 +105,16 @@ export function SceneTab() {
               const div = document.createElement('div');
               div.className = newOverlay;
               div.id = 'active-css-overlay';
+              
+              // Force dimensions to match parent exactly
+              div.style.position = 'absolute';
+              div.style.top = '0';
+              div.style.left = '0';
+              div.style.width = '100%';
+              div.style.height = '100%';
+              div.style.borderRadius = '15px'; // Match CSS
+              div.style.pointerEvents = 'none';
+              
               viewport.appendChild(div);
           }
       }
