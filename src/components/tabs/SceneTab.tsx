@@ -13,10 +13,13 @@ export function SceneTab() {
   const { addToast } = useToastStore();
   const [selectedBackground, setSelectedBackground] = useState('midnight-circuit');
   const [customBackground, setCustomBackground] = useState<string | null>(null);
+  const [customOverlay, setCustomOverlay] = useState<string | null>(null);
+  const [showOverlay, setShowOverlay] = useState(false);
   const [showLogo, setShowLogo] = useState(true);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const vrmInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  const overlayInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Initialize aspect ratio from sceneManager
@@ -58,6 +61,27 @@ export function SceneTab() {
             setSelectedBackground('custom');
             await sceneManager.setBackground(typeUrl);
           };
+
+  const handleOverlayUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      addToast('Please select a PNG, WebM, or MP4 file', 'warning');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setCustomOverlay(url);
+    setShowOverlay(true);
+    await sceneManager.setOverlay(url);
+    addToast('Overlay loaded successfully', 'success');
+  };
+
+  const toggleOverlay = async (show: boolean) => {
+    setShowOverlay(show);
+    await sceneManager.setOverlay(show ? customOverlay : null);
+  };
 
           const handleBackgroundSelect = async (backgroundId: string) => {
     setSelectedBackground(backgroundId);
@@ -174,14 +198,43 @@ export function SceneTab() {
       </div>
 
       <div className="tab-section">
-        <h3>Overlay Options</h3>
+        <h3>Overlays</h3>
+        <p className="muted small">Transparent overlays (PNG/WebM)</p>
+        
+        <div style={{ marginBottom: '1rem' }}>
+            <button
+              className="secondary full-width"
+              onClick={() => overlayInputRef.current?.click()}
+            >
+              {customOverlay ? '🔄 Change Overlay' : '📤 Upload Overlay'}
+            </button>
+            <input
+              ref={overlayInputRef}
+              type="file"
+              accept="image/png,video/webm,video/mp4"
+              onChange={handleOverlayUpload}
+              style={{ display: 'none' }}
+            />
+        </div>
+
+        {customOverlay && (
+            <label className="checkbox-option" style={{ marginBottom: '0.5rem' }}>
+              <input
+                type="checkbox"
+                checked={showOverlay}
+                onChange={(e) => toggleOverlay(e.target.checked)}
+              />
+              <span>Show custom overlay</span>
+            </label>
+        )}
+
         <label className="checkbox-option">
           <input
             type="checkbox"
             checked={showLogo}
             onChange={(e) => setShowLogo(e.target.checked)}
           />
-          <span>Show logo overlay</span>
+          <span>Show logo watermark</span>
         </label>
       </div>
 

@@ -26,8 +26,10 @@ export function TimelineTab() {
 
   // Reset animation speed on unmount to prevent "stuck" playback speed
   useEffect(() => {
+    // Freeze current pose when component unmounts (navigating away)
     return () => {
-      avatarManager.setAnimationSpeed(1);
+      avatarManager.freezeCurrentPose();
+      avatarManager.setAnimationSpeed(1); // Restore speed
     };
   }, []);
 
@@ -61,6 +63,18 @@ export function TimelineTab() {
       console.error('Failed to generate animation clip:', e);
     }
   }, [sequence, isAvatarReady]);
+
+  // Handle visibility changes to auto-pause/resume
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (isPlaying) setIsPlaying(false);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isPlaying, setIsPlaying]);
 
   // Handle Playback Loop
   useEffect(() => {

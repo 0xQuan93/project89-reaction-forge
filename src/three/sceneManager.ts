@@ -30,7 +30,8 @@ class SceneManager {
   private readonly size = new THREE.Vector3();
   private readonly center = new THREE.Vector3();
   private currentAspectRatio: AspectRatio = '16:9';
-  private animatedBackground?: AnimatedBackground;
+  private overlayMesh?: THREE.Mesh;
+  private currentOverlayUrl?: string;
 
   init(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -133,6 +134,81 @@ class SceneManager {
       this.animationFrameId = window.requestAnimationFrame(loop);
     };
     this.animationFrameId = window.requestAnimationFrame(loop);
+  }
+
+  /**
+   * Set a transparent video or image overlay
+   * @param url URL to the overlay media (webm/png)
+   * @param opacity Opacity (0-1)
+   */
+  async setOverlay(url: string | null, opacity = 1.0) {
+    if (!this.camera || !this.scene) return;
+
+    // Remove existing
+    if (this.overlayMesh) {
+      this.camera.remove(this.overlayMesh);
+      // Dispose textures
+      const mat = this.overlayMesh.material as THREE.MeshBasicMaterial;
+      if (mat.map) mat.map.dispose();
+      this.overlayMesh.geometry.dispose();
+      this.overlayMesh = undefined;
+    }
+
+    if (!url) {
+      this.currentOverlayUrl = undefined;
+      return;
+    }
+
+    this.currentOverlayUrl = url;
+
+    // Load Texture
+    const isVideo = url.toLowerCase().endsWith('.webm') || url.toLowerCase().endsWith('.mp4');
+    let texture: THREE.Texture;
+
+    if (isVideo) {
+      const video = document.createElement('video');
+      video.src = url;
+      video.loop = true;
+      video.muted = true;
+      video.crossOrigin = 'anonymous';
+      video.play().catch(e => console.warn("Overlay video failed to play", e));
+      texture = new THREE.VideoTexture(video);
+    } else {
+      texture = await new THREE.TextureLoader().loadAsync(url);
+    }
+
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    // Create Mesh attached to Camera (HUD style)
+    // We want it to cover the screen.
+    // At z=-1 (in front of camera), width should be:
+    // 2 * tan(fov/2) * aspect * 1
+    
+    // Actually, simpler to use a full-screen quad or just place it properly.
+    // Let's place it at a fixed distance and scale it.
+    
+    const dist = 1; // 1 unit in front
+    const fov = THREE.MathUtils.degToRad(this.camera.fov);
+    const height = 2 * Math.tan(fov / 2) * dist;
+    const width = height * this.camera.aspect;
+
+    const geometry = new THREE.PlaneGeometry(width, height);
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: opacity,
+      depthTest: false, // Always on top
+      depthWrite: false
+    });
+
+    this.overlayMesh = new THREE.Mesh(geometry, material);
+    this.overlayMesh.position.set(0, 0, -dist);
+    // Ensure it renders on top of scene but behind gizmos? 
+    // Actually HUD usually is on top.
+    this.overlayMesh.renderOrder = 999; 
+    
+    this.camera.add(this.overlayMesh);
+    console.log('[SceneManager] Overlay applied:', url);
   }
 
   private handleResize() {

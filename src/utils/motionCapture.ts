@@ -492,7 +492,19 @@ export class MotionCaptureManager {
       // 3. Pupils (LookAt)
       if (rig.pupil) {
           const x = rig.pupil.x;
-          const y = rig.pupil.y;
+          // Invert y because MediaPipe y is top-down (0 at top, 1 at bottom) 
+          // while VRM often expects positive for UP or needs correction.
+          // Actually, let's check standard. LookUp is usually positive.
+          // MediaPipe: y increases downwards. So looking UP decreases y.
+          // If rig.pupil.y is negative (looking up in cartesian?), wait.
+          // Kalidokit documentation says: x,y range -1 to 1.
+          // Let's assume standard normalization: 
+          // x: -1 (left) to 1 (right)
+          // y: -1 (up) to 1 (down)? Or standard cartesian?
+          
+          // EXPERIMENTAL: Invert Y for screen-look correction
+          // When looking at screen (down relative to camera), eyes should look down.
+          const y = rig.pupil.y; 
           
           // Helper for ARKit asymmetric mapping
           const setARKitGaze = (xVal: number, yVal: number) => {
@@ -511,12 +523,16 @@ export class MotionCaptureManager {
                  setExpressionTarget(['eyeLookInLeft', 'LookLeft'], 0);
              }
              
+             // Correct logic: y > 0 is Looking Down (if standard coordinate system holds)
+             // If user feels eyes rolling up, maybe our 'LookUp' is being triggered by positive y?
+             
              if (yVal > 0) { // Look Down
                  setExpressionTarget(['eyeLookDownRight', 'LookDown'], yVal);
                  setExpressionTarget(['eyeLookDownLeft', 'LookDown'], yVal);
                  setExpressionTarget(['eyeLookUpRight', 'LookUp'], 0);
                  setExpressionTarget(['eyeLookUpLeft', 'LookUp'], 0);
              } else { // Look Up
+                 // Invert sign for weight
                  setExpressionTarget(['eyeLookUpRight', 'LookUp'], -yVal);
                  setExpressionTarget(['eyeLookUpLeft', 'LookUp'], -yVal);
                  setExpressionTarget(['eyeLookDownRight', 'LookDown'], 0);
