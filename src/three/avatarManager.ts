@@ -425,13 +425,32 @@ class AvatarManager {
     this.vrm.scene.updateMatrixWorld(true);
   }
 
-  /**
-   * Stop any currently playing animation
-   */
-  stopAnimation() {
+  stopAnimation(immediate = false) {
     console.log('[AvatarManager] Stopping animation');
     this.isAnimated = false;
-    animationManager.stopAnimation(true); // immediate stop
+    // When stopping, we should optionally fade out to avoid jolts,
+    // especially if switching to mocap or static poses.
+    if (immediate) {
+        animationManager.stopAnimation(true);
+    } else {
+        // If not immediate, we could fade out, but animationManager doesn't expose a clean "fade out and stop" yet
+        // except via crossFadeTo which needs a target.
+        // For now, let's stick to immediate stop but ensure we capture the pose FIRST if needed.
+        // Actually, freezeCurrentPose calls this. 
+        // If we want smooth transition TO mocap, we rely on the mocap engine to lerp from current state.
+        
+        // Mocap engine uses slerp(current, target). If we stop animation, the "current" might snap to T-pose
+        // if the mixer stops applying changes.
+        // THIS is likely the jolt source.
+        
+        // Fix: Do NOT stop the mixer action immediately if we are transitioning to manual/mocap control.
+        // Instead, pause it or let it be overwritten.
+        // But if we stop the action, the model resets.
+        // We need to bake the current state into the bones before stopping.
+        
+        // This is handled by `freezeCurrentPose()` which copies values back to bones.
+        animationManager.stopAnimation(true);
+    }
   }
 
   /**
@@ -599,11 +618,10 @@ class AvatarManager {
     if (!this.vrm || !this.vrm.humanoid) return;
     console.log('[AvatarManager] Freezing current pose');
 
-    // 1. Capture current bone transforms
+    // 1. Capture current bone transforms from the SCENE nodes (which reflect the animation state)
+    // The animation mixer modifies the scene graph nodes directly.
     const poseData: Record<string, { rotation: THREE.Quaternion, position: THREE.Vector3 }> = {};
     
-    // Iterate all possible humanoid bones
-    // We cast to any because Object.values on enum can return strings that TS might strictly type
     const boneNames = Object.values(VRMHumanBoneName) as VRMHumanBoneName[];
     
     boneNames.forEach((boneName) => {
@@ -616,20 +634,26 @@ class AvatarManager {
       }
     });
 
-    // 2. Stop Animation (which resets bones to rest pose)
-    this.stopAnimation();
+    // 2. Stop Animation (which usually resets bones to rest pose or binding pose)
+    // We pass 'true' for immediate stop.
+    this.stopAnimation(true);
 
-    // 3. Re-apply captured transforms
+    // 3. Re-apply captured transforms immediately to prevent visual snap
     boneNames.forEach((boneName) => {
       const node = this.vrm!.humanoid!.getNormalizedBoneNode(boneName);
       if (node && poseData[boneName]) {
         node.quaternion.copy(poseData[boneName].rotation);
-        node.position.copy(poseData[boneName].position); // Restore position for ALL bones
+        
+        // Only apply position to Hips to avoid distorting the rig
+        if (boneName === 'hips') {
+            node.position.copy(poseData[boneName].position);
+        }
       }
     });
     
-    // Force update
+    // 4. Force update to commit these changes to the mesh
     this.vrm.humanoid.update();
+    this.vrm.update(0); // Update physics/springs
   }
 
   /**

@@ -171,6 +171,10 @@ export class MotionCaptureManager {
           // @ts-ignore
           const node = this.vrm!.humanoid!.getNormalizedBoneNode(boneName);
           if (node) {
+              // Ensure we are slerping from the CURRENT node state
+              // If the animation mixer was just stopped, freezeCurrentPose should have populated 'node.quaternion'
+              // with the last frame. If not, it might have reset.
+              // Slerp to target.
               node.quaternion.slerp(targetQ, lerpFactor);
           }
       });
