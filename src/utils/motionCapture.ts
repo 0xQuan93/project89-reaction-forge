@@ -395,10 +395,12 @@ export class MotionCaptureManager {
     this.eyeCalibrationOffset = { x: 0, y: 0 };
     
     // Set flag to capture offsets on next frame
-    this.shouldCalibrateNextFrame = true;
+    this.shouldCalibrateBody = true;
+    this.shouldCalibrateFace = true;
   }
   
-  private shouldCalibrateNextFrame = false;
+  private shouldCalibrateBody = false;
+  private shouldCalibrateFace = false;
 
   private applyPoseRig(rig: any) {
     if (!this.vrm?.humanoid) return;
@@ -410,8 +412,8 @@ export class MotionCaptureManager {
     };
 
     // Calibration Step: Capture offsets if requested
-    if (this.shouldCalibrateNextFrame) {
-        // Body/Face Bone Offsets
+    if (this.shouldCalibrateBody) {
+        // Body Bone Offsets
         const rigKeys = Object.keys(rig);
         rigKeys.forEach(key => {
             const boneData = rig[key];
@@ -421,17 +423,8 @@ export class MotionCaptureManager {
             }
         });
         
-        // Eye Gaze Offset
-        if (rig.pupil) {
-            this.eyeCalibrationOffset = { 
-                x: rig.pupil.x,
-                y: rig.pupil.y 
-            };
-            console.log('[MotionCaptureManager] Eye calibration captured:', this.eyeCalibrationOffset);
-        }
-        
-        console.log('[MotionCaptureManager] Calibration complete. Offsets:', Object.keys(this.calibrationOffsets).length);
-        this.shouldCalibrateNextFrame = false;
+        console.log('[MotionCaptureManager] Body calibration complete. Offsets:', Object.keys(this.calibrationOffsets).length);
+        this.shouldCalibrateBody = false;
     }
 
     const setTargetRotation = (key: string, rotation: { x: number, y: number, z: number, w?: number }) => {
@@ -524,6 +517,18 @@ export class MotionCaptureManager {
   }
 
   private applyFaceRig(rig: any) {
+      // Calibration Step for Face/Eyes
+      if (this.shouldCalibrateFace) {
+          if (rig.pupil) {
+              this.eyeCalibrationOffset = {
+                  x: rig.pupil.x,
+                  y: rig.pupil.y
+              };
+              console.log('[MotionCaptureManager] Eye calibration captured:', this.eyeCalibrationOffset);
+              this.shouldCalibrateFace = false;
+          }
+      }
+
       // Helper function to set target weights
       // It iterates through all candidates and sets whichever one exists
       // This allows for simultaneous support of multiple standards (VRM 0.0, VRM 1.0, ARKit)
@@ -590,8 +595,8 @@ export class MotionCaptureManager {
           // 3. Pupils (LookAt)
       if (rig.pupil) {
           // Sensitivity multiplier to make eyes more expressive/responsive
-          // Raw webcam tracking often results in small values.
-          const GAZE_SENSITIVITY = 2.0;
+          // Reduced to 1.5 for better balance
+          const GAZE_SENSITIVITY = 1.5;
 
           // Apply Calibration Offset
           // We subtract the calibrated offset from the raw input to zero it out
