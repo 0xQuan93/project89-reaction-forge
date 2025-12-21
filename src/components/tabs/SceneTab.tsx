@@ -1,4 +1,3 @@
-import { usePopOutViewport } from '../../hooks/usePopOutViewport';
 import { useState, useEffect, useRef } from 'react';
 import { sceneManager } from '../../three/sceneManager';
 import { backgroundOptions } from '../../three/backgrounds';
@@ -20,9 +19,6 @@ export function SceneTab() {
   const [showLogo, setShowLogo] = useState(true);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   
-  // Use global CSS overlay state for PopOut
-  const { isPoppedOut, togglePopOut } = usePopOutViewport(activeCssOverlay);
-
   // ... (Upload handlers remain same)
 
   const handleCssOverlayChange = (overlay: string) => {
