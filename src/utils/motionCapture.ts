@@ -602,8 +602,8 @@ export class MotionCaptureManager {
           // We assume the user is looking at the screen center when their eyes are slightly down relative to camera.
           // We shift the "neutral" point up.
           
-          const webcamOffset = 0.2; // Shift neutral gaze up by 20%
-          const y = rig.pupil.y - webcamOffset; 
+          // Reverted offset: User requested strict 1:1 mapping with camera axis.
+          const y = rig.pupil.y;
           
           // Helper for ARKit asymmetric mapping
           const setARKitGaze = (xVal: number, yVal: number) => {
