@@ -91,7 +91,8 @@ export function SceneTab() {
       
       document.documentElement.style.setProperty('--active-overlay', newOverlay || 'none');
       
-      const viewport = document.querySelector('.viewport');
+      // Target the canvas-container instead of the full viewport to prevent overlapping UI
+      const viewport = document.querySelector('.canvas-container');
       if (viewport) {
           // Remove ALL old overlay classes first to be safe
           viewport.classList.remove('overlay-glitch', 'overlay-scanlines', 'overlay-vignette', 'overlay-crt');
