@@ -1,5 +1,6 @@
 import './App.css';
 import './components/overlays.css';
+import { useState, useEffect } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { CanvasStage } from './components/CanvasStage';
 import { ViewportOverlay } from './components/ViewportOverlay';
@@ -9,6 +10,15 @@ import { useUIStore } from './state/useUIStore';
 
 function App() {
   const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen } = useUIStore();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 960);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 960);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="app-shell">
@@ -20,19 +30,21 @@ function App() {
           <ViewportOverlay mode={mode} />
         </section>
 
-        <ControlPanel mode={mode} />
+        {!isMobile && <ControlPanel mode={mode} />}
       </main>
 
       {/* Mobile drawer toggle */}
-      <button
-        className="control-toggle"
-        onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-      >
-        {mobileDrawerOpen ? 'Close' : 'Controls'}
-      </button>
+      {isMobile && (
+        <button
+          className="control-toggle"
+          onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+        >
+          {mobileDrawerOpen ? 'Close' : 'Controls'}
+        </button>
+      )}
 
       {/* Mobile Backdrop */}
-      {mobileDrawerOpen && (
+      {isMobile && mobileDrawerOpen && (
         <div 
           className="drawer-backdrop" 
           onClick={() => setMobileDrawerOpen(false)}
@@ -40,9 +52,11 @@ function App() {
       )}
 
       {/* Mobile drawer */}
-      <div className={`control-drawer ${mobileDrawerOpen ? 'open' : ''}`}>
-        <ControlPanel mode={mode} />
-      </div>
+      {isMobile && (
+        <div className={`control-drawer ${mobileDrawerOpen ? 'open' : ''}`}>
+          <ControlPanel mode={mode} />
+        </div>
+      )}
 
       <ToastHost />
     </div>

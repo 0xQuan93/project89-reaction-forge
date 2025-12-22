@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { useReactionStore } from '../state/useReactionStore';
+import { useUIStore } from '../state/useUIStore';
 import type { ReactionPreset } from '../types/reactions';
 import { useAvatarSource } from '../state/useAvatarSource';
 import { OnboardingOverlay } from './OnboardingOverlay';
@@ -42,6 +43,7 @@ export function CanvasStage() {
   const preset = useReactionStore((state) => state.activePreset);
   const animationMode = useReactionStore((state) => state.animationMode);
   const { currentUrl } = useAvatarSource();
+  const { activeCssOverlay } = useUIStore();
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -154,6 +156,22 @@ export function CanvasStage() {
       )}
 
       <canvas ref={canvasRef} className="canvas-stage" />
+
+      {/* Render active CSS Overlay */}
+      {activeCssOverlay && (
+        <div 
+          className={activeCssOverlay} 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 5
+          }}
+        />
+      )}
     </div>
   );
 }

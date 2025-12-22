@@ -90,28 +90,6 @@ export function SceneTab() {
       // Toggle logic
       const newOverlay = overlay === activeCssOverlay ? null : overlay;
       setActiveCssOverlay(newOverlay);
-      
-      document.documentElement.style.setProperty('--active-overlay', newOverlay || 'none');
-      
-      const viewport = document.querySelector('.canvas-container');
-      if (viewport) {
-          viewport.classList.remove('overlay-glitch', 'overlay-scanlines', 'overlay-vignette', 'overlay-crt');
-          const old = document.getElementById('active-css-overlay');
-          if (old) old.remove();
-
-          if (newOverlay) {
-              const div = document.createElement('div');
-              div.className = newOverlay;
-              div.id = 'active-css-overlay';
-              div.style.position = 'absolute';
-              div.style.top = '0';
-              div.style.left = '0';
-              div.style.width = '100%';
-              div.style.height = '100%';
-              div.style.pointerEvents = 'none';
-              viewport.appendChild(div);
-          }
-      }
   };
 
   const handleBackgroundSelect = async (backgroundId: string) => {
