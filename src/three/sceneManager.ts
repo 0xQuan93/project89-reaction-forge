@@ -4,6 +4,7 @@ import { applyBackground, type AnimatedBackground } from './backgrounds';
 import type { BackgroundId } from '../types/reactions';
 import { useSettingsStore } from '../state/useSettingsStore';
 import { perfMonitor } from '../perf/perfMonitor';
+import { useUIStore } from '../state/useUIStore';
 
 type TickHandler = (delta: number) => void;
 
@@ -375,11 +376,15 @@ class SceneManager {
     const targetWidth = options?.width || this.canvas.width;
     const targetHeight = options?.height || this.canvas.height;
     
+    // Check if we have an active CSS overlay
+    const activeCssOverlay = useUIStore.getState().activeCssOverlay;
+
     console.log('[SceneManager] Capturing snapshot:', { 
       targetWidth, 
       targetHeight, 
       includeLogo, 
-      transparentBackground 
+      transparentBackground,
+      activeCssOverlay
     });
     
     // Save current background and clear color state
@@ -416,7 +421,8 @@ class SceneManager {
           targetWidth, 
           targetHeight, 
           includeLogo,
-          transparentBackground
+          transparentBackground,
+          activeCssOverlay
         );
         
         // Restore original size
@@ -439,7 +445,8 @@ class SceneManager {
         this.canvas.width, 
         this.canvas.height, 
         includeLogo,
-        transparentBackground
+        transparentBackground,
+        activeCssOverlay
       );
       
       // Restore background and clear color
@@ -460,7 +467,8 @@ class SceneManager {
     width: number,
     height: number,
     includeLogo: boolean,
-    transparentBackground: boolean = false
+    transparentBackground: boolean = false,
+    cssOverlay: string | null = null
   ): Promise<string> {
     // Create a temporary canvas to composite logo
     const tempCanvas = document.createElement('canvas');
@@ -480,6 +488,49 @@ class SceneManager {
     
     // Draw the WebGL canvas
     ctx.drawImage(sourceCanvas, 0, 0, width, height);
+
+    // Apply CSS-based effects by drawing them manually onto the canvas
+    if (cssOverlay) {
+        ctx.save();
+        
+        if (cssOverlay === 'overlay-scanlines') {
+            // Draw horizontal scanlines
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            for (let i = 0; i < height; i += 4) {
+                ctx.fillRect(0, i, width, 2);
+            }
+        } else if (cssOverlay === 'overlay-vignette') {
+            // Draw radial gradient vignette
+            const gradient = ctx.createRadialGradient(width/2, height/2, height/3, width/2, height/2, height * 0.8);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        } else if (cssOverlay === 'overlay-glitch') {
+            // Simulate color channel shift
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+            ctx.fillRect(5, 0, width, height);
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+            ctx.fillRect(-5, 0, width, height);
+        } else if (cssOverlay === 'overlay-crt') {
+             // Scanlines + Vignette + slight RGB shift
+             // 1. Scanlines
+             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+             for (let i = 0; i < height; i += 3) {
+                 ctx.fillRect(0, i, width, 1);
+             }
+             // 2. Vignette
+             const gradient = ctx.createRadialGradient(width/2, height/2, height/3, width/2, height/2, height);
+             gradient.addColorStop(0, 'rgba(0,0,0,0)');
+             gradient.addColorStop(1, 'rgba(0,0,0,0.3)');
+             ctx.globalCompositeOperation = 'source-over';
+             ctx.fillStyle = gradient;
+             ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.restore();
+    }
     
     // Load and draw the logo if requested
     if (includeLogo) {
@@ -606,4 +657,3 @@ class SceneManager {
 }
 
 export const sceneManager = new SceneManager();
-

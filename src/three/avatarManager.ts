@@ -31,7 +31,7 @@ const expressionMutators: Record<ExpressionId, ExpressionMutator> = {
 
 interface RawPoseData {
   vrmPose?: VRMPose;
-  tracks?: any[];
+  tracks?: THREE.KeyframeTrack[];
   sceneRotation?: { x: number; y: number; z: number };
   expressions?: Record<string, number>;
   name?: string;
@@ -56,16 +56,35 @@ class AvatarManager {
   setManualPosing(enabled: boolean) { this.isManualPosing = enabled; }
   setInteraction(interacting: boolean) { this.isInteracting = interacting; }
 
+  private startTickLoop() {
+    this.tickDispose?.();
+    this.tickDispose = sceneManager.registerTick((delta) => {
+      if (this.vrm) {
+        this.vrm.update(delta);
+        if (this.isAnimated && !this.isInteracting) {
+          animationManager.update(delta);
+        }
+      }
+    });
+  }
+
   rebindToScene() {
     const scene = sceneManager.getScene();
     if (this.vrm && scene) {
         this.vrm.scene.removeFromParent();
         scene.add(this.vrm.scene);
+        this.startTickLoop();
     }
   }
 
   async load(url: string) {
-    if (this.currentUrl === url && this.vrm) return this.vrm;
+    if (this.currentUrl === url && this.vrm) {
+        // Even if already loaded, we might need to ensure the tick loop is active 
+        // if this load is called after a scene reset (though rebindToScene usually handles it).
+        // But rebindToScene handles the scene transfer. 
+        // If load is called, we assume the caller wants to ensure availability.
+        return this.vrm;
+    }
     const scene = sceneManager.getScene();
     if (!scene) throw new Error('Scene not initialized');
 
@@ -88,12 +107,7 @@ class AvatarManager {
     animationManager.initialize(vrm);
     sceneManager.frameObject(vrm.scene);
 
-    this.tickDispose = sceneManager.registerTick((delta) => {
-      vrm.update(delta);
-      if (this.isAnimated && !this.isInteracting) {
-        animationManager.update(delta);
-      }
-    });
+    this.startTickLoop();
 
     return vrm;
   }

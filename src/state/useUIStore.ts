@@ -29,6 +29,7 @@ interface UIState {
   startTutorial: () => void;
   endTutorial: () => void;
   nextTutorialStep: () => void;
+  prevTutorialStep: () => void;
   setTutorialStep: (step: number) => void;
 
   startCalibration: () => void;
@@ -60,6 +61,7 @@ export const useUIStore = create<UIState>((set) => ({
   startTutorial: () => set({ isTutorialActive: true, currentTutorialStep: 0 }),
   endTutorial: () => set({ isTutorialActive: false, currentTutorialStep: 0 }),
   nextTutorialStep: () => set((state) => ({ currentTutorialStep: state.currentTutorialStep + 1 })),
+  prevTutorialStep: () => set((state) => ({ currentTutorialStep: Math.max(0, state.currentTutorialStep - 1) })),
   setTutorialStep: (step) => set({ currentTutorialStep: step }),
 
   startCalibration: () => set({ isCalibrationActive: true, calibrationStep: 0 }),

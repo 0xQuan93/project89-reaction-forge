@@ -438,7 +438,7 @@ export class MotionCaptureManager {
         // @ts-ignore
         if (rotation.w !== undefined) {
             // Create target quaternion from rig
-            let targetQ = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+            const targetQ = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
             
             // Apply Calibration Offset
             if (this.calibrationOffsets[key]) {

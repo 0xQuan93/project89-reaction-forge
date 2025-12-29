@@ -6,45 +6,53 @@ import { useUIStore } from '../state/useUIStore';
 const TUTORIAL_STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to PoseLab',
-    description: 'The ultimate tool for animating and posing your VRM avatars. Let\'s get you started!',
+    title: 'Welcome to the Loop',
+    description: 'You\'ve entered PoseLab—a tool for subverting reality and giving life to your VRM avatars. Let\'s synchronize your interface.',
     targetId: null,
     highlight: false
   },
   {
     id: 'upload',
-    title: '1. Load Your Avatar',
-    description: 'Start by loading your own VRM file, or use our sample avatar to explore.',
+    title: '1. Materialize Your Avatar',
+    description: 'Load your own VRM file or use our HarmonVox agent. This is your digital presence in the Loom.',
     targetId: 'canvas-stage',
     highlight: true
   },
   {
     id: 'modes',
-    title: '2. Choose Your Mode',
-    description: 'Switch between "Reactions" for quick presets and "Pose Lab" for detailed editing.',
+    title: '2. Frequency Tuning',
+    description: 'Switch to "Reactions" for instant expressive patterns, or "Pose Lab" for deep neural manipulation.',
     targetId: 'mode-switch',
     highlight: true,
     action: (store: any) => store.setMode('reactions')
   },
   {
     id: 'poselab',
-    title: '3. Enter Pose Lab',
-    description: 'Let\'s switch to Pose Lab to see the advanced tools.',
+    title: '3. Neural Manipulation',
+    description: 'Enter the Pose Lab to access advanced surgical tools for bone posing and animation.',
     targetId: 'mode-switch',
     highlight: true,
     action: (store: any) => store.setMode('poselab')
   },
   {
     id: 'tabs',
-    title: '4. The Toolset',
-    description: 'Here you can access Poses and Mocap tools.',
+    title: '4. The Arsenal',
+    description: 'Access Poses, Mocap, and AI tools here. Each module expands your capability to hack the consensus.',
     targetId: 'poselab-tabs',
     highlight: true
   },
   {
+    id: 'export',
+    title: '5. Signal Broadcast',
+    description: 'When your manifestation is complete, use the Export tab to broadcast your avatar to other realms (Images, Video, GLB).',
+    targetId: 'poselab-tabs',
+    highlight: true,
+    action: (store: any) => store.setPoseLabTab('export')
+  },
+  {
     id: 'finish',
-    title: 'You\'re Ready!',
-    description: 'Explore the tools, create something amazing, and export your creations.',
+    title: 'Awaken',
+    description: 'You are now ready to weave your own narrative. Hack the reality, change the world. See you in the loop.',
     targetId: null,
     highlight: false
   }
@@ -59,6 +67,7 @@ export function OnboardingOverlay() {
     startTutorial, 
     endTutorial, 
     nextTutorialStep,
+    prevTutorialStep,
     setMode,
     setPoseLabTab
   } = useUIStore();
@@ -112,12 +121,11 @@ export function OnboardingOverlay() {
     if (!file) return;
     
     if (!file.name.toLowerCase().endsWith('.vrm')) {
-      addToast('Please select a VRM file', 'error');
+      addToast('Invalid data signature. Please provide a .vrm file.', 'error');
       return;
     }
     
     setFileSource(file);
-    // If in tutorial, next step will trigger automatically via useEffect
   };
 
   const loadSampleAvatar = async () => {
@@ -126,19 +134,15 @@ export function OnboardingOverlay() {
       const blob = await response.blob();
       const file = new File([blob], 'HarmonVox_519.vrm', { type: 'model/gltf-binary' });
       setFileSource(file);
-      addToast('Sample avatar loaded', 'success');
+      addToast('Agent HarmonVox materialized.', 'success');
     } catch (error) {
       console.error('Failed to load sample avatar:', error);
-      addToast('Failed to load sample avatar. Please try uploading your own.', 'error');
+      addToast('Transmission failed. Please upload your own avatar.', 'error');
     }
   };
 
   const handleSkip = () => {
     endTutorial();
-    // Ensure we are in a good state
-    if (currentUrl) {
-        // stay where we are
-    }
   };
   
   const handleNext = () => {
@@ -149,50 +153,57 @@ export function OnboardingOverlay() {
     }
   };
 
-  // If tutorial is not active and avatar is loaded, show nothing (or maybe a "Help" button elsewhere)
+  const handleBack = () => {
+    if (currentTutorialStep > 0) {
+      prevTutorialStep();
+    }
+  };
+
+  // If tutorial is not active and avatar is loaded, show nothing
   if (!isTutorialActive && currentUrl) return null;
 
-  // Special Case: Initial Load Screen (Step 0 & 1 effectively merged visually)
+  // Initial Load Screen
   const isInitialLoad = !currentUrl;
   const step = TUTORIAL_STEPS[currentTutorialStep];
 
   if (isInitialLoad && (!isTutorialActive || currentTutorialStep <= 1)) {
      return (
         <div className="onboarding-overlay">
-        <div className="onboarding-card">
-            <div className="onboarding-icon">✨</div>
-            <h2>Welcome to PoseLab</h2>
-            <p>Turn your VRM avatar into endless reactions and animation clips.</p>
-            
-            <div className="onboarding-actions">
-            <button 
-                className="primary large full-width"
-                onClick={() => vrmInputRef.current?.click()}
-            >
-                📂 Load Your VRM
-            </button>
-            
-            <button 
-                className="secondary full-width"
-                onClick={loadSampleAvatar}
-            >
-                🤖 Load Sample Avatar
-            </button>
+          <div className="onboarding-card">
+              <div className="onboarding-icon">👁️</div>
+              <h2>Welcome to PoseLab</h2>
+              <p>Turn your digital presence into endless expressions and manifestations.</p>
+              
+              <div className="onboarding-actions">
+                <button 
+                    className="primary large full-width"
+                    onClick={() => vrmInputRef.current?.click()}
+                >
+                    📂 Materialize VRM
+                </button>
+                
+                <button 
+                    className="secondary full-width"
+                    onClick={loadSampleAvatar}
+                >
+                    🤖 Deploy Agent HarmonVox
+                </button>
 
-            <div className="divider" style={{ margin: '1rem 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}></div>
-             <p className="muted small">
-                Don't have an avatar? Load the sample to try the tutorial.
-             </p>
-            </div>
+                <div className="divider" style={{ margin: '1.5rem 0', borderTop: '1px solid var(--border-color)' }}></div>
+                
+                <p className="muted small" style={{ marginBottom: 0 }}>
+                    First time in the loop? Load the agent to begin your synchronization.
+                </p>
+              </div>
 
-            <input
-            ref={vrmInputRef}
-            type="file"
-            accept=".vrm"
-            onChange={handleVRMUpload}
-            style={{ display: 'none' }}
-            />
-        </div>
+              <input
+                ref={vrmInputRef}
+                type="file"
+                accept=".vrm"
+                onChange={handleVRMUpload}
+                style={{ display: 'none' }}
+              />
+          </div>
         </div>
      );
   }
@@ -201,46 +212,47 @@ export function OnboardingOverlay() {
   if (!isTutorialActive) return null;
 
   return (
-    <div className="tutorial-overlay-container" style={{
-        position: 'absolute',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        pointerEvents: 'none' // Let clicks pass through to the app mostly
-    }}>
-      <div className="tutorial-card" style={{
-        background: 'rgba(8, 10, 17, 0.95)',
-        border: '1px solid #00ffd6',
-        borderRadius: '16px',
-        padding: '1.5rem',
-        width: '400px',
-        maxWidth: '90vw',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-        pointerEvents: 'auto', // Re-enable clicks for the card itself
-        animation: 'slideUp 0.3s ease-out'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ color: '#00ffd6', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>
-                Step {currentTutorialStep + 1}/{TUTORIAL_STEPS.length}
+    <div className="tutorial-overlay-container">
+      <div className="tutorial-card">
+        <div className="tutorial-progress-container">
+          {TUTORIAL_STEPS.map((_, index) => (
+            <div 
+              key={index} 
+              className={`tutorial-progress-dot ${index <= currentTutorialStep ? 'active' : ''}`}
+            />
+          ))}
+        </div>
+
+        <div className="tutorial-header">
+            <span className="tutorial-step-indicator">
+                Phase {currentTutorialStep + 1} / {TUTORIAL_STEPS.length}
             </span>
-            <button onClick={handleSkip} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                Skip Tutorial
+            <button className="tutorial-skip-btn" onClick={handleSkip}>
+                Exit Loop
             </button>
         </div>
         
-        <h3 style={{ margin: '0 0 0.5rem 0', color: '#fff' }}>{step.title}</h3>
-        <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.8)', lineHeight: '1.5' }}>
-            {step.description}
-        </p>
+        <h3>{step.title}</h3>
+        <p>{step.description}</p>
         
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+        <div className="tutorial-footer">
+            <div className="tutorial-nav-buttons">
+              {currentTutorialStep > 0 && (
+                <button 
+                  className="secondary small" 
+                  onClick={handleBack}
+                >
+                  ⇠ Back
+                </button>
+              )}
+            </div>
+            
             <button 
                 className="primary" 
                 onClick={handleNext}
-                style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}
+                style={{ padding: '0.6rem 2rem' }}
             >
-                {currentTutorialStep === TUTORIAL_STEPS.length - 1 ? 'Finish' : 'Next ➜'}
+                {currentTutorialStep === TUTORIAL_STEPS.length - 1 ? 'Awaken' : 'Proceed ⇢'}
             </button>
         </div>
       </div>

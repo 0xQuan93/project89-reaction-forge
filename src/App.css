@@ -368,6 +368,113 @@
   line-height: 1.5;
 }
 
+/* Tutorial UI Improvements */
+.tutorial-overlay-container {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.tutorial-card {
+  background: rgba(13, 16, 23, 0.95);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  animation: slideUp 0.3s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.tutorial-progress-container {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+
+.tutorial-progress-dot {
+  height: 4px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.tutorial-progress-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.tutorial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.tutorial-step-indicator {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tutorial-skip-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.tutorial-skip-btn:hover {
+  color: var(--text-primary);
+}
+
+.tutorial-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+}
+
+.tutorial-card p {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.tutorial-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tutorial-nav-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onboarding-actions button.full-width {
+  width: 100%;
+  justify-content: center;
+}
+
 .onboarding-steps {
   text-align: left;
   margin-bottom: 2rem;
