@@ -49,7 +49,22 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 
 ---
 
-## 🚀 Mid-Term Goals (v1.3 - Next Up)
+## 💎 Monetization & Ecosystem (v1.3 - Active Priority)
+
+### 8. 🔐 IP Protection & Gating
+**Goal:** Allow creators to own and monetize their work.
+- [ ] **Token Gating:** Logic to lock/unlock JSON exports based on subscription/token status.
+- [ ] **License Management:** Embed license data into exported files (Public/Private/Commercial).
+
+### 9. 🏪 Creator Marketplace
+**Goal:** A platform for users to share and sell poses.
+- [ ] **Database Integration:** User profiles, wallets, and asset registry.
+- [ ] **Auto-Marketplace:** Default flow for free users (uploads to public pool).
+- [ ] **Creator Pages:** Personalized storefronts for Premium users.
+
+---
+
+## 🚀 Mid-Term Goals (v1.4 - Next Up)
 
 ### 8. 🛡️ Rendering & Visual Quality
 **Goal:** Professional rendering quality and style options.
@@ -94,6 +109,8 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 | **Motion Capture (Recording)** | ✅ Done (v1.2) | High |
 | **Project Save/Load** | ✅ Done (v1.2) | High |
 | **Command Palette** | ✅ Done (v1.2) | High |
+| **Monetization / Gating** | 🚧 In Progress | **Critical** |
+| **Database Integration** | 🚧 In Progress | **Critical** |
 | **Video Export Hardening** | ✅ Done (v1.2) | High |
 | **Advanced Lighting** | 🚧 Planned | Medium |
 | **Full Body IK** | 🚧 Planned | Medium |
