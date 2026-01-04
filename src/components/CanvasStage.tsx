@@ -109,7 +109,8 @@ export function CanvasStage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUrl, setAvatarReady]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUrl]);
 
   useEffect(() => {
     if (!avatarReady) return;

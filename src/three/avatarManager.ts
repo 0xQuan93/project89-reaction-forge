@@ -8,6 +8,7 @@ import { animationManager } from './animationManager';
 import { getPoseDefinition, getPoseDefinitionWithAnimation, type PoseDefinition } from '../poses';
 import { poseToAnimationClip } from '../poses/poseToAnimation';
 import { getAnimatedPose } from '../poses/animatedPoses';
+import { materialManager } from './materialManager';
 
 type ExpressionMutator = (vrm: VRM) => void;
 
@@ -36,6 +37,17 @@ interface RawPoseData {
   expressions?: Record<string, number>;
   name?: string;
   duration?: number;
+}
+
+// Type for VRM expression with name property
+interface VRMExpressionWithName {
+  expressionName?: string;
+}
+
+// Extended expression manager with expressions array
+interface ExtendedExpressionManager {
+  expressionMap?: Record<string, unknown>;
+  expressions?: VRMExpressionWithName[];
 }
 
 class AvatarManager {
@@ -108,6 +120,9 @@ class AvatarManager {
     sceneManager.frameObject(vrm.scene);
 
     this.startTickLoop();
+    
+    // Apply material settings to the newly loaded VRM
+    materialManager.onVRMLoaded();
 
     return vrm;
   }
@@ -126,7 +141,8 @@ class AvatarManager {
 
     if (animationMode !== 'static' && poseData.tracks) {
       const { deserializeAnimationClip } = await import('../poses/animationClipSerializer');
-      this.playAnimationClip(deserializeAnimationClip(poseData as any), animationMode === 'loop');
+      // Cast through unknown to handle the structural mismatch between RawPoseData and SerializedAnimationClip
+      this.playAnimationClip(deserializeAnimationClip(poseData as unknown as Parameters<typeof deserializeAnimationClip>[0]), animationMode === 'loop');
     } else if (poseData.vrmPose) {
       this.stopAnimation(true);
       this.vrm.humanoid?.setNormalizedPose(poseData.vrmPose);
@@ -227,9 +243,14 @@ class AvatarManager {
   getAvailableExpressions(): string[] {
     if (!this.vrm?.expressionManager) return [];
     const names: string[] = [];
-    const manager = this.vrm.expressionManager as any;
-    if (this.vrm.expressionManager.expressionMap) Object.keys(this.vrm.expressionManager.expressionMap).forEach(name => names.push(name));
-    else if (manager.expressions) manager.expressions.forEach((expr: any) => { if (expr.expressionName) names.push(expr.expressionName); });
+    const manager = this.vrm.expressionManager as unknown as ExtendedExpressionManager;
+    if (manager.expressionMap) {
+      Object.keys(manager.expressionMap).forEach(name => names.push(name));
+    } else if (manager.expressions) {
+      manager.expressions.forEach((expr) => { 
+        if (expr.expressionName) names.push(expr.expressionName); 
+      });
+    }
     return names.sort();
   }
 

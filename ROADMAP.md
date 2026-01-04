@@ -64,14 +64,14 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 
 ---
 
-## 🚀 Mid-Term Goals (v1.4 - Next Up)
+## 🚀 Mid-Term Goals (v1.4 - Completed ✅)
 
 ### 8. 🛡️ Rendering & Visual Quality
 **Goal:** Professional rendering quality and style options.
-- [ ] **Advanced Lighting:** 3-point lighting controls (Key, Fill, Rim).
-- [ ] **HDRI Support:** Upload `.hdr`/`.exr` environment maps.
-- [ ] **Post-Processing:** Bloom, Color Grading (LUTs), and Ambient Occlusion (SSAO).
-- [ ] **Toon Shader Settings:** Customize outlines and shading steps.
+- [x] **Advanced Lighting:** 3-point lighting controls (Key, Fill, Rim) with 6 presets.
+- [x] **HDRI Support:** Upload `.hdr`/`.exr` environment maps with 5 built-in presets.
+- [x] **Post-Processing:** Bloom, Color Grading, Vignette, Film Grain with 6 cinematic presets.
+- [x] **Toon Shader Settings:** Customize outlines, rim lighting, and emissive glow.
 
 ### 9. 👥 Multi-Avatar Composition
 **Goal:** Create interactions between multiple characters.
@@ -112,6 +112,9 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 | **Monetization / Gating** | 🚧 In Progress | **Critical** |
 | **Database Integration** | 🚧 In Progress | **Critical** |
 | **Video Export Hardening** | ✅ Done (v1.2) | High |
-| **Advanced Lighting** | 🚧 Planned | Medium |
+| **Advanced Lighting** | ✅ Done (v1.4) | Medium |
+| **HDRI Environments** | ✅ Done (v1.4) | Medium |
+| **Post-Processing (Bloom, Color Grading)** | ✅ Done (v1.4) | Medium |
+| **Toon Shader Customization** | ✅ Done (v1.4) | Medium |
 | **Full Body IK** | 🚧 Planned | Medium |
 | **Multi-Avatar** | 🚧 Planned | Medium |

@@ -182,13 +182,14 @@ export function AnimationsTab() {
                     <strong>{anim.name}</strong>
                     <span>{anim.duration.toFixed(2)}s</span>
                   </div>
-                  <button 
-                    className="icon-button"
-                    onClick={() => handlePlayAnimation(anim)}
-                    title="Play animation"
-                  >
-                    {currentAnimation === anim.clip ? '⏸️' : '▶️'}
-                  </button>
+<button 
+                                    className="icon-button"
+                                    onClick={() => handlePlayAnimation(anim)}
+                                    title="Play animation"
+                                    aria-label={currentAnimation === anim.clip ? 'Pause animation' : 'Play animation'}
+                                  >
+                                    {currentAnimation === anim.clip ? '⏸️' : '▶️'}
+                                  </button>
                 </div>
               ))}
             </div>

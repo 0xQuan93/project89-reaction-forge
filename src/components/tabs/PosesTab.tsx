@@ -233,29 +233,32 @@ export function PosesTab() {
                       {pose.animationClip && ' 🎬'}
                     </span>
                   </div>
-                  <div className="pose-item__actions">
-                    <button
-                      className="icon-button"
-                      onClick={() => handleApplyPose(pose.id)}
-                      title="Apply"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      className="icon-button"
-                      onClick={() => handleExportPose(pose.id)}
-                      title="Export"
-                    >
-                      💾
-                    </button>
-                    <button
-                      className="icon-button"
-                      onClick={() => handleDeletePose(pose.id)}
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+<div className="pose-item__actions">
+                                    <button
+                                      className="icon-button"
+                                      onClick={() => handleApplyPose(pose.id)}
+                                      title="Apply"
+                                      aria-label="Apply pose"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      className="icon-button"
+                                      onClick={() => handleExportPose(pose.id)}
+                                      title="Export"
+                                      aria-label="Export pose"
+                                    >
+                                      💾
+                                    </button>
+                                    <button
+                                      className="icon-button"
+                                      onClick={() => handleDeletePose(pose.id)}
+                                      title="Delete"
+                                      aria-label="Delete pose"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
                 </div>
               ))}
             </div>

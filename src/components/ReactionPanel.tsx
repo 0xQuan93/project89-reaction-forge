@@ -3,7 +3,7 @@ import { useReactionStore } from '../state/useReactionStore';
 import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { reactionPresets } from '../data/reactions';
-import { exportAsWebM, canExportVideo } from '../export/exportImage';
+import { exportAsWebM, canExportVideo } from '../export/exportVideo';
 import { useAvatarSource } from '../state/useAvatarSource';
 import type { AnimationMode } from '../types/reactions';
 

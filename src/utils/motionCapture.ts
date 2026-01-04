@@ -5,6 +5,41 @@ import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
 import { motionEngine } from '../poses/motionEngine';
 
+// ======================
+// Configuration Constants
+// ======================
+
+/** Smoothing configuration for motion capture */
+const SMOOTHING = {
+  /** Base lerp factor for bone rotations (lower = smoother, higher = more responsive) */
+  BASE_LERP: 0.16,
+  /** Faster lerp for eye movements to reduce lag */
+  EYE_LERP: 0.4,
+  /** Slower lerp for head to prevent jitter */
+  HEAD_LERP: 0.12,
+};
+
+/** Gaze sensitivity multiplier for eye tracking */
+const GAZE_SENSITIVITY = 1.5;
+
+/** Head dampening factor (0.4 = 40% dampening, retain 60% of movement) */
+const HEAD_DAMPENING = 0.4;
+
+/** Camera capture configuration */
+const CAMERA_CONFIG = {
+  WIDTH: 640,
+  HEIGHT: 480,
+};
+
+/** MediaPipe Holistic configuration */
+const HOLISTIC_CONFIG = {
+  modelComplexity: 1 as const,
+  smoothLandmarks: true,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7,
+  refineFaceLandmarks: true,
+};
+
 interface RecordedFrame {
     time: number;
     bones: Record<string, { rotation: THREE.Quaternion, position?: THREE.Vector3 }>;
@@ -51,13 +86,7 @@ export class MotionCaptureManager {
       }
     });
 
-    this.holistic.setOptions({
-      modelComplexity: 1,
-      smoothLandmarks: true,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7,
-      refineFaceLandmarks: true
-    });
+    this.holistic.setOptions(HOLISTIC_CONFIG);
 
     this.holistic.onResults(this.handleResults);
   }
@@ -104,8 +133,8 @@ export class MotionCaptureManager {
             onFrame: async () => {
                 await this.holistic.send({ image: this.videoElement });
             },
-            width: 640,
-            height: 480
+            width: CAMERA_CONFIG.WIDTH,
+            height: CAMERA_CONFIG.HEIGHT
         });
 
         await this.camera.start();
@@ -149,8 +178,7 @@ export class MotionCaptureManager {
   private updateFrame() {
       if (!this.vrm || !this.vrm.humanoid || !this.vrm.expressionManager) return;
       
-      // Increased smoothing by ~35% (0.25 -> 0.16) to prevent violent jolts
-      const lerpFactor = 0.16; 
+      const lerpFactor = SMOOTHING.BASE_LERP;
       
       // 1. Smooth Facial Expressions
       this.targetFaceValues.forEach((targetVal, name) => {
@@ -159,7 +187,7 @@ export class MotionCaptureManager {
           // Dynamic smoothing: Eyes need to be snappier, Mouth/Face smoother
           let localLerp = lerpFactor;
           if (name.toLowerCase().includes('eye') || name.toLowerCase().includes('blink') || name.toLowerCase().includes('look')) {
-              localLerp = 0.4; // Faster eyes (less lag)
+              localLerp = SMOOTHING.EYE_LERP;
           }
           
           const newVal = THREE.MathUtils.lerp(currentVal, targetVal, localLerp);
@@ -199,7 +227,7 @@ export class MotionCaptureManager {
               // For Head bone specifically, use a higher smoothing factor (lower lerp)
               let effectiveLerp = lerpFactor;
               if (boneName.toLowerCase().includes('head')) {
-                  effectiveLerp = 0.12; // Adjusted from 0.10 to 0.12 for slightly less lag
+                  effectiveLerp = SMOOTHING.HEAD_LERP;
               }
               
               currentQ.slerp(targetQ, effectiveLerp);
@@ -559,9 +587,8 @@ export class MotionCaptureManager {
                 
                 // Dampen the head rotation amplitude significantly to mimic natural human range vs camera constraints.
                 // Humans rarely rotate head > 45 deg while looking at a screen.
-                // Adjusted to 0.6 (retain 60%) for better responsiveness while keeping it grounded.
                 const identityQ = new THREE.Quaternion();
-                headQ.slerp(identityQ, 0.4); // Dampens by 40% (retains 60%)
+                headQ.slerp(identityQ, HEAD_DAMPENING);
 
                 // Apply to target map for smoothing
                 this.targetBoneRotations.set('head', headQ);
@@ -600,10 +627,6 @@ export class MotionCaptureManager {
 
           // 3. Pupils (LookAt)
       if (rig.pupil) {
-          // Sensitivity multiplier to make eyes more expressive/responsive
-          // Reduced to 1.5 for better balance
-          const GAZE_SENSITIVITY = 1.5;
-
           // Apply Calibration Offset
           // We subtract the calibrated offset from the raw input to zero it out
           const rawX = rig.pupil.x - this.eyeCalibrationOffset.x;

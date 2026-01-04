@@ -5,6 +5,7 @@ import { AppHeader } from './components/AppHeader';
 import { CanvasStage } from './components/CanvasStage';
 import { ViewportOverlay } from './components/ViewportOverlay';
 import { ControlPanel } from './components/ControlPanel';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastHost } from './ui/Toast';
 import { useUIStore } from './state/useUIStore';
 
@@ -26,8 +27,10 @@ function App() {
       
       <main className="layout">
         <section className="viewport">
-          <CanvasStage />
-          <ViewportOverlay mode={mode} />
+          <ErrorBoundary>
+            <CanvasStage />
+            <ViewportOverlay mode={mode} />
+          </ErrorBoundary>
         </section>
 
         {!isMobile && <ControlPanel mode={mode} />}

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { sceneManager } from '../../three/sceneManager';
 import { useReactionStore } from '../../state/useReactionStore';
 import { avatarManager } from '../../three/avatarManager';
-import { exportAsWebM, canExportVideo } from '../../export/exportImage';
+import { exportAsWebM, canExportVideo } from '../../export/exportVideo';
 import { exportAsGLB } from '../../export/exportGLB';
 import { useToastStore } from '../../state/useToastStore';
 

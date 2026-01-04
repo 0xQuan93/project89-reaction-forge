@@ -4,8 +4,14 @@ import { sceneManager } from '../three/sceneManager';
 export function usePopOutViewport(activeCssOverlay: string | null) {
   const [isPoppedOut, setIsPoppedOut] = useState(false);
   const popOutWindowRef = useRef<Window | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const closePopOut = useCallback(() => {
+    // Stop all tracks in the stream to release the canvas capture
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
     if (popOutWindowRef.current) {
       popOutWindowRef.current.close();
       popOutWindowRef.current = null;
@@ -22,6 +28,7 @@ export function usePopOutViewport(activeCssOverlay: string | null) {
 
     // Capture stream (60fps)
     const stream = canvas.captureStream(60);
+    streamRef.current = stream;
     
     // Open new window
     const newWindow = window.open('', 'PoseLab Viewport', 'width=960,height=540,menubar=no,toolbar=no,location=no,status=no');
@@ -109,6 +116,11 @@ export function usePopOutViewport(activeCssOverlay: string | null) {
 
     // Handle Window Close
     newWindow.addEventListener('beforeunload', () => {
+      // Stop all tracks in the stream to release the canvas capture
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
       setIsPoppedOut(false);
       popOutWindowRef.current = null;
     });
@@ -145,6 +157,11 @@ export function usePopOutViewport(activeCssOverlay: string | null) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Stop all tracks in the stream to release the canvas capture
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
       if (popOutWindowRef.current) {
         popOutWindowRef.current.close();
       }

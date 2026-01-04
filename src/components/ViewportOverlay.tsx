@@ -39,6 +39,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             className="icon-button"
             onClick={handleResetCamera}
             title="Reset camera to default"
+            aria-label="Reset camera to default"
           >
             🏠
           </button>
@@ -46,6 +47,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             className="icon-button"
             onClick={handleFrontView}
             title="Front view"
+            aria-label="Front view"
           >
             👤
           </button>
@@ -53,6 +55,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             className="icon-button"
             onClick={handleQuarterView}
             title="3/4 view"
+            aria-label="Three quarter view"
           >
             📐
           </button>
@@ -60,6 +63,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             className="icon-button"
             onClick={handleSideView}
             title="Side view"
+            aria-label="Side view"
           >
             👁️
           </button>
@@ -69,6 +73,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             className={`icon-button ${isPoppedOut ? 'active' : ''}`}
             onClick={togglePopOut}
             title={isPoppedOut ? "Restore viewport" : "Pop out viewport"}
+            aria-label={isPoppedOut ? "Restore viewport" : "Pop out viewport"}
             style={{ marginLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '0.5rem' }}
           >
             {isPoppedOut ? '🔙' : '↗️'}
@@ -84,6 +89,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
               className="icon-button"
               onClick={onPlayPause}
               title={isPlaying ? 'Pause' : 'Play'}
+              aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
             >
               {isPlaying ? '⏸️' : '▶️'}
             </button>
@@ -91,6 +97,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
               className="icon-button"
               onClick={onStop}
               title="Stop"
+              aria-label="Stop animation"
             >
               ⏹️
             </button>

@@ -122,7 +122,7 @@ export async function applyBackground(scene: THREE.Scene, id: BackgroundId | str
            video.src = url;
            video.loop = true;
            video.muted = true;
-           video.play();
+           video.play().catch(e => console.warn('[Background] Video autoplay failed:', e));
            
            const videoTexture = new THREE.VideoTexture(video);
            videoTexture.colorSpace = THREE.SRGBColorSpace;

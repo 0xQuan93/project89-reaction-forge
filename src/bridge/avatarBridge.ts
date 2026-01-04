@@ -1,6 +1,6 @@
 import { useAvatarSource } from '../state/useAvatarSource';
 
-type AvatarBridge = {
+export type AvatarBridge = {
   setAvatarUrl: (url: string, label?: string) => void;
   setAvatarFile: (file: File) => void;
   resetAvatar: () => void;

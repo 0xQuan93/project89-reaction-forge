@@ -5,16 +5,52 @@ import type { BackgroundId } from '../types/reactions';
 import { useSettingsStore } from '../state/useSettingsStore';
 import { perfMonitor } from '../perf/perfMonitor';
 import { useUIStore } from '../state/useUIStore';
+import { lightingManager } from './lightingManager';
+import { postProcessingManager } from './postProcessingManager';
+import { environmentManager } from './environmentManager';
 
 type TickHandler = (delta: number) => void;
 
-// Logo overlay configuration
+// ======================
+// Configuration Constants
+// ======================
+
+/** Logo overlay configuration for exports */
 const LOGO_CONFIG = {
-  path: '/logo/poselab.svg', // PoseLab logo
+  path: '/logo/poselab.svg',
   position: 'bottom-right' as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
   size: 0.08, // 8% of canvas width
   opacity: 0.85,
 };
+
+/** Camera configuration */
+const CAMERA_CONFIG = {
+  /** Field of view in degrees */
+  FOV: 35,
+  /** Near clipping plane */
+  NEAR: 0.1,
+  /** Far clipping plane */
+  FAR: 100,
+  /** Default camera position */
+  DEFAULT_POSITION: { x: 0, y: 1.4, z: 1.6 },
+  /** Default orbit target */
+  DEFAULT_TARGET: { x: 0, y: 1.4, z: 0 },
+  /** Minimum orbit distance */
+  MIN_DISTANCE: 0.8,
+  /** Maximum orbit distance */
+  MAX_DISTANCE: 3,
+};
+
+/** Timing constants in milliseconds */
+const TIMING = {
+  /** Delay before applying initial resize to ensure canvas is in DOM */
+  INITIAL_RESIZE_DELAY: 100,
+  /** Delay before starting performance monitoring (allows initial load/shader compilation) */
+  PERF_MONITOR_DELAY: 3000,
+};
+
+/** Default background ID on scene init */
+const DEFAULT_BACKGROUND: BackgroundId = 'midnight-circuit';
 
 type AspectRatio = '16:9' | '1:1' | '9:16';
 
@@ -37,8 +73,17 @@ class SceneManager {
   init(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(35, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    this.camera.position.set(0, 1.4, 1.6); // Closer default distance
+    this.camera = new THREE.PerspectiveCamera(
+      CAMERA_CONFIG.FOV,
+      canvas.clientWidth / canvas.clientHeight,
+      CAMERA_CONFIG.NEAR,
+      CAMERA_CONFIG.FAR
+    );
+    this.camera.position.set(
+      CAMERA_CONFIG.DEFAULT_POSITION.x,
+      CAMERA_CONFIG.DEFAULT_POSITION.y,
+      CAMERA_CONFIG.DEFAULT_POSITION.z
+    );
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -57,22 +102,31 @@ class SceneManager {
     this.scene.add(directional);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.target.set(0, 1.4, 0);
+    this.controls.target.set(
+      CAMERA_CONFIG.DEFAULT_TARGET.x,
+      CAMERA_CONFIG.DEFAULT_TARGET.y,
+      CAMERA_CONFIG.DEFAULT_TARGET.z
+    );
     this.controls.enablePan = true;
     this.controls.enableDamping = true;
-    this.controls.minDistance = 0.8; // Allow getting closer
-    this.controls.maxDistance = 3;
+    this.controls.minDistance = CAMERA_CONFIG.MIN_DISTANCE;
+    this.controls.maxDistance = CAMERA_CONFIG.MAX_DISTANCE;
 
     this.handleResize = this.handleResize.bind(this);
     window.addEventListener('resize', this.handleResize);
     this.startLoop();
 
-    applyBackground(this.scene, 'midnight' as BackgroundId);
+    applyBackground(this.scene, DEFAULT_BACKGROUND);
+    
+    // Initialize visual managers
+    lightingManager.init();
+    postProcessingManager.init();
+    environmentManager.init();
     
     // Apply initial aspect ratio after a short delay to ensure canvas is in DOM
     setTimeout(() => {
       this.handleResize();
-    }, 100);
+    }, TIMING.INITIAL_RESIZE_DELAY);
 
     // Subscribe to settings changes
     useSettingsStore.subscribe((state) => {
@@ -85,7 +139,7 @@ class SceneManager {
     // Start performance monitoring after a short delay to allow initial load/compilation
     setTimeout(() => {
         perfMonitor.start();
-    }, 3000);
+    }, TIMING.PERF_MONITOR_DELAY);
   }
 
   private updateSettings(state: { quality: string; shadows: boolean }) {
@@ -131,7 +185,17 @@ class SceneManager {
         this.animatedBackground.update(delta);
       }
 
-      this.renderer?.render(this.scene!, this.camera!);
+      // Update post-processing (for animated effects like film grain)
+      postProcessingManager.update(delta);
+
+      // Render using post-processing composer if enabled, otherwise direct render
+      const composer = postProcessingManager.getComposer();
+      if (postProcessingManager.isEnabled() && composer) {
+        composer.render();
+      } else {
+        this.renderer?.render(this.scene!, this.camera!);
+      }
+      
       this.animationFrameId = window.requestAnimationFrame(loop);
     };
     this.animationFrameId = window.requestAnimationFrame(loop);
@@ -261,6 +325,9 @@ class SceneManager {
     this.renderer.setSize(canvasWidth, canvasHeight, false);
     this.camera.aspect = targetRatio;
     this.camera.updateProjectionMatrix();
+    
+    // Resize post-processing composer
+    postProcessingManager.resize(canvasWidth, canvasHeight);
     
     console.log('[SceneManager] Canvas resized to:', canvasWidth, 'x', canvasHeight, 'Aspect:', targetRatio);
   }
@@ -605,9 +672,16 @@ class SceneManager {
   resetCamera() {
     if (!this.controls || !this.camera) return;
     
-    // Reset to default position (closer)
-    this.camera.position.set(0, 1.4, 1.6);
-    this.controls.target.set(0, 1.4, 0);
+    this.camera.position.set(
+      CAMERA_CONFIG.DEFAULT_POSITION.x,
+      CAMERA_CONFIG.DEFAULT_POSITION.y,
+      CAMERA_CONFIG.DEFAULT_POSITION.z
+    );
+    this.controls.target.set(
+      CAMERA_CONFIG.DEFAULT_TARGET.x,
+      CAMERA_CONFIG.DEFAULT_TARGET.y,
+      CAMERA_CONFIG.DEFAULT_TARGET.z
+    );
     this.controls.update();
     
     console.log('[SceneManager] Camera reset to default position');
@@ -619,21 +693,25 @@ class SceneManager {
   setCameraPreset(preset: 'front' | 'quarter' | 'side') {
     if (!this.controls || !this.camera) return;
     
+    const targetY = CAMERA_CONFIG.DEFAULT_TARGET.y;
+    
     switch (preset) {
       case 'front':
-        this.camera.position.set(0, 1.4, 1.6); // Closer front view
-        this.controls.target.set(0, 1.4, 0);
+        this.camera.position.set(0, targetY, 1.6);
         break;
       case 'quarter':
-        this.camera.position.set(1.2, 1.5, 1.4); // Closer quarter view
-        this.controls.target.set(0, 1.4, 0);
+        this.camera.position.set(1.2, targetY + 0.1, 1.4);
         break;
       case 'side':
-        this.camera.position.set(1.6, 1.4, 0); // Closer side view
-        this.controls.target.set(0, 1.4, 0);
+        this.camera.position.set(1.6, targetY, 0);
         break;
     }
     
+    this.controls.target.set(
+      CAMERA_CONFIG.DEFAULT_TARGET.x,
+      CAMERA_CONFIG.DEFAULT_TARGET.y,
+      CAMERA_CONFIG.DEFAULT_TARGET.z
+    );
     this.controls.update();
     console.log('[SceneManager] Camera set to', preset, 'view');
   }
@@ -646,6 +724,12 @@ class SceneManager {
     if (this.animationFrameId) window.cancelAnimationFrame(this.animationFrameId);
     window.removeEventListener('resize', this.handleResize);
     this.tickHandlers.clear();
+    
+    // Dispose visual managers
+    lightingManager.dispose();
+    postProcessingManager.dispose();
+    environmentManager.destroy();
+    
     this.controls?.dispose();
     this.renderer?.dispose();
     this.scene = undefined;
