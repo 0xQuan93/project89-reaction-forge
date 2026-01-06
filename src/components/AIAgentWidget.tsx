@@ -4,18 +4,27 @@ import { aiManager } from '../ai/AIManager';
 import { apiKeyStorage } from '../utils/secureStorage';
 import './AIAgentWidget.css';
 
+// Check if server proxy is available (no env API key means we use proxy)
+const USE_SERVER_PROXY = !import.meta.env.VITE_GEMINI_API_KEY;
+
 export function AIAgentWidget() {
   const { isAIActive, isLoading, loadProgress, currentThought, setAIActive } = useAIStore();
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [rememberKey, setRememberKey] = useState(false);
-  const [showKeyInput, setShowKeyInput] = useState(true);
+  const [showKeyInput, setShowKeyInput] = useState(!USE_SERVER_PROXY); // Hide if using proxy
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // On mount, migrate old storage and check for existing key
   useEffect(() => {
+    // If using server proxy, no need to check for stored keys
+    if (USE_SERVER_PROXY) {
+      setShowKeyInput(false);
+      return;
+    }
+    
     // Migrate from old insecure localStorage
     apiKeyStorage.migrate();
     
@@ -51,13 +60,15 @@ export function AIAgentWidget() {
 
   const handleToggleActive = async () => {
     if (!isAIActive) {
-      if (!apiKey) {
+      // If using proxy, no API key needed
+      if (!USE_SERVER_PROXY && !apiKey) {
         setIsOpen(true);
         setShowKeyInput(true);
         return;
       }
       try {
-        await aiManager.init(apiKey);
+        // Pass API key only if not using proxy
+        await aiManager.init(USE_SERVER_PROXY ? undefined : apiKey);
         setAIActive(true);
       } catch (error) {
         alert("Failed to connect to AI. Check your API key.");

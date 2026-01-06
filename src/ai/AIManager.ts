@@ -2,8 +2,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { avatarManager } from "../three/avatarManager";
 import { useAIStore } from "../state/useAIStore";
 import { geminiService } from "../services/gemini";
+import { geminiProxy } from "../services/geminiProxy";
 import { avatarController, type GestureType, type EmotionState } from "./AvatarController";
 import type { ExpressionId, PoseId } from "../types/reactions";
+
+// Check if we should use the server proxy (no API key needed)
+const USE_PROXY = !import.meta.env.VITE_GEMINI_API_KEY;
 
 // Valid pose IDs that exist in the pose library
 const VALID_POSE_IDS: PoseId[] = [
@@ -65,6 +69,7 @@ class AIManager {
   private chatSession: any = null;
   private isInitialized = false;
   private apiKey: string = "";
+  private useProxy: boolean = USE_PROXY;
 
   // Enhanced System Prompt with full avatar control
   private systemPrompt = `
@@ -126,28 +131,36 @@ class AIManager {
     - Always use at least one body command per response to feel alive
   `;
 
-  async init(apiKey: string) {
+  /**
+   * Initialize the AI Manager
+   * @param apiKey - Optional API key. If not provided, uses server proxy.
+   */
+  async init(apiKey?: string) {
     if (this.isInitialized) return;
     
-    this.apiKey = apiKey;
     const store = useAIStore.getState();
     store.setLoading(true, 0);
 
     try {
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-      
-      // Try initializing with a reliable default first
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-pro-latest" });
-      
-      // CRITICAL: Also initialize geminiService for pose generation
-      geminiService.initialize(this.apiKey);
-      
-      this.startChatSession();
+      // Determine whether to use proxy or direct API
+      if (apiKey) {
+        // User provided an API key - use direct API
+        this.useProxy = false;
+        this.apiKey = apiKey;
+        this.genAI = new GoogleGenerativeAI(this.apiKey);
+        this.model = this.genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+        geminiService.initialize(this.apiKey);
+        this.startChatSession();
+        console.log("🧠 AI Brain Initialized (Direct API)");
+      } else {
+        // No API key - use server proxy
+        this.useProxy = true;
+        geminiProxy.setSystemPrompt(this.systemPrompt);
+        console.log("🧠 AI Brain Initialized (Server Proxy)");
+      }
 
       this.isInitialized = true;
       store.setLoading(false, 100);
-      
-      console.log("🧠 AI Brain Initialized (Chat + Pose Generation)");
     } catch (e) {
       console.error("Failed to load AI:", e);
       store.setLoading(false, 0);
@@ -173,49 +186,68 @@ class AIManager {
   }
 
   async processInput(userInput: string) {
-    if (!this.isInitialized || !this.genAI) {
+    if (!this.isInitialized) {
       throw new Error("AI not initialized");
     }
 
     useAIStore.getState().setThought("Thinking...");
 
-    // List of models to try in order of preference/reliability
-    // gemini-pro-latest is strictly prioritized as requested
-    const modelsToTry = ["gemini-pro-latest", "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
-    
-    let lastError = null;
+    try {
+      let text: string;
 
-    for (const modelName of modelsToTry) {
-      try {
-        // If the current model isn't the one we want to try, switch it
-        if (!this.model || (this.model as any).model !== modelName) {
-           this.model = this.genAI.getGenerativeModel({ model: modelName });
-           this.startChatSession(); // Re-init chat with new model
+      if (this.useProxy) {
+        // Use server-side proxy (secure, no API key exposed)
+        const response = await geminiProxy.chat(userInput);
+        text = response.text;
+      } else {
+        // Use direct API with user's key
+        if (!this.genAI) {
+          throw new Error("AI not initialized properly");
         }
 
-        if (!this.chatSession) this.startChatSession();
+        // List of models to try in order of preference/reliability
+        const modelsToTry = ["gemini-pro-latest", "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
+        let lastError = null;
+        let success = false;
 
-        const result = await this.chatSession.sendMessage(userInput);
-        const response = result.response;
-        const text = response.text();
+        for (const modelName of modelsToTry) {
+          try {
+            if (!this.model || (this.model as any).model !== modelName) {
+              this.model = this.genAI.getGenerativeModel({ model: modelName });
+              this.startChatSession();
+            }
 
-        useAIStore.getState().setThought(null);
-        
-        // Execute any commands in the response
-        this.executeResponse(text);
-        
-        return text;
+            if (!this.chatSession) this.startChatSession();
 
-      } catch (e: any) {
-        console.warn(`[AIManager] Failed with ${modelName}:`, e.message);
-        lastError = e;
-        // Continue to next model...
+            const result = await this.chatSession.sendMessage(userInput);
+            const response = result.response;
+            text = response.text();
+            success = true;
+            break;
+
+          } catch (e: any) {
+            console.warn(`[AIManager] Failed with ${modelName}:`, e.message);
+            lastError = e;
+          }
+        }
+
+        if (!success) {
+          throw lastError || new Error("All models failed");
+        }
       }
-    }
 
-    console.error("All AI models failed:", lastError);
-    useAIStore.getState().setThought("Connection Error");
-    return "I'm having trouble connecting to the AI service. Please check your API key.";
+      useAIStore.getState().setThought(null);
+      
+      // Execute any commands in the response
+      this.executeResponse(text!);
+      
+      return text!;
+
+    } catch (e: any) {
+      console.error("AI processing failed:", e);
+      useAIStore.getState().setThought("Connection Error");
+      return "I'm having trouble connecting. Please try again.";
+    }
   }
 
   // Parse text for commands and execute them
