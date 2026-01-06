@@ -3,6 +3,7 @@ import { geminiService } from '../../services/gemini';
 import { useCustomPoseStore } from '../../state/useCustomPoseStore';
 import { useToastStore } from '../../state/useToastStore';
 import { avatarManager } from '../../three/avatarManager';
+import { apiKeyStorage } from '../../utils/secureStorage';
 import type { VRMPose } from '@pixiv/three-vrm';
 
 export function AIGeneratorTab() {
@@ -22,14 +23,23 @@ export function AIGeneratorTab() {
   const [showDebug, setShowDebug] = useState(false);
   const [rawResponse, setRawResponse] = useState('');
   
-  // Use environment variable for API Key
+  // Use environment variable for API Key (highest priority)
   const envApiKey = import.meta.env.VITE_GEMINI_API_KEY;
   
-  // State for user-provided API key (for web demo)
-  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  // State for user-provided API key (secure storage)
+  const [userApiKey, setUserApiKey] = useState('');
 
-  // Effective API key
+  // Effective API key (env takes priority)
   const apiKey = envApiKey || userApiKey;
+
+  // On mount, migrate and load stored key
+  useEffect(() => {
+    apiKeyStorage.migrate();
+    const storedKey = apiKeyStorage.get();
+    if (storedKey) {
+      setUserApiKey(storedKey);
+    }
+  }, []);
 
   useEffect(() => {
     if (apiKey) {
@@ -38,12 +48,12 @@ export function AIGeneratorTab() {
   }, [apiKey]);
 
   const handleSaveKey = (key: string) => {
-    localStorage.setItem('gemini_api_key', key);
+    apiKeyStorage.set(key, true); // Persistent for this tab since it's a power-user feature
     setUserApiKey(key);
   };
 
   const handleClearKey = () => {
-    localStorage.removeItem('gemini_api_key');
+    apiKeyStorage.remove();
     setUserApiKey('');
   };
 

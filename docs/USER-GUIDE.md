@@ -11,6 +11,7 @@ PoseLab is a powerful browser-based tool for:
 - **Playing and recording animations** from files or webcam motion capture
 - **Creating professional renders** with advanced lighting and effects
 - **Multiplayer co-op sessions** with real-time avatar sync and voice chat
+- **Interacting with your avatar via the AI Agent**
 - **Exporting** images, videos, and GLB files
 
 No installation required - works entirely in your browser, including on **mobile devices**!
@@ -40,6 +41,28 @@ No installation required - works entirely in your browser, including on **mobile
 ---
 
 ## 📑 Complete Feature Guide
+
+## 🧠 AI Agent (Neural Link)
+
+Chat with your avatar and have it perform actions!
+
+**How to Use:**
+1. Look for the **"AI Agent Offline"** (🔌) widget at the bottom-left of the screen.
+2. Click to expand it.
+3. Click the **Connect** (⚡) button.
+4. Enter your **Google Gemini API Key** (Get one free from Google AI Studio).
+5. Start chatting!
+
+**Commands:**
+Try asking your avatar to:
+- *"Do a dance!"*
+- *"Wave hello!"*
+- *"Look surprised!"*
+- *"Strike a victory pose!"*
+
+The AI understands natural language and will **respond with voice and actions**.
+
+---
 
 ## 🎭 Scene Tab
 
@@ -431,6 +454,7 @@ PoseLab works on mobile devices with some considerations:
 | Voice chat | ✅ |
 | Image export | ✅ |
 | Video export | ⚠️ Limited on some devices |
+| AI Agent | ✅ |
 
 ### Tips for Best Mobile Experience
 1. **Use landscape mode** for better viewport visibility
@@ -649,6 +673,7 @@ PoseLab works on mobile devices with some considerations:
 - ✅ **Viewport aspect ratio controls**
 - ✅ Live facial expression sync in multiplayer
 - ✅ Avatar translation via gizmo
+- ✅ **AI Agent** (Chat with avatar using Gemini)
 
 ### v1.4
 - Advanced 3-point lighting system
@@ -670,3 +695,5 @@ PoseLab works on mobile devices with some considerations:
 ---
 
 *Built with ❤️ by Project89*
+
+*Version 1.5 | January 2026*

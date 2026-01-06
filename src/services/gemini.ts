@@ -203,10 +203,10 @@ export class GeminiService {
   initialize(apiKey: string) {
     this.apiKey = apiKey;
     this.genAI = new GoogleGenerativeAI(apiKey);
-    // Fallback to gemini-pro as it is standard. 
+    // Fallback to gemini-pro-latest as strictly requested.
     // We will let the user configure this or we'll detect availability.
     this.model = this.genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
+      model: 'gemini-pro-latest',
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -334,7 +334,12 @@ export class GeminiService {
     // Note: Input 'pose' here is using Euler Angles (Degrees) from AI
     const newPose: any = {};
     
-    console.log('[GeminiService] Processing Euler pose. Bone count:', Object.keys(sanitizedPose).length);
+    const boneCount = Object.keys(sanitizedPose).length;
+    console.log('[GeminiService] Processing Euler pose. Bone count:', boneCount);
+    
+    if (boneCount === 0) {
+      console.warn('[GeminiService] No valid bones found after sanitization. Original pose keys:', Object.keys(pose));
+    }
 
     Object.entries(sanitizedPose).forEach(([boneName, transform]: [string, any]) => {
       if (!transform || !transform.rotation) return;
@@ -415,7 +420,7 @@ export class GeminiService {
     return newPose as VRMPose;
   }
 
-  async generatePose(prompt: string, useLimits = true, isAnimation = false, isLoop = true): Promise<{ vrmPose?: VRMPose; tracks?: any[]; expressions?: Record<string, number>; rawJson: string } | null> {
+  async generatePose(prompt: string, useLimits = true, isAnimation = false, isLoop = true): Promise<{ vrmPose?: VRMPose; sceneRotation?: { x: number, y: number, z: number }; tracks?: any[]; expressions?: Record<string, number>; rawJson: string } | null> {
     if (!this.model) {
       throw new Error('Gemini API not initialized. Please provide an API key.');
     }

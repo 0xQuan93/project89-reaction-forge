@@ -25,48 +25,73 @@ class AnimationManager {
    * @param loop - Whether to loop the animation (default: true)
    * @param fadeInDuration - Fade in duration in seconds (default: 0.3)
    */
-  playAnimation(clip: THREE.AnimationClip, loop = true, fadeInDuration = 0.3) {
+  playAnimation(clip: THREE.AnimationClip, loop = true, _fadeInDuration = 0.3) {
     if (!this.mixer || !this.vrm) {
       console.warn('[AnimationManager] Cannot play animation - mixer not initialized');
       return;
     }
 
-    console.log('[AnimationManager] Playing animation:', clip.name, { loop, duration: clip.duration });
+    console.log('[AnimationManager] Playing animation:', clip.name, { loop, duration: clip.duration, tracks: clip.tracks.length });
 
-    // Stop current animation with fade out
+    // Handle existing animation - just stop it cleanly, don't uncache yet
+    // Uncaching while fading can cause bone snapping issues
     if (this.currentAction) {
-      this.currentAction.fadeOut(fadeInDuration);
+      this.currentAction.stop();
+      this.currentAction = undefined;
     }
+    
+    // Stop all other actions to ensure clean slate
+    this.mixer.stopAllAction();
 
     // Create and configure new action
     const action = this.mixer.clipAction(clip);
     action.reset();
     action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
     action.clampWhenFinished = !loop;
-    action.fadeIn(fadeInDuration);
-    action.play();
+    action.enabled = true;  // Ensure action is enabled
+    action.setEffectiveWeight(1);  // Ensure full weight
+    action.setEffectiveTimeScale(1);  // Ensure normal speed
+    action.play();  // Start immediately, no fade (cleaner transition)
 
     this.currentAction = action;
+    
+    console.log('[AnimationManager] ✅ Animation started:', {
+      isRunning: action.isRunning(),
+      weight: action.getEffectiveWeight(),
+      timeScale: action.getEffectiveTimeScale()
+    });
   }
 
   /**
    * Stop the current animation
    * @param immediate - If true, stop immediately without fade (default: true for static poses)
+   * @param resetPose - If true, reset to T-pose after stopping (default: false)
    */
-  stopAnimation(immediate = true) {
+  stopAnimation(immediate = true, resetPose = false) {
+    if (!this.mixer) return;
+    
+    console.log('[AnimationManager] Stopping animation', { immediate, resetPose });
+    
     if (this.currentAction) {
-      console.log('[AnimationManager] Stopping animation', { immediate });
       if (immediate) {
         this.currentAction.stop();
-        this.currentAction.reset();
       } else {
         this.currentAction.fadeOut(0.3);
       }
       this.currentAction = undefined;
     }
+    
     // Stop all actions to ensure clean state
-    if (this.mixer && immediate) {
+    if (immediate) {
       this.mixer.stopAllAction();
+    }
+    
+    // Only reset to T-pose if explicitly requested
+    // This prevents unwanted snapping when transitioning between animations
+    if (resetPose && this.vrm?.humanoid) {
+      this.vrm.humanoid.resetNormalizedPose();
+      this.vrm.update(0);
+      console.log('[AnimationManager] Reset VRM to T-pose');
     }
   }
 

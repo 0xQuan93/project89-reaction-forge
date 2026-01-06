@@ -74,8 +74,14 @@ class AvatarManager {
     this.tickDispose = sceneManager.registerTick((delta) => {
       if (this.vrm) {
         this.vrm.update(delta);
-        if (this.isAnimated && !this.isInteracting) {
-          animationManager.update(delta);
+        // ALWAYS update the animation mixer if an animation is playing
+        // The isInteracting flag should only pause, not block entirely
+        if (this.isAnimated) {
+          if (!this.isInteracting) {
+            animationManager.update(delta);
+          }
+          // If interacting but animated, we still want the mixer to be ready
+          // just not updating (paused state)
         }
       }
     });
@@ -133,7 +139,10 @@ class AvatarManager {
   }
 
   async applyRawPose(poseData: RawPoseData, animationMode: AnimationMode = 'static') {
-    if (!this.vrm) return;
+    if (!this.vrm) {
+      console.warn('[AvatarManager] applyRawPose called but no VRM loaded');
+      return;
+    }
     this.isInteracting = false;
 
     // Only apply scene rotation if not locked
@@ -151,24 +160,75 @@ class AvatarManager {
       // Cast through unknown to handle the structural mismatch between RawPoseData and SerializedAnimationClip
       this.playAnimationClip(deserializeAnimationClip(poseData as unknown as Parameters<typeof deserializeAnimationClip>[0]), animationMode === 'loop');
     } else if (poseData.vrmPose) {
+      // Stop any running animation first
       this.stopAnimation(true);
-      this.vrm.humanoid?.setNormalizedPose(poseData.vrmPose);
+      
+      // Validate and log the pose data
+      const boneCount = Object.keys(poseData.vrmPose).length;
+      console.log(`[AvatarManager] Applying raw pose with ${boneCount} bones`);
+      
+      if (boneCount === 0) {
+        console.warn('[AvatarManager] Empty vrmPose received - skipping');
+        return;
+      }
+      
+      // Log first few bones for debugging
+      const bones = Object.entries(poseData.vrmPose).slice(0, 3);
+      bones.forEach(([name, data]) => {
+        console.log(`  - ${name}:`, data);
+      });
+      
+      // Apply the pose
+      try {
+        // First reset to T-pose to clear any residual bone state
+        this.vrm.humanoid?.resetNormalizedPose();
+        this.vrm.update(0);
+        
+        // Now apply the new pose
+        this.vrm.humanoid?.setNormalizedPose(poseData.vrmPose);
+      } catch (e) {
+        console.error('[AvatarManager] Failed to set normalized pose:', e);
+        return;
+      }
+      
+      // Apply expressions if provided
       if (poseData.expressions && this.vrm.expressionManager) {
         Object.entries(poseData.expressions).forEach(([name, value]) => {
           const standardMap: Record<string, string> = { 'joy': 'Joy', 'happy': 'Joy', 'angry': 'Angry', 'sad': 'Sorrow', 'fun': 'Fun', 'surprised': 'Surprised', 'blink': 'Blink' };
           this.vrm!.expressionManager!.setValue(standardMap[name.toLowerCase()] || name, value as number);
         });
       }
+      
+      // Force update to apply changes
+      this.vrm.humanoid?.update();
       this.vrm.update(0);
+      console.log('[AvatarManager] ✅ Raw pose applied successfully');
+    } else {
+      console.warn('[AvatarManager] applyRawPose called with no vrmPose or tracks');
     }
   }
 
   async applyPose(pose: PoseId, animated = false, animationMode: AnimationMode = 'static') {
-    if (!this.vrm) return;
+    if (!this.vrm) {
+      console.warn('[AvatarManager] applyPose called but no VRM loaded');
+      return;
+    }
     this.isInteracting = false;
-    const shouldAnimate = animated || animationMode !== 'static';
-    const def = shouldAnimate ? await getPoseDefinitionWithAnimation(pose) : getPoseDefinition(pose);
-    if (!def) return;
+    
+    // Determine if we should animate
+    // If animated=true but animationMode='static', default to 'loop' to prevent freezing
+    const effectiveAnimationMode = animated && animationMode === 'static' ? 'loop' : animationMode;
+    const shouldAnimate = animated || effectiveAnimationMode !== 'static';
+    const shouldLoop = effectiveAnimationMode === 'loop';
+    
+    console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}`);
+    
+    // Pass VRM to getPoseDefinitionWithAnimation so it can retarget the animation tracks
+    const def = shouldAnimate ? await getPoseDefinitionWithAnimation(pose, this.vrm) : getPoseDefinition(pose);
+    if (!def) {
+      console.warn(`[AvatarManager] Pose definition not found for: ${pose}`);
+      return;
+    }
 
     // Only apply scene rotation if not locked (user hasn't manually rotated)
     const { rotationLocked } = useSceneSettingsStore.getState();
@@ -181,20 +241,36 @@ class AvatarManager {
     }
 
     if (shouldAnimate && def.animationClip) {
-      this.playAnimationClip(def.animationClip, animationMode === 'loop');
+      console.log(`[AvatarManager] Playing animation clip for: ${pose}`);
+      this.playAnimationClip(def.animationClip, shouldLoop);
     } else if (shouldAnimate) {
+      console.log(`[AvatarManager] Generating animation from pose: ${pose}`);
       const vrmPose = buildVRMPose(def);
       const clip = getAnimatedPose(pose, vrmPose, this.vrm) || poseToAnimationClip(vrmPose, this.vrm, 0.5, pose);
-      this.playAnimationClip(clip, animationMode === 'loop');
+      this.playAnimationClip(clip, shouldLoop);
     } else {
+      console.log(`[AvatarManager] Applying static pose: ${pose}`);
+      // Stop animation first
       this.stopAnimation(true);
-      this.vrm.humanoid?.setNormalizedPose(buildVRMPose(def));
+      
+      // Reset to T-pose then apply new pose
+      this.vrm.humanoid?.resetNormalizedPose();
       this.vrm.update(0);
+      
+      const vrmPose = buildVRMPose(def);
+      this.vrm.humanoid?.setNormalizedPose(vrmPose);
+      this.vrm.humanoid?.update();
+      this.vrm.update(0);
+      console.log(`[AvatarManager] ✅ Static pose applied: ${pose}`);
     }
   }
 
   playAnimationClip(clip: THREE.AnimationClip, loop = true, fade = 0.3) {
-    if (!this.vrm) return;
+    if (!this.vrm) {
+      console.warn('[AvatarManager] playAnimationClip called but no VRM loaded');
+      return;
+    }
+    console.log(`[AvatarManager] playAnimationClip: ${clip.name}, loop=${loop}, tracks=${clip.tracks.length}`);
     this.isInteracting = false;
     this.isAnimated = true;
     animationManager.playAnimation(clip, loop, fade);

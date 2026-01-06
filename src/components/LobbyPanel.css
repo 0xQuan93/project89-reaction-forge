@@ -1,0 +1,192 @@
+/* Lobby Panel Styles */
+
+.lobby-container {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: 'Space Grotesk', sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lobby-status-bar {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.lobby-status-bar:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.lobby-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #00ff9d;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00ff9d;
+  animation: pulse-live 2s infinite;
+}
+
+@keyframes pulse-live {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.live-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.lobby-toggle-icon {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: auto;
+}
+
+/* Chat Window */
+.lobby-chat-window {
+  width: 320px;
+  height: 400px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-bottom: 0.5rem; /* Space between chat and status bar */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Reverse order so status bar is at bottom in DOM flow but visually chat is above */
+  order: -1; 
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lobby-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.lobby-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lobby-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.lobby-empty-state {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  margin-top: 2rem;
+  font-style: italic;
+}
+
+.lobby-message {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.lobby-sender {
+  color: #00ffd6;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.lobby-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.lobby-input-area {
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lobby-input-area input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.lobby-input-area input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #00ffd6;
+  box-shadow: 0 0 0 2px rgba(0, 255, 214, 0.1);
+}
+
+.lobby-input-area button {
+  background: linear-gradient(135deg, #1c6cff, #6c2bff);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 0 1rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.lobby-input-area button:hover {
+  transform: scale(1.05);
+}
+
+.lobby-input-area button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .lobby-chat-window {
+    width: calc(100vw - 2rem);
+    height: 350px;
+  }
+}
+

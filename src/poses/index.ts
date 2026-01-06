@@ -57,22 +57,27 @@ export function getPoseDefinition(id: PoseId): PoseDefinition | undefined {
 /**
  * Get pose definition with animation clip loaded (async)
  * Use this when you need the full animation data
+ * 
+ * @param id - The pose ID to get
+ * @param vrm - Optional VRM to retarget the animation to. Required for proper playback.
  */
-export async function getPoseDefinitionWithAnimation(id: PoseId): Promise<PoseDefinition | undefined> {
+export async function getPoseDefinitionWithAnimation(id: PoseId, vrm?: import('@pixiv/three-vrm').VRM): Promise<PoseDefinition | undefined> {
   const definition = poseLibrary[id];
   if (!definition) return undefined;
 
-  // If animation clip is already loaded, return as-is
-  if (definition.animationClip) {
+  // If animation clip is already loaded AND we don't have a VRM to retarget to, return as-is
+  // Note: We should ideally always retarget, but for backwards compatibility we allow cached clips
+  if (definition.animationClip && !vrm) {
     return definition;
   }
 
   // Try to load animation clip from file
   const { loadAnimationClip } = await import('./loadAnimationClip');
-  const animationClip = await loadAnimationClip(id);
+  const animationClip = await loadAnimationClip(id, vrm);
 
   if (animationClip) {
-    // Cache the loaded animation clip
+    // Return with the loaded (and potentially retargeted) animation clip
+    // Note: We don't cache retargeted clips since they're VRM-specific
     return {
       ...definition,
       animationClip,

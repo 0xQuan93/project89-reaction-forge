@@ -48,6 +48,61 @@ interface MotionConfig {
 }
 
 /**
+ * Easing Functions for Natural Animation
+ * Based on the 12 Principles of Animation (Disney)
+ */
+const Easing = {
+  // Basic easing
+  linear: (t: number) => t,
+  easeIn: (t: number) => t * t,
+  easeOut: (t: number) => 1 - (1 - t) * (1 - t),
+  easeInOut: (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+  
+  // Anticipation (slow start with overshoot)
+  anticipation: (t: number) => {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return c3 * t * t * t - c1 * t * t;
+  },
+  
+  // Follow-through (overshoot then settle)
+  followThrough: (t: number) => {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  },
+  
+  // Bounce (for impacts)
+  bounce: (t: number) => {
+    const n1 = 7.5625;
+    const d1 = 2.75;
+    if (t < 1 / d1) return n1 * t * t;
+    if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+    if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+    return n1 * (t -= 2.625 / d1) * t + 0.984375;
+  },
+  
+  // Elastic (springy motion)
+  elastic: (t: number) => {
+    const c4 = (2 * Math.PI) / 3;
+    return t === 0 ? 0 : t === 1 ? 1 
+      : -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * c4);
+  },
+  
+  // Organic breathing curve
+  breath: (t: number) => (1 - Math.cos(t * Math.PI * 2)) / 2,
+  
+  // Natural sway (asymmetric)
+  sway: (t: number) => Math.sin(t * Math.PI * 2) * (1 + 0.2 * Math.sin(t * Math.PI * 4)),
+  
+  // Smooth step (S-curve)
+  smoothStep: (t: number) => t * t * (3 - 2 * t),
+  
+  // Smoother step (even smoother S-curve)
+  smootherStep: (t: number) => t * t * t * (t * (t * 6 - 15) + 10),
+};
+
+/**
  * MotionEngine
  * 
  * A procedural animation generator that combines:
@@ -56,6 +111,7 @@ interface MotionConfig {
  * 3. Dynamic Noise Profiles (Organic Jitter)
  * 4. Extremity Solvers (Hand Synergy & Leg Grounding)
  * 5. Energy Coupling (Full Body Integration)
+ * 6. 12 Principles of Animation (Anticipation, Follow-through, Ease In/Out)
  */
 export class MotionEngine {
   private limits: { [key: string]: LimitStats };
@@ -149,21 +205,70 @@ export class MotionEngine {
 
   // --- MATH HELPERS ---
 
+  /**
+   * Organic sine wave with asymmetric ease (more natural than pure sine)
+   * Implements "Slow In, Slow Out" principle
+   */
   private bioSin(t: number): number {
     const s = Math.sin(t);
-    return Math.sign(s) * Math.pow(Math.abs(s), 0.85); 
+    // Apply smoothstep-like easing for more organic feel
+    const abs = Math.abs(s);
+    const eased = abs * abs * (3 - 2 * abs); // smoothstep
+    return Math.sign(s) * eased;
   }
 
+  /**
+   * Multi-octave Perlin-like noise for organic micro-movements
+   * Implements "Secondary Action" principle
+   */
   private noise(t: number, offset: number, amp: number): number {
     // Multi-octave noise for organic feel
     const n1 = Math.sin(t * 1.5 + offset);
     const n2 = Math.sin(t * 3.7 + offset * 1.3) * 0.5;
     const n3 = Math.sin(t * 7.1 + offset * 0.7) * 0.25;
-    return (n1 + n2 + n3) * amp;
+    const n4 = Math.sin(t * 13.3 + offset * 2.1) * 0.125; // Extra octave for detail
+    return (n1 + n2 + n3 + n4) * amp;
+  }
+
+  /**
+   * Anticipation curve - small opposite motion before main action
+   * Used for gesture wind-ups
+   */
+  public anticipate(t: number, anticipationAmount = 0.1): number {
+    if (t < 0.15) {
+      // Wind-up (opposite direction)
+      return -anticipationAmount * Easing.easeOut(t / 0.15);
+    } else {
+      // Main action
+      const mainT = (t - 0.15) / 0.85;
+      return Easing.followThrough(mainT);
+    }
+  }
+
+  /**
+   * Follow-through with overshoot and settle
+   * Used for gesture endings
+   */
+  public followThrough(t: number, overshoot = 0.15): number {
+    if (t < 0.7) {
+      // Main motion with overshoot
+      return Easing.easeOut(t / 0.7) * (1 + overshoot);
+    } else {
+      // Settle back
+      const settleT = (t - 0.7) / 0.3;
+      return 1 + overshoot * (1 - Easing.easeInOut(settleT));
+    }
   }
 
   public clamp(val: number, min: number, max: number): number {
     return Math.min(Math.max(val, min), max);
+  }
+  
+  /**
+   * Get easing function by name
+   */
+  public getEasing(name: keyof typeof Easing): (t: number) => number {
+    return Easing[name] || Easing.linear;
   }
 
   /**

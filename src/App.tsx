@@ -10,6 +10,9 @@ import { ToastHost } from './ui/Toast';
 import { useUIStore } from './state/useUIStore';
 import { initAvatarBridge } from './multiplayer/avatarBridge';
 import { ConnectionProgressPanel } from './components/ConnectionProgressPanel';
+import { AIAgentWidget } from './components/AIAgentWidget';
+
+// import { LobbyPanel } from './components/LobbyPanel';
 
 // Initialize multiplayer avatar bridge on app startup
 initAvatarBridge();
@@ -68,6 +71,8 @@ function App() {
 
       <ToastHost />
       <ConnectionProgressPanel />
+      <AIAgentWidget />
+      {/* <LobbyPanel /> */}
     </div>
   );
 }
