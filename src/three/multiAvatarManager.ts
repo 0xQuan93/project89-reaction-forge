@@ -676,32 +676,40 @@ class MultiAvatarManager {
   /**
    * Recalculate and apply positions for all avatars
    * Called when avatars are added/removed to maintain proper layout
+   * Only sets INITIAL positions - doesn't override user-controlled positions
    */
   private updateAllPositions() {
     const avatarList = Array.from(this.avatars.values());
     const totalCount = avatarList.length;
     
     if (totalCount <= 1) {
-      // Single or no avatars - center
+      // Single or no avatars - only set initial position if not already positioned
       avatarList.forEach(instance => {
-        instance.positionOffset.set(0, 0, 0);
-        instance.vrm.scene.position.set(0, 0, 0);
+        // Only set position if this is a fresh avatar (position is 0,0,0)
+        if (instance.positionOffset.lengthSq() === 0 && instance.vrm.scene.position.lengthSq() === 0) {
+          instance.positionOffset.set(0, 0, 0);
+          instance.vrm.scene.position.set(0, 0, 0);
+        }
       });
       return;
     }
     
-    // Multiple avatars - position based on ROLE (host/guest) not local/remote
-    // This ensures consistent world positions across all clients
-    // Host always on left (-X), guests on right (+X)
-    // We use peer ID ordering for consistent placement across clients
+    // Multiple avatars - calculate initial positions for NEW avatars only
+    // Don't override positions of avatars that have already been positioned
     const sortedAvatars = avatarList.sort((a, b) => a.peerId.localeCompare(b.peerId));
     
     sortedAvatars.forEach((instance, index) => {
-      // First avatar (alphabetically by peer ID) goes left, rest go right
-      // This creates consistent positions regardless of who is "local"
-      const xOffset = index === 0 ? -AVATAR_SPACING / 2 : AVATAR_SPACING / 2 + (index - 1) * AVATAR_SPACING;
-      instance.positionOffset.set(xOffset, 0, 0);
-      instance.vrm.scene.position.copy(instance.positionOffset);
+      // Only set position for avatars that haven't been positioned yet
+      // (positionOffset is 0,0,0 and scene position is also 0,0,0)
+      const isUnpositioned = instance.positionOffset.lengthSq() === 0;
+      
+      if (isUnpositioned) {
+        // First avatar (alphabetically by peer ID) goes left, rest go right
+        const xOffset = index === 0 ? -AVATAR_SPACING / 2 : AVATAR_SPACING / 2 + (index - 1) * AVATAR_SPACING;
+        instance.positionOffset.set(xOffset, 0, 0);
+        instance.vrm.scene.position.copy(instance.positionOffset);
+        console.log(`[MultiAvatarManager] Set initial position for ${instance.peerId}: x=${xOffset}`);
+      }
     });
   }
 

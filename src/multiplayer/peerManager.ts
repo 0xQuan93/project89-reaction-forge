@@ -458,11 +458,24 @@ class PeerManager {
         store.updatePeer(peerId, { displayName: message.displayName });
         // If we're host, notify other peers about the new peer
         if (store.role === 'host') {
+          // Tell existing peers about the new peer
           this.broadcastExcept(peerId, {
             type: 'peer-join',
             peerId: message.peerId,
             displayName: message.displayName,
             timestamp: Date.now(),
+          });
+          
+          // Tell the new peer about all existing peers
+          store.peers.forEach((peerInfo, existingPeerId) => {
+            if (existingPeerId !== peerId && existingPeerId !== store.localPeerId) {
+              this.send(peerId, {
+                type: 'peer-join',
+                peerId: existingPeerId,
+                displayName: peerInfo.displayName,
+                timestamp: Date.now(),
+              });
+            }
           });
         }
         break;

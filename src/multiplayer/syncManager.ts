@@ -395,8 +395,9 @@ class SyncManager {
         break;
 
       case 'peer-join':
-        // When a new peer joins, send them our full state and VRM
-        this.handlePeerJoin(peerId);
+        // When a new peer joins (or we're notified about them), exchange state and VRM
+        // The peerId here is who sent the message, message.peerId is who actually joined
+        this.handlePeerJoin(peerId, message as { peerId: PeerId; displayName: string });
         break;
 
       case 'peer-leave':
@@ -405,27 +406,71 @@ class SyncManager {
     }
   }
 
-  private handlePeerJoin(peerId: PeerId) {
-    console.log(`[SyncManager] Peer joined: ${peerId}`);
+  private handlePeerJoin(senderPeerId: PeerId, message: { peerId: PeerId; displayName: string }) {
+    const actualPeerId = message.peerId;
+    const store = useMultiplayerStore.getState();
     
-    // Send our full avatar state
-    this.sendFullStateToPeer(peerId);
+    console.log(`[SyncManager] Peer joined notification: ${actualPeerId} (from ${senderPeerId})`);
     
-    // Send our VRM file to the new peer (if we have one)
-    const { vrmArrayBuffer } = useAvatarSource.getState();
-    if (vrmArrayBuffer) {
-      // Small delay to let the peer set up
-      setTimeout(() => {
-        this.sendVRMToPeer(peerId);
-      }, 500);
-    }
-
-    // Request their VRM file
-    setTimeout(() => {
-      if (!multiAvatarManager.hasAvatar(peerId)) {
-        this.requestVRMFromPeer(peerId);
+    // If we're the host and someone directly connected to us
+    if (store.role === 'host' && senderPeerId === actualPeerId) {
+      // Send our full avatar state to the new peer
+      this.sendFullStateToPeer(senderPeerId);
+      
+      // Send our VRM file to the new peer (if we have one)
+      const { vrmArrayBuffer } = useAvatarSource.getState();
+      if (vrmArrayBuffer) {
+        setTimeout(() => {
+          this.sendVRMToPeer(senderPeerId);
+        }, 500);
       }
-    }, 1000);
+
+      // Request their VRM file
+      setTimeout(() => {
+        if (!multiAvatarManager.hasAvatar(senderPeerId)) {
+          this.requestVRMFromPeer(senderPeerId);
+        }
+      }, 1000);
+    } 
+    // If we're a guest and the host told us about another peer
+    else if (store.role === 'guest' && senderPeerId !== actualPeerId) {
+      console.log(`[SyncManager] Host notified us about peer: ${actualPeerId}`);
+      
+      // Add the peer to our store
+      store.addPeer(actualPeerId, {
+        displayName: message.displayName,
+        connectionState: 'connected',
+        hasAvatar: false,
+        isLocal: false,
+      });
+      
+      // We can't directly connect to them (star topology), but we can request
+      // their VRM through the host by sending a message that gets relayed
+      // For now, we rely on the host to relay VRM data
+      
+      // The host should handle VRM relay in sync-response
+    }
+    // If we're a guest and another peer sent us a join message (shouldn't happen in star)
+    else if (store.role === 'guest' && senderPeerId === actualPeerId) {
+      console.log(`[SyncManager] Direct peer join from: ${actualPeerId}`);
+      
+      // Send our state back
+      this.sendFullStateToPeer(senderPeerId);
+      
+      // Exchange VRMs
+      const { vrmArrayBuffer } = useAvatarSource.getState();
+      if (vrmArrayBuffer) {
+        setTimeout(() => {
+          this.sendVRMToPeer(senderPeerId);
+        }, 500);
+      }
+
+      setTimeout(() => {
+        if (!multiAvatarManager.hasAvatar(senderPeerId)) {
+          this.requestVRMFromPeer(senderPeerId);
+        }
+      }, 1000);
+    }
   }
 
   private handleVRMRequest(peerId: PeerId) {
@@ -783,19 +828,27 @@ class SyncManager {
     }
   }
 
-  private handlePeerLeave(peerId: PeerId) {
-    // Remove the peer's avatar from the scene
-    multiAvatarManager.removeAvatar(peerId);
-
+  private handlePeerLeave(peerId: PeerId, removeAvatar = false) {
     // Clean up any pending VRM transfers
     this.vrmTransferBuffers.delete(peerId);
+    this.pendingVRMRequests.delete(peerId);
 
-    console.log(`[SyncManager] Peer left: ${peerId}`);
+    // Only remove the avatar if explicitly requested (e.g., intentional leave)
+    // Otherwise, keep the avatar but mark as offline for visual feedback
+    if (removeAvatar) {
+      multiAvatarManager.removeAvatar(peerId);
+      console.log(`[SyncManager] Peer left and avatar removed: ${peerId}`);
+    } else {
+      // Keep avatar in scene but could add visual indication of offline status
+      console.log(`[SyncManager] Peer disconnected (avatar preserved): ${peerId}`);
+    }
   }
 
   private handleConnectionChange(peerId: PeerId, state: string) {
     if (state === 'disconnected') {
-      this.handlePeerLeave(peerId);
+      // Don't remove avatar on disconnect - they might reconnect
+      // The avatar stays visible as a "ghost" until session ends
+      this.handlePeerLeave(peerId, false);
     }
   }
 
