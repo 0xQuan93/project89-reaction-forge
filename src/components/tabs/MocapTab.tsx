@@ -119,6 +119,13 @@ export function MocapTab() {
       }
   }, [addToast]);
 
+  const setMocapModeOnly = useCallback((mode: 'full' | 'face') => {
+    setMocapMode(mode);
+    if (managerRef.current) {
+      managerRef.current.setMode(mode);
+    }
+  }, []);
+
   const toggleRecording = () => {
       if (!managerRef.current || !isActive) return;
 
@@ -327,7 +334,11 @@ export function MocapTab() {
 
     liveShutdownRef.current = true;
     if (previousMocapModeRef.current !== mocapMode) {
-      handleModeChange(previousMocapModeRef.current);
+      if (!isActive && !previousMocapActiveRef.current) {
+        setMocapModeOnly(previousMocapModeRef.current);
+      } else {
+        handleModeChange(previousMocapModeRef.current);
+      }
     }
     if (!previousMocapActiveRef.current && isActive) {
       liveShutdownRef.current = true;
@@ -343,6 +354,7 @@ export function MocapTab() {
     isActive,
     isVoiceLipSyncActive,
     handleModeChange,
+    setMocapModeOnly,
     startMocap,
     startVoiceLipSync,
     stopMocap,
