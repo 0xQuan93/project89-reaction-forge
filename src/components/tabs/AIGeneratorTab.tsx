@@ -23,11 +23,12 @@ export function AIGeneratorTab() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedPose, setGeneratedPose] = useState<VRMPose | null>(null);
+  const [generatedAnimation, setGeneratedAnimation] = useState<{ data: any; loop: boolean } | null>(null);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [showModels, setShowModels] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gemini-pro');
   const [customModelInput, setCustomModelInput] = useState('');
-  const [useLimits, setUseLimits] = useState(false);
+  const [useLimits, setUseLimits] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoop, setIsLoop] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
@@ -102,6 +103,7 @@ export function AIGeneratorTab() {
     setIsGenerating(true);
     setError(null);
     setGeneratedPose(null);
+    setGeneratedAnimation(null);
     
     try {
       if (!apiKey) {
@@ -119,7 +121,7 @@ export function AIGeneratorTab() {
       
       if (result && (result.vrmPose || (result as any).tracks)) {
         if ((result as any).tracks) {
-           setGeneratedPose((result as any)); // Store full animation data
+           setGeneratedAnimation({ data: result, loop: isLoop });
            await avatarManager.applyRawPose(result, isLoop ? 'loop' : 'once'); // Play animation
         } else if (result.vrmPose) {
            setGeneratedPose(result.vrmPose);
@@ -418,6 +420,22 @@ export function AIGeneratorTab() {
         </div>
       )}
 
+      {generatedAnimation && (
+        <div className="tab-section" style={{ border: '1px solid var(--accent)', background: 'rgba(0, 255, 157, 0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="small" style={{ color: 'var(--accent)' }}>Animation Preview Active</span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                className="secondary small"
+                onClick={() => avatarManager.applyRawPose(generatedAnimation.data, generatedAnimation.loop ? 'loop' : 'once')}
+              >
+                Replay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="tab-section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h3>Your Library ({customPoses.length})</h3>
@@ -486,4 +504,3 @@ export function AIGeneratorTab() {
     </div>
   );
 }
-

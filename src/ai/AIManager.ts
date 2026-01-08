@@ -326,14 +326,18 @@ class AIManager {
         useAIStore.getState().setThought("Generating Pose...");
         
         try {
-            const result = await geminiService.generatePose(description);
-            if (result && result.vrmPose) {
-                await avatarManager.applyRawPose({
-                    vrmPose: result.vrmPose,
-                    sceneRotation: result.sceneRotation
-                }, 'static');
-                console.log("[AIManager] ✅ Generated pose applied successfully");
-                actionTaken = true;
+            if (!geminiService.isReady()) {
+                console.warn('[AIManager] Gemini service not ready for pose generation');
+            } else {
+                const result = await geminiService.generatePose(description);
+                if (result && result.vrmPose) {
+                    await avatarManager.applyRawPose({
+                        vrmPose: result.vrmPose,
+                        sceneRotation: result.sceneRotation
+                    }, 'static');
+                    console.log("[AIManager] ✅ Generated pose applied successfully");
+                    actionTaken = true;
+                }
             }
         } catch (e) {
             console.error("[AIManager] Failed to generate pose:", e);
@@ -431,4 +435,3 @@ class AIManager {
 }
 
 export const aiManager = new AIManager();
-
