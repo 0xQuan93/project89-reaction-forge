@@ -49,6 +49,8 @@ export function CanvasStage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const preset = useReactionStore((state) => state.activePreset);
   const animationMode = useReactionStore((state) => state.animationMode);
+  const liveControlsEnabled = useReactionStore((state) => state.liveControlsEnabled);
+  const setPresetById = useReactionStore((state) => state.setPresetById);
   const { currentUrl } = useAvatarSource();
   const { activeCssOverlay } = useUIStore();
   
@@ -177,6 +179,37 @@ export function CanvasStage() {
     applyPreset(preset);
   }, [preset, avatarReady, animationMode]);
 
+  useEffect(() => {
+    if (!avatarReady || !liveControlsEnabled) return;
+
+    const hotkeyMap: Record<string, string> = {
+      ArrowUp: 'dawn-runner',
+      ArrowDown: 'signal-reverie',
+      ArrowLeft: 'simple-wave',
+      ArrowRight: 'point',
+    };
+
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isEditableTarget(event.target)) return;
+
+      const presetId = hotkeyMap[event.key];
+      if (!presetId) return;
+      event.preventDefault();
+      setPresetById(presetId);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [avatarReady, liveControlsEnabled, setPresetById]);
+
   // Random auto-snapshot timer
   const randomSnapshotInterval = useIntroStore((s) => s.randomSnapshotInterval);
   
@@ -254,4 +287,3 @@ export function CanvasStage() {
     </div>
   );
 }
-
