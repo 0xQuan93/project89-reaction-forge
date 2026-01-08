@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MotionCaptureManager } from '../../utils/motionCapture';
 import { voiceLipSync } from '../../utils/voiceLipSync';
 import { avatarManager } from '../../three/avatarManager';
 import { useAnimationStore } from '../../state/useAnimationStore';
 import { useToastStore } from '../../state/useToastStore';
 import { useUIStore } from '../../state/useUIStore';
+import { useReactionStore } from '../../state/useReactionStore';
 import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToScenePaths';
 import { CalibrationWizard } from '../CalibrationWizard';
 import { sceneManager } from '../../three/sceneManager';
@@ -27,6 +28,12 @@ export function MocapTab() {
   const { addToast } = useToastStore();
   const { addAnimation } = useAnimationStore();
   const { startCalibration } = useUIStore();
+  const {
+    liveModeEnabled,
+    liveControlsEnabled,
+    setLiveModeEnabled,
+    setLiveControlsEnabled,
+  } = useReactionStore();
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isActive, setIsActive] = useState(false);
@@ -43,6 +50,13 @@ export function MocapTab() {
   const [isVoiceLipSyncActive, setIsVoiceLipSyncActive] = useState(false);
   const [voiceVolume, setVoiceVolume] = useState(0);
   const [voiceSensitivity, setVoiceSensitivity] = useState(2.0);
+  const previousMocapModeRef = useRef<'full' | 'face'>('full');
+  const previousMocapActiveRef = useRef(false);
+  const previousVoiceActiveRef = useRef(false);
+  const liveModeEnabledRef = useRef(liveModeEnabled);
+  const liveShutdownRef = useRef(false);
+  const mocapStartingRef = useRef(false);
+  const voiceStartingRef = useRef(false);
 
   useEffect(() => {
     if (videoRef.current && !managerRef.current) {
@@ -69,7 +83,7 @@ export function MocapTab() {
       }
   };
 
-  const handleModeChange = (mode: 'full' | 'face') => {
+  const handleModeChange = useCallback((mode: 'full' | 'face') => {
       setMocapMode(mode);
       if (managerRef.current) {
           managerRef.current.setMode(mode);
@@ -103,7 +117,14 @@ export function MocapTab() {
           avatarManager.setInteraction(true);
           addToast("Full Body Mode: Animation Frozen for Tracking", "info");
       }
-  };
+  }, [addToast]);
+
+  const setMocapModeOnly = useCallback((mode: 'full' | 'face') => {
+    setMocapMode(mode);
+    if (managerRef.current) {
+      managerRef.current.setMode(mode);
+    }
+  }, []);
 
   const toggleRecording = () => {
       if (!managerRef.current || !isActive) return;
@@ -145,36 +166,53 @@ export function MocapTab() {
   };
 
   // Voice Lip Sync handlers
+  const stopVoiceLipSync = useCallback(() => {
+    if (!isVoiceLipSyncActive) return;
+    voiceLipSync.stop();
+    setIsVoiceLipSyncActive(false);
+    setVoiceVolume(0);
+  }, [isVoiceLipSyncActive]);
+
+  const startVoiceLipSync = useCallback(async () => {
+    if (isVoiceLipSyncActive || voiceStartingRef.current) return;
+    const vrm = avatarManager.getVRM();
+    if (!vrm) {
+      addToast("Load an avatar first!", "error");
+      return;
+    }
+    voiceStartingRef.current = true;
+    try {
+      voiceLipSync.setVRM(vrm);
+      voiceLipSync.setOnVolumeChange(setVoiceVolume);
+      voiceLipSync.setSensitivity(voiceSensitivity);
+      await voiceLipSync.start();
+      setIsVoiceLipSyncActive(true);
+      addToast("Voice Lip Sync started", "success");
+      if (liveShutdownRef.current && !liveModeEnabledRef.current) {
+        voiceLipSync.stop();
+        setIsVoiceLipSyncActive(false);
+        setVoiceVolume(0);
+      }
+    } catch (e: any) {
+      console.error('[VoiceLipSync]', e);
+      let msg = "Failed to access microphone.";
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        msg = "Microphone permission denied. Please allow access in browser settings.";
+      } else if (e.name === 'NotFoundError') {
+        msg = "No microphone found.";
+      }
+      addToast(msg, "error");
+    } finally {
+      voiceStartingRef.current = false;
+    }
+  }, [addToast, isVoiceLipSyncActive, voiceSensitivity]);
+
   const toggleVoiceLipSync = async () => {
     if (isVoiceLipSyncActive) {
-      voiceLipSync.stop();
-      setIsVoiceLipSyncActive(false);
-      setVoiceVolume(0);
-    } else {
-      const vrm = avatarManager.getVRM();
-      if (!vrm) {
-        addToast("Load an avatar first!", "error");
-        return;
-      }
-      
-      try {
-        voiceLipSync.setVRM(vrm);
-        voiceLipSync.setOnVolumeChange(setVoiceVolume);
-        voiceLipSync.setSensitivity(voiceSensitivity);
-        await voiceLipSync.start();
-        setIsVoiceLipSyncActive(true);
-        addToast("Voice Lip Sync started", "success");
-      } catch (e: any) {
-        console.error('[VoiceLipSync]', e);
-        let msg = "Failed to access microphone.";
-        if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-          msg = "Microphone permission denied. Please allow access in browser settings.";
-        } else if (e.name === 'NotFoundError') {
-          msg = "No microphone found.";
-        }
-        addToast(msg, "error");
-      }
+      stopVoiceLipSync();
+      return;
     }
+    await startVoiceLipSync();
   };
 
   const handleSensitivityChange = (value: number) => {
@@ -191,69 +229,165 @@ export function MocapTab() {
     };
   }, [isVoiceLipSyncActive]);
 
+  const stopMocap = useCallback(() => {
+    if (!managerRef.current || !isActive) return;
+    managerRef.current.stop();
+    setIsActive(false);
+    // Resume normal behavior when stopping camera
+    avatarManager.setInteraction(false);
+    mocapStartingRef.current = false;
+  }, [isActive]);
+
+  const startMocap = useCallback(async (modeOverride?: 'full' | 'face') => {
+    if (!managerRef.current || isActive || mocapStartingRef.current) return;
+    const vrm = avatarManager.getVRM();
+    if (!vrm) {
+      setError("Load an avatar first!");
+      return;
+    }
+    mocapStartingRef.current = true;
+    try {
+      // Check for secure context first
+      if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+        throw new Error("Webcam access requires HTTPS (Secure Context).");
+      }
+
+      const mode = modeOverride ?? mocapMode;
+      if (modeOverride && modeOverride !== mocapMode) {
+        setMocapMode(modeOverride);
+        managerRef.current.setMode(modeOverride);
+      }
+
+      // In Face Only mode, we WANT the animation to keep playing.
+      // In Full Body mode, we want to freeze so we can take over.
+      if (mode === 'full') {
+        // Freeze the current pose instead of resetting to T-pose
+        // This prevents the avatar from snapping to T-pose while the camera initializes
+        avatarManager.freezeCurrentPose();
+        // Flag interaction to pause mixer
+        avatarManager.setInteraction(true);
+      } else {
+        // Face Mode: Ensure interaction is OFF so mixer runs
+        avatarManager.setInteraction(false);
+        
+        // If no animation is playing, apply the default 'sunset-call'
+        // But only if we aren't already playing something
+        if (!avatarManager.isAnimationPlaying()) {
+          avatarManager.applyPose('sunset-call', true, 'loop');
+        }
+      }
+      
+      managerRef.current.setVRM(vrm);
+      await managerRef.current.start();
+      setIsActive(true);
+      setError(null);
+      if (liveShutdownRef.current && !liveModeEnabledRef.current) {
+        managerRef.current.stop();
+        setIsActive(false);
+      }
+    } catch (e: any) {
+      console.error(e);
+      let msg = "Failed to access webcam.";
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        msg = "Permission denied. Please allow camera access in your browser settings.";
+      } else if (e.name === 'NotFoundError') {
+        msg = "No camera found.";
+      } else if (e.name === 'NotReadableError') {
+        msg = "Camera is in use by another application.";
+      } else if (e.message) {
+        msg = e.message;
+      }
+      setError(msg);
+    } finally {
+      mocapStartingRef.current = false;
+    }
+  }, [isActive, mocapMode]);
+
   const toggleMocap = async () => {
     if (!managerRef.current) return;
     
     if (isActive) {
-        managerRef.current.stop();
-        setIsActive(false);
-        // Resume normal behavior when stopping camera
-        avatarManager.setInteraction(false);
+        stopMocap();
     } else {
-        const vrm = avatarManager.getVRM();
-        if (!vrm) {
-            setError("Load an avatar first!");
-            return;
-        }
-        
-        try {
-            // Check for secure context first
-            if (!window.isSecureContext && window.location.hostname !== 'localhost') {
-                throw new Error("Webcam access requires HTTPS (Secure Context).");
-            }
-
-            // In Face Only mode, we WANT the animation to keep playing.
-            // In Full Body mode, we want to freeze so we can take over.
-            if (mocapMode === 'full') {
-            // Freeze the current pose instead of resetting to T-pose
-            // This prevents the avatar from snapping to T-pose while the camera initializes
-            avatarManager.freezeCurrentPose();
-            // Flag interaction to pause mixer
-            avatarManager.setInteraction(true);
-            } else {
-                 // Face Mode: Ensure interaction is OFF so mixer runs
-                 avatarManager.setInteraction(false);
-                 
-                 // If no animation is playing, apply the default 'sunset-call'
-                 // But only if we aren't already playing something
-                 if (!avatarManager.isAnimationPlaying()) {
-                     avatarManager.applyPose('sunset-call', true, 'loop');
-                 }
-            }
-            
-            managerRef.current.setVRM(vrm);
-            await managerRef.current.start();
-            setIsActive(true);
-            setError(null);
-        } catch (e: any) {
-            console.error(e);
-            let msg = "Failed to access webcam.";
-            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                msg = "Permission denied. Please allow camera access in your browser settings.";
-            } else if (e.name === 'NotFoundError') {
-                msg = "No camera found.";
-            } else if (e.name === 'NotReadableError') {
-                msg = "Camera is in use by another application.";
-            } else if (e.message) {
-                msg = e.message;
-            }
-            setError(msg);
-        }
+        await startMocap();
     }
   };
 
+  useEffect(() => {
+    liveModeEnabledRef.current = liveModeEnabled;
+    if (liveModeEnabled) {
+      liveShutdownRef.current = false;
+      previousMocapModeRef.current = mocapMode;
+      previousMocapActiveRef.current = isActive;
+      previousVoiceActiveRef.current = isVoiceLipSyncActive;
+      if (mocapMode !== 'face') {
+        handleModeChange('face');
+      }
+      if (!isActive && !mocapStartingRef.current) {
+        startMocap('face');
+      }
+      if (!isVoiceLipSyncActive && !voiceStartingRef.current) {
+        startVoiceLipSync();
+      }
+      return;
+    }
+
+    liveShutdownRef.current = true;
+    if (previousMocapModeRef.current !== mocapMode) {
+      if (!isActive && !previousMocapActiveRef.current) {
+        setMocapModeOnly(previousMocapModeRef.current);
+      } else {
+        handleModeChange(previousMocapModeRef.current);
+      }
+    }
+    if (!previousMocapActiveRef.current && isActive) {
+      liveShutdownRef.current = true;
+      stopMocap();
+    }
+    if (!previousVoiceActiveRef.current && isVoiceLipSyncActive) {
+      liveShutdownRef.current = true;
+      stopVoiceLipSync();
+    }
+  }, [
+    liveModeEnabled,
+    mocapMode,
+    isActive,
+    isVoiceLipSyncActive,
+    handleModeChange,
+    setMocapModeOnly,
+    startMocap,
+    startVoiceLipSync,
+    stopMocap,
+    stopVoiceLipSync,
+  ]);
+
   return (
     <div className="tab-content">
+      <div className="tab-section">
+        <h3>LIVE Mode</h3>
+        <p className="muted small">
+          LIVE turns on face-only mocap with voice sync. Arrow keys can trigger poses at any time.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <button
+            className={`primary full-width ${liveModeEnabled ? 'secondary' : ''}`}
+            onClick={() => setLiveModeEnabled(!liveModeEnabled)}
+            style={{ flex: '1 1 100%' }}
+          >
+            {liveModeEnabled ? 'Disable LIVE Mode' : 'Enable LIVE Mode'}
+          </button>
+          <button
+            className={`secondary full-width ${liveControlsEnabled ? 'active' : ''}`}
+            onClick={() => setLiveControlsEnabled(!liveControlsEnabled)}
+            style={{ flex: '1 1 100%' }}
+          >
+            {liveControlsEnabled ? 'Arrow Key Controls: On' : 'Arrow Key Controls: Off'}
+          </button>
+        </div>
+        <p className="small muted" style={{ marginTop: '0.75rem' }}>
+          Arrow keys map to presets: ↑ Sunset Call, ↓ Signal Reverie, ← Wave, → Point.
+        </p>
+      </div>
       <div className="tab-section">
         <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><VideoCamera size={18} weight="duotone" /> Webcam Motion Capture</h3>
         <p className="muted small">
@@ -472,4 +606,3 @@ export function MocapTab() {
     </div>
   );
 }
-
