@@ -63,7 +63,7 @@ export function SessionHUD() {
 
     socialManager.initialize();
 
-    const unsubChat = socialManager.onChat((msg) => {
+    const unsubChat = socialManager.onChat((msg: { id: string; peerId: string; displayName: string; text: string; timestamp: number; isLocal: boolean }) => {
       addChatMessage({
         id: msg.id,
         peerId: msg.peerId,
@@ -74,7 +74,7 @@ export function SessionHUD() {
       });
     });
 
-    const unsubReaction = socialManager.onReaction((reaction) => {
+    const unsubReaction = socialManager.onReaction((reaction: { id: string; peerId: string; displayName: string; reaction: ReactionType; timestamp: number }) => {
       addReaction({
         id: reaction.id,
         peerId: reaction.peerId,
@@ -87,11 +87,11 @@ export function SessionHUD() {
       });
     });
 
-    const unsubCountdown = socialManager.onCountdown((count, _photoId) => {
+    const unsubCountdown = socialManager.onCountdown((count: number, _photoId: string) => {
       setCountdown(count > 0, count);
     });
 
-    const unsubPhoto = socialManager.onPhotoCaptured((_photoId, dataUrl) => {
+    const unsubPhoto = socialManager.onPhotoCaptured((_photoId: string, dataUrl: string) => {
       setLastPhoto(dataUrl);
       setShowPhotoPreview(true);
       setCountdown(false);

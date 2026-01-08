@@ -74,7 +74,10 @@ export type MessageType =
   | 'reaction'          // Quick emoji reaction (triggers avatar animation)
   | 'presence'          // Presence update (typing, AFK, recording, etc.)
   | 'group-photo'       // Synchronized photo capture
-  | 'countdown';        // Countdown sync for group photos
+  | 'countdown'        // Countdown sync for group photos
+  | 'background-request' // New: Request a peer's animated background
+  | 'background-chunk'   // New: Send animated background data in chunks
+  | 'background-complete';// New: Signal completion of animated background transfer
 
 /** Base message structure */
 export interface BaseMessage {
@@ -122,6 +125,30 @@ export interface VRMCompleteMessage extends BaseMessage {
   type: 'vrm-complete';
   targetPeerId: PeerId;
   fileName: string;
+  totalSize: number;
+}
+
+/** New: Background file transfer messages */
+export interface BackgroundRequestMessage extends BaseMessage {
+  type: 'background-request';
+  targetPeerId: PeerId;
+}
+
+export interface BackgroundChunkMessage extends BaseMessage {
+  type: 'background-chunk';
+  targetPeerId: PeerId;
+  chunkIndex: number;
+  totalChunks: number;
+  data: string; // Base64 encoded chunk (JSON serialization compatible)
+  fileName: string; // To identify the file being sent
+  fileType: string; // MIME type (e.g., 'video/webm', 'image/gif')
+}
+
+export interface BackgroundCompleteMessage extends BaseMessage {
+  type: 'background-complete';
+  targetPeerId: PeerId;
+  fileName: string;
+  fileType: string;
   totalSize: number;
 }
 
@@ -233,7 +260,10 @@ export type PeerMessage =
   | ReactionMessage
   | PresenceMessage
   | GroupPhotoMessage
-  | CountdownMessage;
+  | CountdownMessage
+  | BackgroundRequestMessage // Add new message types to the union
+  | BackgroundChunkMessage
+  | BackgroundCompleteMessage;
 
 /** Configuration for multiplayer */
 export interface MultiplayerConfig {

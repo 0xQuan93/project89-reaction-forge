@@ -228,11 +228,11 @@
   
   --z-base: 0;
   --z-dropdown: 100;
-  --z-sticky: 200;
+  --z-sticky: 200; /* Reverted to original value */
   --z-fixed: 300;
   --z-drawer: 400;
-  --z-modal-backdrop: 500;
-  --z-modal: 600;
+  --z-modal-backdrop: 500; /* Reverted to original value */
+  --z-modal: 600;    /* Reverted to original value */
   --z-popover: 700;
   --z-tooltip: 800;
   --z-toast: 900;

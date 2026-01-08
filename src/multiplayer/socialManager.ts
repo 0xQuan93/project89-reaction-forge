@@ -64,6 +64,7 @@ const REACTION_TO_EXPRESSION: Record<ReactionType, string> = {
   nod: 'happy',
   celebrate: 'happy',
 };
+
 class SocialManager {
   private chatListeners = new Set<ChatListener>();
   private reactionListeners = new Set<ReactionListener>();
@@ -606,4 +607,3 @@ class SocialManager {
 
 // Singleton instance
 export const socialManager = new SocialManager();
-

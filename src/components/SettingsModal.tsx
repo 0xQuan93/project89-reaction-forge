@@ -7,10 +7,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { 
-    quality, shadows, showStats, theme,
-    setQuality, setShadows, setShowStats, setTheme 
-  } = useSettingsStore();
+  const { quality, shadows, showStats, theme, setQuality, setShadows, setShowStats, setTheme } = useSettingsStore();
 
   if (!isOpen) return null;
 
@@ -169,4 +166,3 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     </div>
   );
 }
-

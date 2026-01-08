@@ -6,6 +6,9 @@ import type {
   PeerMessage, 
   ConnectionState,
   MultiplayerConfig,
+  BackgroundRequestMessage,
+  BackgroundChunkMessage,
+  BackgroundCompleteMessage,
 } from '../types/multiplayer';
 import { DEFAULT_MULTIPLAYER_CONFIG } from '../types/multiplayer';
 import { useMultiplayerStore } from '../state/useMultiplayerStore';
@@ -14,6 +17,7 @@ import { voiceChatManager } from './voiceChatManager';
 type MessageHandler = (peerId: PeerId, message: PeerMessage) => void;
 type ConnectionHandler = (peerId: PeerId, state: ConnectionState) => void;
 type ErrorHandler = (error: Error) => void;
+type BackgroundTransferHandler = (peerId: PeerId, fileName: string, fileType: string, dataUrl: string) => void;
 
 /**
  * PeerManager handles WebRTC peer-to-peer connections using PeerJS.
@@ -25,9 +29,13 @@ class PeerManager {
   private messageHandlers = new Set<MessageHandler>();
   private connectionHandlers = new Set<ConnectionHandler>();
   private errorHandlers = new Set<ErrorHandler>();
+  private backgroundTransferHandlers = new Set<BackgroundTransferHandler>();
   private config: MultiplayerConfig;
   private reconnectTimers = new Map<PeerId, ReturnType<typeof setTimeout>>();
   private isDestroyed = false;
+
+  // Temporary storage for incoming file chunks
+  private incomingFileBuffers = new Map<PeerId, Map<string, { chunks: string[]; totalChunks: number; fileName: string; fileType: string }>>();
   
   // Auto-reconnect state
   private reconnectAttempts = 0;
@@ -341,6 +349,14 @@ class PeerManager {
     return () => this.errorHandlers.delete(handler);
   }
 
+  /**
+   * Register a background transfer completion handler
+   */
+  onBackgroundTransfer(handler: BackgroundTransferHandler): () => void {
+    this.backgroundTransferHandlers.add(handler);
+    return () => this.backgroundTransferHandlers.delete(handler);
+  }
+
   // ==================
   // Utilities
   // ==================
@@ -524,6 +540,18 @@ class PeerManager {
         const latency = Date.now() - message.sentAt;
         store.updatePeerLatency(peerId, latency);
         break;
+
+      case 'background-request':
+        this.handleBackgroundRequest(peerId, message as BackgroundRequestMessage);
+        break;
+
+      case 'background-chunk':
+        this.handleBackgroundChunk(peerId, message as BackgroundChunkMessage);
+        break;
+
+      case 'background-complete':
+        this.handleBackgroundComplete(peerId, message as BackgroundCompleteMessage);
+        break;
     }
 
     // Notify all handlers
@@ -554,6 +582,106 @@ class PeerManager {
         console.error('[PeerManager] Error handler error:', e);
       }
     });
+  }
+
+  private handleBackgroundRequest(peerId: PeerId, _message: BackgroundRequestMessage) {
+    // Host receives a request for a background
+    const store = useMultiplayerStore.getState();
+    if (store.role === 'host') {
+      // For now, assume host has the background. In a real app, you'd retrieve it.
+      // For testing, let's simulate sending a simple animated background (e.g., a small WebM)
+      console.log(`[PeerManager] Host received background request from ${peerId}.`);
+
+      // Here you would typically load the actual animated background file.
+      // For demonstration, let's assume a placeholder file is available.
+      // In a real scenario, you'd load from a local cache or a specific path.
+      const placeholderBackgroundData = `data:video/webm;base64,GkXfo6NChoEBQveBAULygQYJ/EBkQoaBAgSYhCEE///LwYAAQAAAoWlmo/`
+      const fileName = "placeholder.webm";
+      const fileType = "video/webm";
+      const totalSize = placeholderBackgroundData.length; // Approximate size
+
+      const chunkSize = this.config.vrmChunkSize;
+      const totalChunks = Math.ceil(placeholderBackgroundData.length / chunkSize);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = placeholderBackgroundData.slice(i * chunkSize, (i + 1) * chunkSize);
+        const chunkMessage: BackgroundChunkMessage = {
+          type: 'background-chunk',
+          peerId: store.localPeerId!,
+          targetPeerId: peerId,
+          chunkIndex: i,
+          totalChunks,
+          data: chunk,
+          fileName,
+          fileType,
+          timestamp: Date.now(),
+        };
+        this.send(peerId, chunkMessage);
+      }
+
+      const completeMessage: BackgroundCompleteMessage = {
+        type: 'background-complete',
+        peerId: store.localPeerId!,
+        targetPeerId: peerId,
+        fileName,
+        fileType,
+        totalSize,
+        timestamp: Date.now(),
+      };
+      this.send(peerId, completeMessage);
+    } else {
+      console.warn(`[PeerManager] Peer ${store.localPeerId} received background request but is not host.`);
+    }
+  }
+
+  private handleBackgroundChunk(peerId: PeerId, message: BackgroundChunkMessage) {
+    const fileId = `${peerId}-${message.fileName}`;
+    let buffer = this.incomingFileBuffers.get(peerId)?.get(fileId);
+
+    if (!buffer) {
+      buffer = { chunks: [], totalChunks: message.totalChunks, fileName: message.fileName, fileType: message.fileType };
+      if (!this.incomingFileBuffers.has(peerId)) {
+        this.incomingFileBuffers.set(peerId, new Map());
+      }
+      this.incomingFileBuffers.get(peerId)?.set(fileId, buffer);
+    }
+
+    buffer.chunks[message.chunkIndex] = message.data;
+
+    // Check if all chunks received
+    const receivedAllChunks = buffer.chunks.length === buffer.totalChunks &&
+                              buffer.chunks.every(chunk => chunk !== undefined);
+
+    if (receivedAllChunks) {
+      console.log(`[PeerManager] All chunks received for ${message.fileName} from ${peerId}.`);
+      // Reconstruct the file
+      const fullData = buffer.chunks.join('');
+      const dataUrl = `data:${buffer.fileType};base64,${fullData}`;
+
+      this.notifyBackgroundTransfer(peerId, buffer.fileName, buffer.fileType, dataUrl);
+
+      // Clean up buffer
+      this.incomingFileBuffers.get(peerId)?.delete(fileId);
+      if (this.incomingFileBuffers.get(peerId)?.size === 0) {
+        this.incomingFileBuffers.delete(peerId);
+      }
+    }
+  }
+
+  private notifyBackgroundTransfer(peerId: PeerId, fileName: string, fileType: string, dataUrl: string) {
+    this.backgroundTransferHandlers.forEach(handler => {
+      try {
+        handler(peerId, fileName, fileType, dataUrl);
+      } catch (e) {
+        console.error('[PeerManager] Background transfer handler error:', e);
+      }
+    });
+  }
+
+  private handleBackgroundComplete(peerId: PeerId, message: BackgroundCompleteMessage) {
+    console.log(`[PeerManager] Background transfer complete for ${message.fileName} from ${peerId}.`)
+    // The actual file reassembly and notification happens in handleBackgroundChunk,
+    // but this message confirms completion for tracking/UI purposes.
   }
 
   /**
@@ -687,6 +815,72 @@ class PeerManager {
   getPeer(): Peer | null {
     return this.peer;
   }
+
+  /**
+   * Request a background from a peer
+   */
+  requestBackground(peerId: PeerId) {
+    const store = useMultiplayerStore.getState();
+    if (!store.localPeerId) return;
+
+    const message: BackgroundRequestMessage = {
+      type: 'background-request',
+      peerId: store.localPeerId,
+      targetPeerId: peerId,
+      timestamp: Date.now(),
+    };
+    this.send(peerId, message);
+  }
+
+  /**
+   * Send a background file to a peer
+   * Chunks the file and sends it reliably.
+   */
+  async sendBackground(peerId: PeerId, file: File) {
+    const store = useMultiplayerStore.getState();
+    if (!store.localPeerId) return;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const chunkSize = this.config.vrmChunkSize; // Using the same chunk size as VRM
+    const totalChunks = Math.ceil(base64Data.length / chunkSize);
+
+    console.log(`[PeerManager] Sending background ${file.name} to ${peerId} in ${totalChunks} chunks.`);
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
+      const message: BackgroundChunkMessage = {
+        type: 'background-chunk',
+        peerId: store.localPeerId,
+        targetPeerId: peerId,
+        chunkIndex: i,
+        totalChunks,
+        data: chunk,
+        fileName: file.name,
+        fileType: file.type,
+        timestamp: Date.now(),
+      };
+      // Send reliably, potentially with a small delay to prevent overwhelming the connection
+      await new Promise(resolve => setTimeout(() => {
+        this.send(peerId, message);
+        resolve(null);
+      }, 5)); // Small delay to avoid overwhelming the data channel
+    }
+
+    // Send complete message
+    const completeMessage: BackgroundCompleteMessage = {
+      type: 'background-complete',
+      peerId: store.localPeerId,
+      targetPeerId: peerId,
+      fileName: file.name,
+      fileType: file.type,
+      totalSize: file.size,
+      timestamp: Date.now(),
+    };
+    this.send(peerId, completeMessage);
+    console.log(`[PeerManager] Finished sending background ${file.name} to ${peerId}.`);
+  }
+
 }
 
 // Singleton instance
