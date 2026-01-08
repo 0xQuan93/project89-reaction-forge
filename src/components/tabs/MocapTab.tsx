@@ -53,6 +53,8 @@ export function MocapTab() {
   const previousMocapModeRef = useRef<'full' | 'face'>('full');
   const previousMocapActiveRef = useRef(false);
   const previousVoiceActiveRef = useRef(false);
+  const liveModeEnabledRef = useRef(liveModeEnabled);
+  const liveShutdownRef = useRef(false);
 
   useEffect(() => {
     if (videoRef.current && !managerRef.current) {
@@ -177,6 +179,11 @@ export function MocapTab() {
       await voiceLipSync.start();
       setIsVoiceLipSyncActive(true);
       addToast("Voice Lip Sync started", "success");
+      if (liveShutdownRef.current && !liveModeEnabledRef.current) {
+        voiceLipSync.stop();
+        setIsVoiceLipSyncActive(false);
+        setVoiceVolume(0);
+      }
     } catch (e: any) {
       console.error('[VoiceLipSync]', e);
       let msg = "Failed to access microphone.";
@@ -262,6 +269,10 @@ export function MocapTab() {
       await managerRef.current.start();
       setIsActive(true);
       setError(null);
+      if (liveShutdownRef.current && !liveModeEnabledRef.current) {
+        managerRef.current.stop();
+        setIsActive(false);
+      }
     } catch (e: any) {
       console.error(e);
       let msg = "Failed to access webcam.";
@@ -289,7 +300,9 @@ export function MocapTab() {
   };
 
   useEffect(() => {
+    liveModeEnabledRef.current = liveModeEnabled;
     if (liveModeEnabled) {
+      liveShutdownRef.current = false;
       previousMocapModeRef.current = mocapMode;
       previousMocapActiveRef.current = isActive;
       previousVoiceActiveRef.current = isVoiceLipSyncActive;
@@ -305,13 +318,16 @@ export function MocapTab() {
       return;
     }
 
+    liveShutdownRef.current = true;
     if (previousMocapModeRef.current !== mocapMode) {
       handleModeChange(previousMocapModeRef.current);
     }
     if (!previousMocapActiveRef.current && isActive) {
+      liveShutdownRef.current = true;
       stopMocap();
     }
     if (!previousVoiceActiveRef.current && isVoiceLipSyncActive) {
+      liveShutdownRef.current = true;
       stopVoiceLipSync();
     }
   }, [
@@ -350,7 +366,7 @@ export function MocapTab() {
           </button>
         </div>
         <p className="small muted" style={{ marginTop: '0.75rem' }}>
-          Arrow keys map to presets: ↑ Dawn Runner, ↓ Signal Reverie, ← Wave, → Point.
+          Arrow keys map to presets: ↑ Sunset Call, ↓ Signal Reverie, ← Wave, → Point.
         </p>
       </div>
       <div className="tab-section">

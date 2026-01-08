@@ -183,7 +183,7 @@ export function CanvasStage() {
     if (!avatarReady || !liveControlsEnabled) return;
 
     const hotkeyMap: Record<string, string> = {
-      ArrowUp: 'dawn-runner',
+      ArrowUp: 'sunset-call',
       ArrowDown: 'signal-reverie',
       ArrowLeft: 'simple-wave',
       ArrowRight: 'point',
