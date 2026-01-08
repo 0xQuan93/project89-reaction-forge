@@ -73,6 +73,7 @@ class SceneManager {
   init(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.scene = new THREE.Scene();
+    this.currentAspectRatio = this.getInitialAspectRatio();
     this.camera = new THREE.PerspectiveCamera(
       CAMERA_CONFIG.FOV,
       canvas.clientWidth / canvas.clientHeight,
@@ -140,6 +141,24 @@ class SceneManager {
     setTimeout(() => {
         perfMonitor.start();
     }, TIMING.PERF_MONITOR_DELAY);
+  }
+
+  private getInitialAspectRatio(): AspectRatio {
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    if (!isCoarsePointer) {
+      return '16:9';
+    }
+
+    const minSide = Math.min(window.innerWidth, window.innerHeight);
+    if (minSide <= 640) {
+      return '9:16';
+    }
+
+    if (minSide <= 1024) {
+      return '1:1';
+    }
+
+    return '16:9';
   }
 
   private updateSettings(state: { quality: string; shadows: boolean }) {
