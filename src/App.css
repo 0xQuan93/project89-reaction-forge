@@ -1261,6 +1261,7 @@
 
   .viewport {
     padding: var(--space-4);
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   }
 
   .control-panel {
@@ -1333,6 +1334,19 @@
   .viewport-overlay.top-left,
   .viewport-overlay.bottom-right {
     display: none;
+  }
+
+  .viewport-overlay.top-right {
+    top: var(--space-3);
+    right: var(--space-3);
+  }
+
+  .viewport-overlay.bottom-left {
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
+
+  .viewport-overlay.bottom-center {
+    bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   }
 }
 
