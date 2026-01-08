@@ -240,6 +240,10 @@ export class GeminiService {
     });
   }
 
+  isReady(): boolean {
+    return !!this.model;
+  }
+
   private getLimitKey(boneName: string): string | null {
     // Try exact match first
     if (this.limits[boneName]) return boneName;
