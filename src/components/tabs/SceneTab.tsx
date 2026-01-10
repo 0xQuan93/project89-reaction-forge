@@ -64,11 +64,11 @@ function Section({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(17, 21, 32, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)',
           borderRadius: '8px',
           padding: '0.75rem 1rem',
-          color: '#e6f3ff',
+          color: 'var(--text-primary)',
           cursor: 'pointer',
           fontSize: '0.95rem',
           fontWeight: 600,
@@ -90,12 +90,12 @@ function Section({
       {isOpen && (
         <div style={{ 
           padding: '1rem',
-          background: 'rgba(17, 21, 32, 0.3)',
+          background: 'var(--glass-bg)',
           borderRadius: '0 0 8px 8px',
           marginTop: '-4px',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderLeft: '1px solid var(--glass-border)',
+          borderRight: '1px solid var(--glass-border)',
+          borderBottom: '1px solid var(--glass-border)',
         }}>
           {children}
         </div>
@@ -127,7 +127,7 @@ function Slider({
         justifyContent: 'space-between', 
         marginBottom: '0.25rem',
         fontSize: '0.8rem',
-        color: 'rgba(230, 243, 255, 0.7)'
+        color: 'var(--text-secondary)'
       }}>
         <span>{label}</span>
         <span>{value.toFixed(2)}</span>
@@ -143,7 +143,7 @@ function Slider({
           width: '100%',
           height: '6px',
           borderRadius: '3px',
-          background: 'rgba(17, 21, 32, 0.8)',
+          background: 'var(--color-surface)',
           outline: 'none',
           cursor: 'pointer',
         }}
@@ -464,9 +464,9 @@ export function SceneTab() {
                   flex: 1,
                   padding: '0.4rem 0.6rem',
                   borderRadius: '6px',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'rgba(17, 21, 32, 0.6)',
-                  color: '#e6f3ff',
+                  border: '1px solid var(--border-default)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--text-primary)',
                 }}
               />
               <button
@@ -936,16 +936,16 @@ function IntroSection() {
             type="checkbox"
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
-            style={{ width: '18px', height: '18px', accentColor: '#00ffd6' }}
+            style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }}
           />
-          <span style={{ color: '#e6f3ff', fontSize: '0.9rem' }}>
+          <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
             Play intro on avatar load
           </span>
         </label>
         
         {/* Sequence Selector */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+          <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             Intro Style
           </label>
           <select
@@ -954,9 +954,9 @@ function IntroSection() {
             style={{
               padding: '0.5rem 0.75rem',
               borderRadius: '6px',
-              background: 'rgba(17, 21, 32, 0.8)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#e6f3ff',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-primary)',
               fontSize: '0.9rem',
             }}
           >
@@ -982,16 +982,16 @@ function IntroSection() {
             type="checkbox"
             checked={autoCapture}
             onChange={(e) => setAutoCapture(e.target.checked)}
-            style={{ width: '18px', height: '18px', accentColor: '#00ffd6' }}
+            style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }}
           />
-          <span style={{ color: '#e6f3ff', fontSize: '0.9rem' }}>
+          <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
             Auto-capture at key moments
           </span>
         </label>
         
         {/* Random Snapshot Interval */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+          <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             Random Auto-Snapshot ({randomSnapshotInterval === 0 ? 'Off' : `Every ${randomSnapshotInterval}s`})
           </label>
           <input
@@ -1001,7 +1001,7 @@ function IntroSection() {
             step={5}
             value={randomSnapshotInterval}
             onChange={(e) => setRandomSnapshotInterval(parseInt(e.target.value))}
-            style={{ accentColor: '#00ffd6' }}
+            style={{ accentColor: 'var(--accent)' }}
           />
         </div>
         
