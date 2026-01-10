@@ -9,6 +9,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastHost } from './ui/Toast';
 import { useUIStore } from './state/useUIStore';
 import { useSettingsStore } from './state/useSettingsStore';
+import { projectManager } from './persistence/projectManager';
+import { autosaveManager } from './persistence/autosaveManager';
 import { initAvatarBridge } from './multiplayer/avatarBridge';
 import { ConnectionProgressPanel } from './components/ConnectionProgressPanel';
 import { AIAgentWidget } from './components/AIAgentWidget';
@@ -21,13 +23,55 @@ initAvatarBridge();
 
 function App() {
   const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen } = useUIStore();
-  const { theme } = useSettingsStore();
+  const { theme, locale, textScale, autosaveEnabled, autosaveIntervalMinutes, autosaveMaxEntries } = useSettingsStore();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 960);
 
   useEffect(() => {
     // Apply theme to HTML element
-    document.documentElement.setAttribute('data-theme', theme);
+    const root = document.documentElement;
+    if (theme !== 'system') {
+      root.setAttribute('data-theme', theme);
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    const applyTheme = () => {
+      root.setAttribute('data-theme', mediaQuery.matches ? 'light' : 'dark');
+    };
+
+    applyTheme();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', applyTheme);
+      return () => mediaQuery.removeEventListener('change', applyTheme);
+    }
+
+    mediaQuery.addListener(applyTheme);
+    return () => mediaQuery.removeListener(applyTheme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  useEffect(() => {
+    const baseSize = 16;
+    document.documentElement.style.fontSize = `${baseSize * textScale}px`;
+  }, [textScale]);
+
+  useEffect(() => {
+    if (!autosaveEnabled) return undefined;
+    const intervalMs = autosaveIntervalMinutes * 60 * 1000;
+    if (intervalMs <= 0) return undefined;
+
+    const saveSnapshot = () => {
+      const project = projectManager.serializeProject('Autosave');
+      autosaveManager.addAutosave(project, autosaveMaxEntries);
+    };
+
+    saveSnapshot();
+    const intervalId = window.setInterval(saveSnapshot, intervalMs);
+    return () => window.clearInterval(intervalId);
+  }, [autosaveEnabled, autosaveIntervalMinutes, autosaveMaxEntries]);
 
   useEffect(() => {
     const handleResize = () => {

@@ -8,7 +8,9 @@ import { useUIStore } from '../../state/useUIStore';
 import { useSceneSettingsStore } from '../../state/useSceneSettingsStore';
 import { useIntroStore } from '../../state/useIntroStore';
 import { useAvatarSource } from '../../state/useAvatarSource';
+import { useOnboardingStore } from '../../state/useOnboardingStore';
 import { introSequence } from '../../intro/IntroSequence';
+import { getOnboardingPersona, ONBOARDING_PERSONAS } from '../../data/onboardingPaths';
 import { LIGHT_PRESETS } from '../../three/lightingManager';
 import { POST_PRESETS } from '../../three/postProcessingManager';
 import { HDRI_PRESETS, environmentManager } from '../../three/environmentManager';
@@ -239,6 +241,11 @@ export function SceneTab() {
   const [live2dExpressionWeight, setLive2dExpressionWeight] = useState(0.8);
   const [live2dPhysicsEnabled, setLive2dPhysicsEnabled] = useState(true);
   const [live2dEyeTrackingEnabled, setLive2dEyeTrackingEnabled] = useState(true);
+  const { selectedPersonaId, completedSteps, setPersona, toggleStep, resetPersona } = useOnboardingStore();
+  const activePersona = getOnboardingPersona(selectedPersonaId) ?? ONBOARDING_PERSONAS[0];
+  const personaCompletedSteps = completedSteps[activePersona.id] ?? [];
+  const personaStepIds = new Set(activePersona.steps.map((step) => step.id));
+  const personaCompletedCount = personaCompletedSteps.filter((stepId) => personaStepIds.has(stepId)).length;
 
   // Restore custom background from store on mount
   useEffect(() => {
@@ -255,6 +262,12 @@ export function SceneTab() {
     const currentRatio = sceneManager.getAspectRatio();
     setAspectRatio(currentRatio);
   }, []);
+
+  useEffect(() => {
+    if (!getOnboardingPersona(selectedPersonaId) && ONBOARDING_PERSONAS.length > 0) {
+      setPersona(ONBOARDING_PERSONAS[0].id);
+    }
+  }, [selectedPersonaId, setPersona]);
 
   const handleVRMUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -518,6 +531,90 @@ export function SceneTab() {
           onChange={handleLive2DUpload}
           style={{ display: 'none' }}
         />
+      </Section>
+
+      <Section title="Creator Path" icon={<User size={18} weight="duotone" />} defaultOpen>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Choose a persona to get an evergreen checklist tailored to your workflow.
+            </span>
+            <select
+              value={activePersona.id}
+              onChange={(event) => setPersona(event.target.value)}
+              style={{
+                padding: '0.5rem 0.75rem',
+                borderRadius: '6px',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem',
+              }}
+            >
+              {ONBOARDING_PERSONAS.map((persona) => (
+                <option key={persona.id} value={persona.id}>
+                  {persona.label}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              {activePersona.description}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+              Progress: {personaCompletedCount}/{activePersona.steps.length}
+            </span>
+            <button
+              className="secondary"
+              onClick={() => resetPersona(activePersona.id)}
+              style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}
+            >
+              Reset
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {activePersona.steps.map((step) => {
+              const isComplete = personaCompletedSteps.includes(step.id);
+              return (
+                <label
+                  key={step.id}
+                  style={{
+                    display: 'flex',
+                    gap: '0.6rem',
+                    alignItems: 'flex-start',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '0.6rem',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isComplete}
+                    onChange={() => toggleStep(activePersona.id, step.id)}
+                    style={{ marginTop: '0.2rem', accentColor: 'var(--accent)' }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {step.title}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      {step.description}
+                    </span>
+                    {step.cta && (
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(0, 255, 214, 0.8)' }}>
+                        {step.cta}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
       </Section>
 
       {/* Lighting Section */}
