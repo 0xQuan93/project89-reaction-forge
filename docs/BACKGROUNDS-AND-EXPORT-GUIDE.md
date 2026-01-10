@@ -13,7 +13,7 @@ public/
 │   ├── logo.svg
 │   └── watermark.png
 └── vrm/
-    └── HarmonVox_519.vrm
+    └── VIPE_Hero_2851-default.vrm
 ```
 
 ---

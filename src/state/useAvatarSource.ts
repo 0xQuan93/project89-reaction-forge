@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export const DEFAULT_VRM_URL = '/vrm/HarmonVox_519.vrm';
+export const DEFAULT_VRM_URL = '/vrm/VIPE_Hero_2851-default.vrm';
 
 export type AvatarSourceKind = 'none' | 'vrm' | 'live2d';
 

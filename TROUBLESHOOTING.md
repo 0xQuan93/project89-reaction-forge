@@ -21,7 +21,7 @@ The most common cause of blank pages after code changes is stale browser cache:
    - `[main] Starting Project 89 Reaction Forge`
    - `[main] Render mode: main-app`
    - `[App] Rendering App component`
-   - `[CanvasStage] Loading avatar from: /vrm/HarmonVox_519.vrm`
+   - `[CanvasStage] Loading avatar from: /vrm/VIPE_Hero_2851-default.vrm`
 
 ### 4. Restart Dev Server
 Sometimes Vite's HMR needs a fresh start:
@@ -56,8 +56,8 @@ You should see these logs if the app is loading correctly:
 [main] Starting Project 89 Reaction Forge
 [main] Render mode: main-app
 [App] Rendering App component
-[CanvasStage] Loading avatar from: /vrm/HarmonVox_519.vrm
-[AvatarManager] Loading VRM from: /vrm/HarmonVox_519.vrm
+[CanvasStage] Loading avatar from: /vrm/VIPE_Hero_2851-default.vrm
+[AvatarManager] Loading VRM from: /vrm/VIPE_Hero_2851-default.vrm
 [AvatarManager] Fetching GLTF...
 [AvatarManager] VRM extracted, optimizing...
 [AvatarManager] VRM added to scene
@@ -70,15 +70,15 @@ You should see these logs if the app is loading correctly:
 1. Open DevTools (F12)
 2. Go to Network tab
 3. Refresh page
-4. Check if `/vrm/HarmonVox_519.vrm` loads (should be ~10-20MB)
+4. Check if `/vrm/VIPE_Hero_2851-default.vrm` loads (should be ~10-20MB)
 5. Check if all JS/CSS files load successfully
 
 ### Common Errors
 
 #### "Failed to fetch VRM"
-- VRM file not found at `/vrm/HarmonVox_519.vrm`
-- Check that `public/vrm/HarmonVox_519.vrm` exists
-- Try using the full path: `http://localhost:5173/vrm/HarmonVox_519.vrm`
+- VRM file not found at `/vrm/VIPE_Hero_2851-default.vrm`
+- Check that `public/vrm/VIPE_Hero_2851-default.vrm` exists
+- Try using the full path: `http://localhost:5173/vrm/VIPE_Hero_2851-default.vrm`
 
 #### "Root element not found"
 - The HTML isn't loading
@@ -92,7 +92,7 @@ You should see these logs if the app is loading correctly:
 
 ## Current Configuration
 
-- **Default Avatar:** `/vrm/HarmonVox_519.vrm` (local file)
+- **Default Avatar:** `/vrm/VIPE_Hero_2851-default.vrm` (local file)
 - **Dev Server:** http://localhost:5173/
 - **Pose Lab:** http://localhost:5173/?mode=pose-lab
 

@@ -138,11 +138,11 @@ export function OnboardingOverlay() {
 
   const loadSampleAvatar = async () => {
     try {
-      const response = await fetch('/vrm/HarmonVox_519.vrm');
+      const response = await fetch('/vrm/VIPE_Hero_2851-default.vrm');
       const blob = await response.blob();
-      const file = new File([blob], 'HarmonVox_519.vrm', { type: 'model/gltf-binary' });
+      const file = new File([blob], 'VIPE_Hero_2851-default.vrm', { type: 'model/gltf-binary' });
       setFileSource(file);
-      addToast('Agent HarmonVox materialized.', 'success');
+      addToast('Agent VIPE Hero materialized.', 'success');
     } catch (error) {
       console.error('Failed to load sample avatar:', error);
       addToast('Transmission failed. Please upload your own avatar.', 'error');

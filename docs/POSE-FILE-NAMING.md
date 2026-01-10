@@ -169,7 +169,7 @@ src/poses/
 ### Option A: Manual Export
 
 1. **Open Pose Lab:** http://localhost:5173/?mode=pose-lab
-2. **Upload VRM** (HarmonVox_519.vrm)
+2. **Upload VRM** (VIPE_Hero_2851-default.vrm)
 3. **Drop** `src/poses/fbx/Taunt.fbx`
 4. **Click "Export Pose"**
 5. **Rename downloads:**
