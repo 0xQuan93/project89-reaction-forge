@@ -8,6 +8,7 @@ import { useUIStore } from '../state/useUIStore';
 import { lightingManager } from './lightingManager';
 import { postProcessingManager } from './postProcessingManager';
 import { environmentManager } from './environmentManager';
+import { live2dManager } from '../live2d/live2dManager';
 
 type TickHandler = (delta: number) => void;
 
@@ -597,6 +598,12 @@ class SceneManager {
     
     // Draw the WebGL canvas
     ctx.drawImage(sourceCanvas, 0, 0, width, height);
+
+    // Draw Live2D overlay canvas if present
+    const live2dCanvas = live2dManager.getCanvas();
+    if (live2dCanvas && live2dCanvas.width > 0 && live2dCanvas.height > 0) {
+      ctx.drawImage(live2dCanvas, 0, 0, width, height);
+    }
 
     // Apply CSS-based effects by drawing them manually onto the canvas
     if (cssOverlay) {

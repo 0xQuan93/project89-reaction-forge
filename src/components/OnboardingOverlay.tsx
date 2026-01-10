@@ -67,7 +67,7 @@ const TUTORIAL_STEPS = [
 ];
 
 export function OnboardingOverlay() {
-  const { currentUrl, setFileSource } = useAvatarSource();
+  const { avatarType, setFileSource } = useAvatarSource();
   const { addToast } = useToastStore();
   const { 
     isTutorialActive, 
@@ -84,10 +84,10 @@ export function OnboardingOverlay() {
 
   // Auto-start tutorial if no avatar is loaded
   useEffect(() => {
-    if (!currentUrl && !isTutorialActive) {
+    if (avatarType === 'none' && !isTutorialActive) {
       startTutorial();
     }
-  }, [currentUrl, isTutorialActive, startTutorial]);
+  }, [avatarType, isTutorialActive, startTutorial]);
 
   // Handle step actions
   useEffect(() => {
@@ -99,11 +99,11 @@ export function OnboardingOverlay() {
     }
 
     // specific check for upload step completion
-    if (step && step.id === 'upload' && currentUrl) {
+    if (step && step.id === 'upload' && avatarType !== 'none') {
        nextTutorialStep();
     }
 
-  }, [currentTutorialStep, isTutorialActive, currentUrl, nextTutorialStep, setMode, setPoseLabTab]);
+  }, [currentTutorialStep, isTutorialActive, avatarType, nextTutorialStep, setMode, setPoseLabTab]);
 
   // Clean up highlights
   useEffect(() => {
@@ -168,10 +168,10 @@ export function OnboardingOverlay() {
   };
 
   // If tutorial is not active and avatar is loaded, show nothing
-  if (!isTutorialActive && currentUrl) return null;
+  if (!isTutorialActive && avatarType !== 'none') return null;
 
   // Initial Load Screen
-  const isInitialLoad = !currentUrl;
+  const isInitialLoad = avatarType === 'none';
   const step = TUTORIAL_STEPS[currentTutorialStep];
 
   if (isInitialLoad && (!isTutorialActive || currentTutorialStep <= 1)) {

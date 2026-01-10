@@ -21,10 +21,11 @@ interface AppHeaderProps {
 
 export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
   const vrmInputRef = useRef<HTMLInputElement>(null);
+  const live2dInputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const { currentUrl, setFileSource, sourceLabel } = useAvatarSource();
+  const { avatarType, setFileSource, setLive2dSource, sourceLabel } = useAvatarSource();
   const isAvatarReady = useReactionStore((state) => state.isAvatarReady);
   const { addToast } = useToastStore();
 
@@ -38,6 +39,26 @@ export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
     }
     
     setFileSource(file);
+  };
+
+  const handleLive2dUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+    event.target.value = '';
+
+    const zipFile = files.length === 1 && files[0].name.toLowerCase().endsWith('.zip');
+    if (zipFile) {
+      addToast('ZIP bundles are not supported yet. Please select the .model3.json and texture files directly.', 'warning');
+      return;
+    }
+
+    try {
+      const label = files.find((file) => file.name.toLowerCase().endsWith('.model3.json'))?.name ?? 'Live2D Avatar';
+      await setLive2dSource(files, label);
+      addToast('Live2D avatar loaded successfully', 'success');
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : 'Failed to load Live2D assets', 'error');
+    }
   };
 
   const handleProjectLoad = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,12 +111,18 @@ export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
         </div>
 
         <div className="app-header__center">
-          {currentUrl ? (
+          {avatarType !== 'none' ? (
             <div className="avatar-selector">
               <span className="avatar-selector__label">{sourceLabel}</span>
               <button
                 className="avatar-selector__button"
-                onClick={() => vrmInputRef.current?.click()}
+                onClick={() => {
+                  if (avatarType === 'live2d') {
+                    live2dInputRef.current?.click();
+                    return;
+                  }
+                  vrmInputRef.current?.click();
+                }}
                 title="Change avatar"
               >
                 Change Avatar
@@ -114,6 +141,14 @@ export function AppHeader({ mode, onModeChange }: AppHeaderProps) {
             type="file"
             accept=".vrm"
             onChange={handleVRMUpload}
+            style={{ display: 'none' }}
+          />
+          <input
+            ref={live2dInputRef}
+            type="file"
+            accept=".model3.json,.zip,.moc3,.json,image/*"
+            multiple
+            onChange={handleLive2dUpload}
             style={{ display: 'none' }}
           />
         </div>

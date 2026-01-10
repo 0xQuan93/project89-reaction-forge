@@ -48,6 +48,17 @@
   --glass-active: rgba(255, 255, 255, 0.12);
   --glass-blur: 20px;
   --glass-saturate: 180%;
+
+  /* UI Surface Tints */
+  --surface-ui: rgba(0, 0, 0, 0.25);
+  --surface-ui-hover: rgba(255, 255, 255, 0.04);
+  --surface-ui-accent: rgba(0, 255, 214, 0.1);
+  --surface-ui-border: rgba(0, 255, 214, 0.2);
+
+  /* Shell Glow Layers */
+  --shell-glow-1: rgba(0, 255, 214, 0.08);
+  --shell-glow-2: rgba(124, 58, 237, 0.06);
+  --shell-glow-3: rgba(249, 115, 22, 0.04);
   
   /* Primary Spectrum - Aurora Cyan */
   --accent-50: #e6fffc;
@@ -247,40 +258,51 @@
   color-scheme: light;
   
   /* Background Layers - Warm, Soft, Eye-Friendly */
-  --color-void: #CCD0DA;      /* Darker Crust */
-  --color-abyss: #E0E4ED;     /* Softer Base - Main Background */
-  --color-deep: #D2D6E0;      /* Mantle */
-  --color-surface: #F8FAFC;   /* Light Grayish Blue for Cards */
-  --color-elevated: #F8FAFC;
+  --color-void: #D5DAE5;      /* Soft graphite */
+  --color-abyss: #EEF1F6;     /* Main background */
+  --color-deep: #E5E9F1;      /* Mantle */
+  --color-surface: #F6F8FB;   /* Panel surface */
+  --color-elevated: #FFFFFF;
   --color-card: #FFFFFF;
-  --color-hover: #DCE0E8;     /* Slightly darker hover */
+  --color-hover: #E6EAF3;     /* Gentle hover */
   
   /* Glass Surfaces */
-  --glass-bg: rgba(248, 250, 252, 0.75); /* Use lighter base color */
-  --glass-border: rgba(76, 79, 105, 0.12);
-  --glass-hover: rgba(76, 79, 105, 0.08);
-  --glass-active: rgba(76, 79, 105, 0.15);
+  --glass-bg: rgba(246, 248, 251, 0.85);
+  --glass-border: rgba(46, 51, 72, 0.12);
+  --glass-hover: rgba(46, 51, 72, 0.08);
+  --glass-active: rgba(46, 51, 72, 0.16);
   
   /* Text Hierarchy - High Contrast Dark Blue-Gray */
-  --text-primary: #363A4F;    /* Text - Even darker for better contrast */
-  --text-secondary: #585B70;  /* Subtext0 */
-  --text-tertiary: #787B94;   /* Overlay2 */
-  --text-muted: #9598A7;      /* Overlay0 */
-  --text-disabled: #B4B7C9;   /* Surface2 */
-  --text-on-accent: #363A4F;  /* Dark text on bright accents for light mode */
+  --text-primary: #2E3348;
+  --text-secondary: #4A4F65;
+  --text-tertiary: #646A83;
+  --text-muted: #868CA5;
+  --text-disabled: #B1B7C8;
+  --text-on-accent: #1F2333;
   
   /* Borders */
-  --border-subtle: rgba(76, 79, 105, 0.1);
-  --border-default: rgba(76, 79, 105, 0.2);
-  --border-emphasis: rgba(76, 79, 105, 0.3);
-  --border-accent: rgba(0, 150, 120, 0.5); /* Darker accent border for visibility */
+  --border-subtle: rgba(46, 51, 72, 0.12);
+  --border-default: rgba(46, 51, 72, 0.22);
+  --border-emphasis: rgba(46, 51, 72, 0.32);
+  --border-accent: rgba(0, 150, 120, 0.45);
   
   /* Primary Spectrum */
-  --accent: #00A080;          /* Slightly darker Teal */
-  --accent-glow: rgba(0, 150, 120, 0.25);
+  --accent: #009C7A;
+  --accent-glow: rgba(0, 156, 122, 0.2);
   --accent-50: #E0FFF7;
-  --accent-100: #A0F5DC;
-  --accent-600: #008066;
+  --accent-100: #B4F4E3;
+  --accent-600: #00785F;
+
+  /* UI Surface Tints */
+  --surface-ui: rgba(255, 255, 255, 0.72);
+  --surface-ui-hover: rgba(46, 51, 72, 0.06);
+  --surface-ui-accent: rgba(0, 156, 122, 0.12);
+  --surface-ui-border: rgba(0, 156, 122, 0.25);
+
+  /* Shell Glow Layers */
+  --shell-glow-1: rgba(0, 156, 122, 0.08);
+  --shell-glow-2: rgba(124, 58, 237, 0.05);
+  --shell-glow-3: rgba(249, 115, 22, 0.05);
   
   /* Shadows - Colored & Soft */
   --shadow-xs: 0 1px 2px rgba(54, 58, 79, 0.05);
@@ -692,4 +714,3 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
-

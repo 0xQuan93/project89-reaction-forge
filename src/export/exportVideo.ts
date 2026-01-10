@@ -3,6 +3,7 @@
  * WebM export with optional conversion to GIF
  */
 import { useUIStore } from '../state/useUIStore';
+import { live2dManager } from '../live2d/live2dManager';
 
 export interface ExportOptions {
   duration: number; // Total duration in seconds
@@ -96,6 +97,12 @@ export async function exportAsWebM(
     // Draw the entire canvas, scaling to fill the composite canvas
     // This ensures the background and all content fills the entire frame
     ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+
+    // Draw Live2D overlay canvas if present
+    const live2dCanvas = live2dManager.getCanvas();
+    if (live2dCanvas && live2dCanvas.width > 0 && live2dCanvas.height > 0) {
+      ctx.drawImage(live2dCanvas, 0, 0, targetWidth, targetHeight);
+    }
 
     // Apply CSS Effects manually to video stream
     if (activeCssOverlay) {

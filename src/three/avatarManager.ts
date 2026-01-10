@@ -465,6 +465,18 @@ class AvatarManager {
   seekAnimation(time: number) { if (this.isAnimated) animationManager.seek(time); }
   isAnimationPlaying(): boolean { return this.isAnimated && animationManager.isPlaying(); }
   getVRM(): VRM | undefined { return this.vrm; }
+  clear() {
+    const scene = sceneManager.getScene();
+    if (this.vrm && scene) {
+      scene.remove(this.vrm.scene);
+    }
+    this.tickDispose?.();
+    this.tickDispose = undefined;
+    this.vrm = undefined;
+    this.currentUrl = undefined;
+    this.isAnimated = false;
+    animationManager.stopAnimation(true);
+  }
   
   applyExpression(expression: ExpressionId) {
     if (!this.vrm) return;
