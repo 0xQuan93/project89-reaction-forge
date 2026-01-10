@@ -4,64 +4,164 @@
   },
   "vrmPose": {
     "hips": {
-      "rotation": [0, 0.05, 0, 0.9987]
+      "rotation": [
+        0,
+        0.05,
+        0,
+        0.9987
+      ]
     },
     "spine": {
-      "rotation": [0.03, -0.02, 0, 0.999]
+      "rotation": [
+        0.03,
+        -0.02,
+        0,
+        0.999
+      ]
     },
     "chest": {
-      "rotation": [0.02, -0.02, 0, 0.999]
+      "rotation": [
+        0.02,
+        -0.02,
+        0,
+        0.999
+      ]
     },
     "upperChest": {
-      "rotation": [0.01, 0, 0, 0.9999]
+      "rotation": [
+        0.01,
+        0,
+        0,
+        0.9999
+      ]
     },
     "neck": {
-      "rotation": [-0.02, -0.05, 0, 0.998]
+      "rotation": [
+        -0.02,
+        -0.05,
+        0,
+        0.998
+      ]
     },
     "head": {
-      "rotation": [-0.02, -0.08, 0, 0.996]
+      "rotation": [
+        -0.02,
+        -0.08,
+        0,
+        0.996
+      ]
     },
     "rightShoulder": {
-      "rotation": [0, 0.15, 0.05, 0.987]
+      "rotation": [
+        0,
+        0.15,
+        0.05,
+        0.987
+      ]
     },
     "rightUpperArm": {
-      "rotation": [-0.15, 0.55, -0.15, 0.81]
+      "rotation": [
+        -0.15,
+        0.55,
+        -0.15,
+        0.81
+      ]
     },
     "rightLowerArm": {
-      "rotation": [0, 0.45, 0, 0.89]
+      "rotation": [
+        0,
+        0.45,
+        0,
+        0.89
+      ]
     },
     "rightHand": {
-      "rotation": [0, 0.1, 0, 0.995]
+      "rotation": [
+        0,
+        0.1,
+        0,
+        0.995
+      ]
     },
     "leftShoulder": {
-      "rotation": [0, 0, -0.03, 0.9995]
+      "rotation": [
+        0,
+        0,
+        -0.03,
+        0.9995
+      ]
     },
     "leftUpperArm": {
-      "rotation": [0.05, 0.05, 0.6, 0.797]
+      "rotation": [
+        0.05,
+        0.05,
+        0.6,
+        0.797
+      ]
     },
     "leftLowerArm": {
-      "rotation": [0, -0.08, 0, 0.997]
+      "rotation": [
+        0,
+        -0.08,
+        0,
+        0.997
+      ]
     },
     "leftHand": {
-      "rotation": [0, 0, 0, 1]
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ]
     },
     "rightUpperLeg": {
-      "rotation": [0.02, 0, 0.02, 0.999]
+      "rotation": [
+        0.02,
+        0,
+        0.02,
+        0.999
+      ]
     },
     "rightLowerLeg": {
-      "rotation": [0.015, 0, 0, 0.9999]
+      "rotation": [
+        0.015,
+        0,
+        0,
+        0.9999
+      ]
     },
     "rightFoot": {
-      "rotation": [-0.02, 0, 0, 0.9998]
+      "rotation": [
+        -0.02,
+        0,
+        0,
+        0.9998
+      ]
     },
     "leftUpperLeg": {
-      "rotation": [0.02, 0, -0.02, 0.999]
+      "rotation": [
+        0.02,
+        0,
+        -0.02,
+        0.999
+      ]
     },
     "leftLowerLeg": {
-      "rotation": [0.015, 0, 0, 0.9999]
+      "rotation": [
+        0.015,
+        0,
+        0,
+        0.9999
+      ]
     },
     "leftFoot": {
-      "rotation": [-0.02, 0, 0, 0.9998]
+      "rotation": [
+        -0.02,
+        0,
+        0,
+        0.9998
+      ]
     }
   }
 }
