@@ -8,6 +8,8 @@ import { notifySceneChange } from '../multiplayer/avatarBridge';
 import { useReactionStore } from '../state/useReactionStore';
 import { useIntroStore } from '../state/useIntroStore';
 import { useToastStore } from '../state/useToastStore';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
+import { LIGHT_PRESETS } from '../three/lightingManager';
 import { 
   House, 
   User, 
@@ -36,6 +38,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
   const { randomize, isAvatarReady } = useReactionStore();
   const { autoCaptures, addAutoCapture, clearAutoCaptures } = useIntroStore();
   const { addToast } = useToastStore();
+  const { lightingPreset, setLightingPreset } = useSceneSettingsStore();
   const { isPoppedOut, togglePopOut } = usePopOutViewport(activeCssOverlay);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [showClock, setShowClock] = useState(true);
@@ -49,6 +52,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
   const endTimerRef = useRef<number | null>(null);
   const countdownTimerRef = useRef<number | null>(null);
   const captureCountRef = useRef(0);
+  const lightingPresetRef = useRef(lightingPreset);
 
   // Sync with sceneManager on mount
   useEffect(() => {
@@ -101,6 +105,9 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
       window.clearInterval(countdownTimerRef.current);
       countdownTimerRef.current = null;
     }
+    if (lightingPresetRef.current) {
+      setLightingPreset(lightingPresetRef.current);
+    }
     setIsFocusSprintActive(false);
     setFocusModeActive(false);
     if (showGallery) {
@@ -129,6 +136,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
       'side',
       'fullbody',
     ];
+    const lightingPresets = Object.keys(LIGHT_PRESETS);
 
     clearAutoCaptures();
     captureCountRef.current = 0;
@@ -137,12 +145,17 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
     setShowFocusGallery(false);
     setIsFocusSprintActive(true);
     setFocusModeActive(true);
+    lightingPresetRef.current = lightingPreset;
     addToast('PoseLab Sprint started — focus mode enabled.', 'info');
 
     const applyRandomPoseAndCamera = () => {
       randomize();
       const nextCamera = cameraPresets[Math.floor(Math.random() * cameraPresets.length)];
       sceneManager.setCameraPreset(nextCamera);
+      if (lightingPresets.length > 0) {
+        const nextLighting = lightingPresets[Math.floor(Math.random() * lightingPresets.length)];
+        setLightingPreset(nextLighting);
+      }
     };
 
     applyRandomPoseAndCamera();
