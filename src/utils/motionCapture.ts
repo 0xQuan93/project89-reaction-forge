@@ -17,13 +17,37 @@ const SMOOTHING = {
   EYE_LERP: 0.4,
   /** Slower lerp for head to prevent jitter */
   HEAD_LERP: 0.12,
+  /** Moderate lerp for hand tracking to balance responsiveness and stability */
+  HAND_LERP: 0.22,
 };
 
 /** Gaze sensitivity multiplier for eye tracking */
 const GAZE_SENSITIVITY = 1.5;
 
+/** Deadzone for eye tracking to reduce micro-jitter */
+const GAZE_DEADZONE = 0.04;
+
 /** Head dampening factor (0.4 = 40% dampening, retain 60% of movement) */
 const HEAD_DAMPENING = 0.4;
+
+/** Hand joint constraints for stability (radians) */
+const HAND_CONSTRAINTS = {
+  WRIST: {
+    x: [-1.6, 1.6],
+    y: [-1.6, 1.6],
+    z: [-1.6, 1.6],
+  },
+  FINGER: {
+    x: [-0.5, 0.5],
+    y: [-0.5, 0.5],
+    z: [-1.9, 0.3],
+  },
+  THUMB: {
+    x: [-0.8, 0.8],
+    y: [-0.8, 0.8],
+    z: [-1.6, 0.5],
+  },
+};
 
 /** Camera capture configuration */
 const CAMERA_CONFIG = {
@@ -47,6 +71,8 @@ interface RecordedFrame {
     bones: Record<string, { rotation: THREE.Quaternion, position?: THREE.Vector3 }>;
 }
 
+type HandLandmarks2D = Results['leftHandLandmarks'];
+
 export class MotionCaptureManager {
   private holistic: Holistic;
   private camera?: Camera;
@@ -69,6 +95,10 @@ export class MotionCaptureManager {
   private targetRootPosition: THREE.Vector3 | null = null;
   private currentRootPosition: THREE.Vector3 = new THREE.Vector3();
   private updateLoopId: number | null = null;
+
+  // Hand Tracking State
+  private lastLeftHandLandmarks2D: HandLandmarks2D = null;
+  private lastRightHandLandmarks2D: HandLandmarks2D = null;
   
   // Recording State
   private isRecording = false;
@@ -101,6 +131,13 @@ export class MotionCaptureManager {
   setMode(mode: 'full' | 'face') {
       this.mode = mode;
       console.log('[MotionCaptureManager] Set mode:', mode);
+  }
+
+  getHandLandmarks2D() {
+    return {
+      left: this.lastLeftHandLandmarks2D,
+      right: this.lastRightHandLandmarks2D,
+    };
   }
 
   private updateAvailableBlendshapes() {
@@ -231,6 +268,8 @@ export class MotionCaptureManager {
               let effectiveLerp = lerpFactor;
               if (boneName.toLowerCase().includes('head')) {
                   effectiveLerp = SMOOTHING.HEAD_LERP;
+              } else if (boneName.toLowerCase().includes('hand') || boneName.toLowerCase().includes('thumb') || boneName.toLowerCase().includes('index') || boneName.toLowerCase().includes('middle') || boneName.toLowerCase().includes('ring') || boneName.toLowerCase().includes('little')) {
+                  effectiveLerp = SMOOTHING.HAND_LERP;
               }
               
               currentQ.slerp(targetQ, effectiveLerp);
@@ -407,12 +446,45 @@ export class MotionCaptureManager {
             const smile = this.calculateSmile(results.faceLandmarks);
             // @ts-ignore - Injecting custom property
             faceRig.smile = smile;
+
+            if (faceRig.eye && faceRig.head) {
+                const stabilized = Kalidokit.Face.stabilizeBlink(faceRig.eye, faceRig.head.y, {
+                    noWink: false,
+                    maxRot: 0.5,
+                });
+                faceRig.eye = stabilized;
+            }
             
             if (faceRig) {
                 this.applyFaceRig(faceRig);
             }
         } catch (error) {
             console.warn("[MotionCapture] Face solver error:", error);
+        }
+    }
+
+    // Solve Hands using Kalidokit
+    if (results.rightHandLandmarks && results.rightHandLandmarks.length > 0) {
+        try {
+            this.lastRightHandLandmarks2D = results.rightHandLandmarks;
+            const rightHandRig = Kalidokit.Hand.solve(results.rightHandLandmarks, 'Right');
+            if (rightHandRig) {
+                this.applyHandRig(rightHandRig, 'Right');
+            }
+        } catch (error) {
+            console.warn("[MotionCapture] Right hand solver error:", error);
+        }
+    }
+
+    if (results.leftHandLandmarks && results.leftHandLandmarks.length > 0) {
+        try {
+            this.lastLeftHandLandmarks2D = results.leftHandLandmarks;
+            const leftHandRig = Kalidokit.Hand.solve(results.leftHandLandmarks, 'Left');
+            if (leftHandRig) {
+                this.applyHandRig(leftHandRig, 'Left');
+            }
+        } catch (error) {
+            console.warn("[MotionCapture] Left hand solver error:", error);
         }
     }
   };
@@ -641,6 +713,9 @@ export class MotionCaptureManager {
           // ... (comments retained/abbreviated)
           // FIX: Invert Y axis to match user expectation (Look Up = Look Up)
           const y = THREE.MathUtils.clamp(-rawY * GAZE_SENSITIVITY, -1, 1);
+
+          const stabilizedX = Math.abs(x) < GAZE_DEADZONE ? 0 : x;
+          const stabilizedY = Math.abs(y) < GAZE_DEADZONE ? 0 : y;
           
           // Helper for ARKit asymmetric mapping
           const setARKitGaze = (xVal: number, yVal: number) => {
@@ -675,7 +750,7 @@ export class MotionCaptureManager {
              }
           };
           
-          setARKitGaze(x, y);
+          setARKitGaze(stabilizedX, stabilizedY);
       }
 
       // 4. Mouth
@@ -707,5 +782,50 @@ export class MotionCaptureManager {
           const browValue = rig.brow;
           setExpressionTarget(['browInnerUp', 'BrowsUp', 'browOuterUpLeft', 'browOuterUpRight', 'Surprised', 'surprise'], browValue);
       }
+  }
+
+  private applyHandRig(rig: Record<string, { x: number, y: number, z: number }>, side: 'Left' | 'Right') {
+      if (!this.vrm?.humanoid) return;
+
+      const isLeft = side === 'Left';
+      const boneMap: Record<string, VRMHumanBoneName> = {
+          [`${side}Wrist`]: isLeft ? 'leftHand' : 'rightHand',
+          [`${side}ThumbProximal`]: isLeft ? 'leftThumbMetacarpal' : 'rightThumbMetacarpal',
+          [`${side}ThumbIntermediate`]: isLeft ? 'leftThumbProximal' : 'rightThumbProximal',
+          [`${side}ThumbDistal`]: isLeft ? 'leftThumbDistal' : 'rightThumbDistal',
+          [`${side}IndexProximal`]: isLeft ? 'leftIndexProximal' : 'rightIndexProximal',
+          [`${side}IndexIntermediate`]: isLeft ? 'leftIndexIntermediate' : 'rightIndexIntermediate',
+          [`${side}IndexDistal`]: isLeft ? 'leftIndexDistal' : 'rightIndexDistal',
+          [`${side}MiddleProximal`]: isLeft ? 'leftMiddleProximal' : 'rightMiddleProximal',
+          [`${side}MiddleIntermediate`]: isLeft ? 'leftMiddleIntermediate' : 'rightMiddleIntermediate',
+          [`${side}MiddleDistal`]: isLeft ? 'leftMiddleDistal' : 'rightMiddleDistal',
+          [`${side}RingProximal`]: isLeft ? 'leftRingProximal' : 'rightRingProximal',
+          [`${side}RingIntermediate`]: isLeft ? 'leftRingIntermediate' : 'rightRingIntermediate',
+          [`${side}RingDistal`]: isLeft ? 'leftRingDistal' : 'rightRingDistal',
+          [`${side}LittleProximal`]: isLeft ? 'leftLittleProximal' : 'rightLittleProximal',
+          [`${side}LittleIntermediate`]: isLeft ? 'leftLittleIntermediate' : 'rightLittleIntermediate',
+          [`${side}LittleDistal`]: isLeft ? 'leftLittleDistal' : 'rightLittleDistal',
+      };
+
+      const clampRotation = (boneName: string, rotation: { x: number, y: number, z: number }) => {
+          const isThumb = boneName.toLowerCase().includes('thumb');
+          const isWrist = boneName.toLowerCase().includes('hand');
+          const range = isWrist ? HAND_CONSTRAINTS.WRIST : isThumb ? HAND_CONSTRAINTS.THUMB : HAND_CONSTRAINTS.FINGER;
+
+          return {
+              x: THREE.MathUtils.clamp(rotation.x, range.x[0], range.x[1]),
+              y: THREE.MathUtils.clamp(rotation.y, range.y[0], range.y[1]),
+              z: THREE.MathUtils.clamp(rotation.z, range.z[0], range.z[1]),
+          };
+      };
+
+      Object.entries(rig).forEach(([key, rotation]) => {
+          const boneName = boneMap[key];
+          if (!boneName || !rotation) return;
+
+          const constrained = clampRotation(boneName, rotation);
+          const targetQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(constrained.x, constrained.y, constrained.z, 'XYZ'));
+          this.targetBoneRotations.set(boneName, targetQ);
+      });
   }
 }

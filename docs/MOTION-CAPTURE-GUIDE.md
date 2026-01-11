@@ -29,12 +29,17 @@ Improved support for ARKit-standard blendshapes (often found in iPhone-ready ava
 - **Eye Tracking**: Mapped `eyeLookIn`/`eyeLookOut` for precise gaze.
 - **Mouth Shapes**: Full support for `mouthFunnel`, `mouthPucker`, and more.
 
-### 5. Green Screen Mode
+### 5. Hand Tracking (3D + 2D)
+PoseLab now tracks both hands with stabilized finger rotations.
+- **3D Hand Rig**: Finger joints are retargeted to VRM hand bones for live mocap.
+- **2D Landmarks**: Hand landmarks are captured for overlays or gesture-driven UI.
+
+### 6. Green Screen Mode
 A dedicated toggle for easy compositing.
 - **Toggle**: Switch instantly between your selected background and a pure green screen.
 - **Workflow**: Record your motion against green, then key it out in OBS, Premiere, or After Effects.
 
-### 6. Tracking Modes
+### 7. Tracking Modes
 - **Full Body**: Tracks both body and face. Requires full view of the user.
 - **Face Only**: Tracks only facial expressions and head rotation. 
   - **Body Behavior**: Automatically loops the "Sunset Call" idle animation (or your currently playing animation) so the body stays alive while you talk.
