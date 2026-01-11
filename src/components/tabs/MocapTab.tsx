@@ -259,13 +259,12 @@ export function MocapTab() {
         managerRef.current.setMode(modeOverride);
       }
 
+      managerRef.current.setVRM(vrm);
+      await managerRef.current.start();
       // For both Full Body and Upper Body (Face) tracking, we pause animation so
       // mocap has full control over tracked bones without animation sway.
       avatarManager.freezeCurrentPose();
       avatarManager.setInteraction(true);
-      
-      managerRef.current.setVRM(vrm);
-      await managerRef.current.start();
       setIsActive(true);
       setError(null);
       if (liveShutdownRef.current && !liveModeEnabledRef.current) {
