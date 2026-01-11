@@ -73,6 +73,20 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
             </li>
           </ul>
 
+          <h3 style={{ marginTop: '1.5rem' }}>Hotkeys</h3>
+          <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '6px' }}>
+            <li><strong>Space:</strong> Save a snapshot PNG</li>
+            <li><strong>P:</strong> Export PNG with effects</li>
+            <li><strong>1 / 3 / 5 / 7:</strong> Camera presets (headshot, 3/4, side, home)</li>
+            <li><strong>2:</strong> Toggle Pose Lab rotate gizmo</li>
+            <li><strong>R:</strong> Reset pose</li>
+            <li><strong>S:</strong> Stop animation</li>
+            <li><strong>Arrow keys:</strong> Trigger reaction presets (Live Controls)</li>
+            <li><strong>Ctrl/Cmd + S:</strong> Save project</li>
+            <li><strong>Ctrl/Cmd + O:</strong> Load project</li>
+            <li><strong>Esc:</strong> Turn off gizmo tools</li>
+          </ul>
+
           <h3 style={{ marginTop: '1.5rem' }}>About</h3>
           <p style={{ opacity: 0.85, lineHeight: 1.6 }}>
             PoseLab is an open-source initiative by Project 89 to democratize VRM avatar creation and animation. 

@@ -242,6 +242,66 @@
     0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.canvas-container::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle at 20% 20%, rgba(0, 255, 214, 0.12), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(124, 58, 237, 0.12), transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(249, 115, 22, 0.1), transparent 55%);
+  opacity: 0.4;
+  filter: blur(40px);
+  animation: viewport-breathe 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.canvas-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 24px
+    ),
+    repeating-linear-gradient(
+      -120deg,
+      rgba(0, 255, 214, 0.04),
+      rgba(0, 255, 214, 0.04) 1px,
+      transparent 1px,
+      transparent 32px
+    );
+  opacity: 0.2;
+  mix-blend-mode: screen;
+  animation: viewport-grid-drift 18s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.viewport-halo {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(0, 255, 214, 0.1),
+    rgba(124, 58, 237, 0.1),
+    rgba(0, 255, 214, 0.1)
+  );
+  opacity: 0.18;
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  animation: viewport-halo-spin 36s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 62%, #000 66%, transparent 70%);
+  mask: radial-gradient(circle, transparent 58%, #000 62%, #000 66%, transparent 70%);
+}
+
 .canvas-stage {
   max-width: 100%;
   max-height: 100%;
@@ -250,6 +310,51 @@
   display: block;
   position: relative;
   z-index: 1;
+}
+
+@keyframes viewport-breathe {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(2%, -1%, 0) scale(1.03);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.35;
+  }
+}
+
+@keyframes viewport-grid-drift {
+  0% {
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 100% 40%, -80% 60%;
+  }
+}
+
+@keyframes viewport-halo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-container::before {
+    animation: none;
+  }
+  .canvas-container::after {
+    animation: none;
+  }
+  .viewport-halo {
+    animation: none;
+  }
 }
 
 /* Viewport Overlays */
@@ -978,6 +1083,102 @@
   margin-bottom: var(--space-2);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   POSELAB SPRINT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-shell.focus-mode .app-header,
+.app-shell.focus-mode .control-panel,
+.app-shell.focus-mode .control-toggle,
+.app-shell.focus-mode .control-drawer,
+.app-shell.focus-mode .viewport-overlay {
+  opacity: 0.2;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.app-shell.focus-mode .viewport-overlay.focus-sprint {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pose-lab-sprint-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-accent);
+  background: linear-gradient(135deg, rgba(0, 255, 214, 0.18), rgba(124, 58, 237, 0.2));
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-glow);
+  transition: var(--transition-all);
+}
+
+.pose-lab-sprint-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow-strong);
+}
+
+.pose-lab-sprint-btn.active {
+  background: linear-gradient(135deg, rgba(255, 77, 109, 0.3), rgba(255, 159, 67, 0.25));
+  border-color: rgba(255, 77, 109, 0.6);
+}
+
+.viewport-overlay.focus-sprint {
+  bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.focus-sprint-modal h2 {
+  margin-top: 0;
+}
+
+.focus-sprint-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  flex-wrap: wrap;
+}
+
+.focus-sprint-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.focus-sprint-thumb {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.focus-sprint-thumb img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.focus-sprint-thumb span {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.focus-sprint-thumb:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-glow);
+}
+
 .modal-body ul {
   padding-left: var(--space-5);
   margin-bottom: var(--space-5);
@@ -1347,6 +1548,21 @@
 
   .viewport-overlay.bottom-center {
     bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  }
+
+  .canvas-container::before {
+    opacity: 0.28;
+  }
+
+  .canvas-container::after {
+    opacity: 0.14;
+    animation-duration: 28s;
+  }
+
+  .viewport-halo {
+    opacity: 0.12;
+    inset: -6%;
+    animation-duration: 48s;
   }
 }
 

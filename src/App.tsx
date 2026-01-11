@@ -22,7 +22,7 @@ import { SessionHUD } from './components/SessionHUD';
 initAvatarBridge();
 
 function App() {
-  const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen } = useUIStore();
+  const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen, focusModeActive } = useUIStore();
   const { theme, locale, textScale, autosaveEnabled, autosaveIntervalMinutes, autosaveMaxEntries } = useSettingsStore();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 960);
 
@@ -82,7 +82,7 @@ function App() {
   }, []);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${focusModeActive ? 'focus-mode' : ''}`}>
       <AppHeader mode={mode} onModeChange={setMode} />
       
       <main className="layout">
