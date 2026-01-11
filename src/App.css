@@ -1453,6 +1453,21 @@
   .viewport-overlay.bottom-center {
     bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   }
+
+  .canvas-container::before {
+    opacity: 0.28;
+  }
+
+  .canvas-container::after {
+    opacity: 0.14;
+    animation-duration: 28s;
+  }
+
+  .viewport-halo {
+    opacity: 0.12;
+    inset: -6%;
+    animation-duration: 48s;
+  }
 }
 
 @media (max-width: 640px) {
