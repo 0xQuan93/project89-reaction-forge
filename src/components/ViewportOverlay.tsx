@@ -116,11 +116,11 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
     const shotCount = 6;
     const poseIntervalMs = 3500;
     const captureIntervalMs = Math.max(3000, Math.floor(focusDurationMs / shotCount));
-    const cameraPresets: Array<'headshot' | 'quarter' | 'side' | 'home'> = [
+    const cameraPresets: Array<'headshot' | 'quarter' | 'side' | 'fullbody'> = [
       'headshot',
       'quarter',
       'side',
-      'home',
+      'fullbody',
     ];
 
     clearAutoCaptures();
