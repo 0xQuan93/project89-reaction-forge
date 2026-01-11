@@ -241,9 +241,9 @@ export class MotionCaptureManager {
       
       // 2. Smooth Bone Rotations
       this.targetBoneRotations.forEach((targetQ, boneName) => {
-          // In Face mode, allow Head, Neck, and Upper Body bones for natural movement
+          // In Face mode, allow Head, Neck, Upper Body, and Hands for natural movement
           if (this.mode === 'face') {
-              const allowedBones = ['head', 'neck', 'chest', 'upperchest', 'spine'];
+              const allowedBones = ['head', 'neck', 'chest', 'upperchest', 'spine', 'hand', 'thumb', 'index', 'middle', 'ring', 'little'];
               if (!allowedBones.some(b => boneName.toLowerCase().includes(b))) return;
           }
 
