@@ -5,6 +5,8 @@ import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
 import { motionEngine } from '../poses/motionEngine';
 import { sceneManager } from '../three/sceneManager';
+import { avatarManager } from '../three/avatarManager';
+import { OneEuroFilter, OneEuroFilterQuat, OneEuroFilterVec3 } from './OneEuroFilter';
 
 // ======================
 // Configuration Constants
@@ -12,16 +14,14 @@ import { sceneManager } from '../three/sceneManager';
 
 /** Smoothing configuration for motion capture */
 const SMOOTHING = {
-  /** Minimum lerp factor (when still) - higher smoothing */
-  MIN_LERP: 0.05,
-  /** Maximum lerp factor (when moving fast) - higher responsiveness */
-  MAX_LERP: 0.4,
-  /** Velocity threshold for max responsiveness (radians per second) */
-  VELOCITY_THRESHOLD: 4.0,
-  /** Faster lerp for eye movements to reduce lag */
-  EYE_LERP: 0.6,
-  /** Slower lerp for head to prevent jitter */
-  HEAD_LERP: 0.15,
+  // OneEuroFilter parameters
+  MIN_CUTOFF: 1.0,  // Hz. Lower = more smoothing when slow.
+  BETA: 0.5,        // Speed coefficient. Higher = less lag when moving fast.
+  D_CUTOFF: 1.0,    // Derivative cutoff.
+  
+  // Specific overrides
+  EYE_MIN_CUTOFF: 2.0, // Eyes move faster
+  HEAD_MIN_CUTOFF: 0.5, // Head is heavier
 };
 
 /** Gaze sensitivity multiplier for eye tracking */
@@ -93,8 +93,12 @@ export class MotionCaptureManager {
   private targetFaceValues: Map<string, number> = new Map();
   private currentFaceValues: Map<string, number> = new Map();
   private targetBoneRotations: Map<string, THREE.Quaternion> = new Map();
-  // Store smoothed rotation state internally to prevent loop jolts
-  private currentBoneRotations: Map<string, THREE.Quaternion> = new Map(); 
+  
+  // OneEuroFilter Instances
+  private boneFilters: Map<string, OneEuroFilterQuat> = new Map();
+  private faceFilters: Map<string, OneEuroFilter> = new Map();
+  private rootPositionFilter: OneEuroFilterVec3 = new OneEuroFilterVec3(SMOOTHING.MIN_CUTOFF, SMOOTHING.BETA);
+  
   private targetRootPosition: THREE.Vector3 | null = null;
   private currentRootPosition: THREE.Vector3 = new THREE.Vector3();
   private tickDispose?: () => void; // Replaces updateLoopId
@@ -111,6 +115,7 @@ export class MotionCaptureManager {
   // Calibration State
   private calibrationOffsets: Record<string, THREE.Quaternion> = {};
   private eyeCalibrationOffset = { x: 0, y: 0 };
+  private hipsRefPosition: THREE.Vector3 | null = null;
 
   constructor(videoElement: HTMLVideoElement) {
     this.videoElement = videoElement;
@@ -149,6 +154,11 @@ export class MotionCaptureManager {
     this.currentFaceValues.clear();
     this.targetBoneRotations.clear();
     
+    // Reset filters
+    this.boneFilters.clear();
+    this.faceFilters.clear();
+    this.rootPositionFilter = new OneEuroFilterVec3(SMOOTHING.MIN_CUTOFF, SMOOTHING.BETA);
+    
     if (!this.vrm?.expressionManager) return;
     
     // Extract available expression names from VRM
@@ -171,6 +181,18 @@ export class MotionCaptureManager {
     if (this.isTracking) return;
     
     try {
+        // Stop any active animations/poses on the AvatarManager to prevent conflict
+        // Use true (immediate) to ensure the mixer doesn't fight us this frame
+        avatarManager.stopAnimation(true);
+        
+        // Also disable LookAt temporarily if it exists (it fights head rotation)
+        if (this.vrm?.lookAt) {
+            this.vrm.lookAt.target = undefined; 
+            // We can't easily "disable" it without removing the plugin or setting weight to 0
+            // Setting applier to null might work or setting autoUpdate to false if exposed
+            // For now, let's assume the user isn't using LookAt heavily or we'll overwrite it
+        }
+
         this.camera = new Camera(this.videoElement, {
             onFrame: async () => {
                 await this.holistic.send({ image: this.videoElement });
@@ -197,6 +219,11 @@ export class MotionCaptureManager {
         }
         this.camera = undefined;
     }
+    
+    // Resume idle animation or reset pose if needed?
+    // For now, we leave the avatar in the last mocap pose (freeze)
+    // or we could call avatarManager.resetPose();
+    
     this.isTracking = false;
     this.stopUpdateLoop();
   }
@@ -219,36 +246,23 @@ export class MotionCaptureManager {
   private updateFrame(delta: number) {
       if (!this.vrm || !this.vrm.humanoid || !this.vrm.expressionManager) return;
       
-      // Fixed time step for logic stability, but delta for visual smoothness
-      // 1. Smooth Facial Expressions
-      const safeDelta = Number.isFinite(delta) ? Math.max(delta, 0) : 0;
-      const clampedDelta = Math.min(safeDelta, 0.1);
-      const deltaFactor = Math.min(clampedDelta * 60, 3);
-      this.targetFaceValues.forEach((targetVal, name) => {
-          const currentVal = this.currentFaceValues.get(name) || 0;
-          
-          let localLerp = SMOOTHING.MIN_LERP;
-          
-          // Adaptive Smoothing for Face
-          const diff = Math.abs(targetVal - currentVal);
-          if (diff > 0.1) {
-              localLerp = SMOOTHING.MAX_LERP; // Snap to big changes (blinks, mouth open)
-          } else {
-              localLerp = SMOOTHING.MIN_LERP; // Smooth out micro-jitter
-          }
+      const timestamp = performance.now() / 1000;
 
-          // Override for Eyes
-          if (name.toLowerCase().includes('eye') || name.toLowerCase().includes('blink')) {
-              localLerp = SMOOTHING.EYE_LERP;
+      // 1. Smooth Facial Expressions
+      this.targetFaceValues.forEach((targetVal, name) => {
+          let filter = this.faceFilters.get(name);
+          if (!filter) {
+              const minCutoff = (name.toLowerCase().includes('eye') || name.toLowerCase().includes('blink')) 
+                ? SMOOTHING.EYE_MIN_CUTOFF 
+                : SMOOTHING.MIN_CUTOFF;
+              filter = new OneEuroFilter(minCutoff, SMOOTHING.BETA);
+              this.faceFilters.set(name, filter);
           }
           
-          const adjustedLerp = 1 - Math.pow(1 - localLerp, deltaFactor);
-          const newVal = THREE.MathUtils.lerp(currentVal, targetVal, adjustedLerp);
+          const newVal = filter.filter(targetVal, timestamp);
           this.currentFaceValues.set(name, newVal);
           
-          if (Math.abs(newVal - currentVal) > 0.0001) {
-              this.vrm!.expressionManager!.setValue(name, newVal);
-          }
+          this.vrm!.expressionManager!.setValue(name, newVal);
       });
       this.vrm.expressionManager.update();
       
@@ -263,39 +277,21 @@ export class MotionCaptureManager {
           // @ts-ignore
           const node = this.vrm!.humanoid!.getNormalizedBoneNode(boneName);
           if (node) {
-              // 1. Get or Init current smoothed rotation
-              let currentQ = this.currentBoneRotations.get(boneName);
-              if (!currentQ) {
-                  currentQ = node.quaternion.clone();
-                  this.currentBoneRotations.set(boneName, currentQ);
+              // Get or Init Filter
+              let filter = this.boneFilters.get(boneName);
+              if (!filter) {
+                  const minCutoff = boneName.toLowerCase().includes('head') 
+                    ? SMOOTHING.HEAD_MIN_CUTOFF 
+                    : SMOOTHING.MIN_CUTOFF;
+                  filter = new OneEuroFilterQuat(minCutoff, SMOOTHING.BETA);
+                  this.boneFilters.set(boneName, filter);
               }
+
+              // Filter Quaternion components
+              // OneEuroFilterQuat handles normalization internally
+              const smoothed = filter.filter(targetQ.x, targetQ.y, targetQ.z, targetQ.w, timestamp);
               
-              // 2. Adaptive Slerp based on Velocity
-              const angle = currentQ.angleTo(targetQ); // Radians difference
-              
-              // Calculate effective lerp
-              // If angle is large (moving fast), we want high lerp (responsiveness)
-              // If angle is small (jitter), we want low lerp (smoothness)
-              let adaptiveLerp = THREE.MathUtils.mapLinear(
-                  angle, 
-                  0.01, // 0.5 degrees
-                  0.5,  // ~30 degrees
-                  SMOOTHING.MIN_LERP, 
-                  SMOOTHING.MAX_LERP
-              );
-              adaptiveLerp = THREE.MathUtils.clamp(adaptiveLerp, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
-              
-              // Adjust for specific body parts
-              if (boneName.toLowerCase().includes('head')) {
-                  adaptiveLerp = Math.min(adaptiveLerp, SMOOTHING.HEAD_LERP);
-              }
-              
-              // Apply Slerp
-              const adjustedLerp = 1 - Math.pow(1 - adaptiveLerp, deltaFactor);
-              currentQ.slerp(targetQ, adjustedLerp);
-              
-              // 3. Apply to Scene Node (Overwriting animation mixer for this frame)
-              node.quaternion.copy(currentQ);
+              node.quaternion.set(smoothed.x, smoothed.y, smoothed.z, smoothed.w);
           }
       });
 
@@ -303,19 +299,17 @@ export class MotionCaptureManager {
       if (this.mode === 'full' && this.targetRootPosition) {
           const hips = this.vrm.humanoid.getNormalizedBoneNode('hips');
           if (hips) {
-              // Adaptive lerp for position too
-              const dist = this.currentRootPosition.distanceTo(this.targetRootPosition);
-              let posLerp = THREE.MathUtils.mapLinear(dist, 0.01, 0.5, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
-              posLerp = THREE.MathUtils.clamp(posLerp, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
-              
-              const adjustedLerp = 1 - Math.pow(1 - posLerp, deltaFactor);
-              this.currentRootPosition.lerp(this.targetRootPosition, adjustedLerp);
-              hips.position.copy(this.currentRootPosition);
+             const smoothedPos = this.rootPositionFilter.filter(
+                 this.targetRootPosition.x,
+                 this.targetRootPosition.y,
+                 this.targetRootPosition.z,
+                 timestamp
+             );
+             
+             this.currentRootPosition.set(smoothedPos.x, smoothedPos.y, smoothedPos.z);
+             hips.position.copy(this.currentRootPosition);
           }
       }
-      
-      // Only update if we are not recording (recording handles its own update/capture)
-      // Actually we should always update visual model
       
       // CRITICAL: Force update the humanoid to apply these changes
       this.vrm.humanoid.update();
@@ -524,6 +518,7 @@ export class MotionCaptureManager {
     if (!this.vrm?.humanoid) return;
     console.log('[MotionCaptureManager] Calibrating Body Offsets...');
     this.calibrationOffsets = {};
+    this.hipsRefPosition = null; // Reset hips ref
     this.shouldCalibrateBody = true;
   }
 
@@ -559,6 +554,13 @@ export class MotionCaptureManager {
         });
         
         console.log('[MotionCaptureManager] Body calibration complete. Offsets:', Object.keys(this.calibrationOffsets).length);
+        
+        // Capture Hips Reference Position if available in this frame
+        if (rig.Hips?.position) {
+            this.hipsRefPosition = new THREE.Vector3(rig.Hips.position.x, rig.Hips.position.y, rig.Hips.position.z);
+            console.log('[MotionCaptureManager] Hips reference position captured:', this.hipsRefPosition);
+        }
+
         this.shouldCalibrateBody = false;
     }
 
@@ -607,17 +609,32 @@ export class MotionCaptureManager {
             setTargetRotation('Hips', boneData.rotation!);
             
             // Apply Hips Position
-            // Kalidokit returns position normalized -1 to 1 usually, or scaled.
-            // We need to scale it to be visible but not extreme.
-            // Position z is crucial for depth.
             if (boneData.position) {
                 const pos = boneData.position;
-                // Create target vector. Scale factors are experimental.
-                // VRM is approx 1.7m tall.
+                
+                // Calculate delta from calibration
+                let x = pos.x;
+                let y = pos.y;
+                let z = pos.z;
+                
+                if (this.hipsRefPosition) {
+                    x -= this.hipsRefPosition.x;
+                    y -= this.hipsRefPosition.y;
+                    z -= this.hipsRefPosition.z;
+                }
+                
+                // Scale movement
+                // We want significant movement but kept within reasonable bounds
+                const MOVE_SCALE = 1.5; 
+                
+                // Base height (standard VRM hip height is ~0.8-1.0m)
+                // We use the VRM's actual rest position if possible, or default to 1.0
+                const restY = 1.0; 
+
                 this.targetRootPosition = new THREE.Vector3(
-                    pos.x * 0.5, // Horizontal movement
-                    pos.y * 0.5 + 1.0, // Vertical movement + offset to keep feet on ground approx
-                    pos.z * 0.5  // Depth movement
+                    x * MOVE_SCALE,           // Horizontal
+                    (y * MOVE_SCALE) + restY, // Vertical + Base Height
+                    z * MOVE_SCALE            // Depth
                 );
             }
         } else {

@@ -36,6 +36,7 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 - [x] **Real-time Retargeting:** Map MediaPipe landmarks to VRM humanoid bones.
 - [x] **Recording:** Capture motion sessions to `AnimationClip` for playback/export.
 - [x] **Calibration:** T-Pose calibration for accurate retargeting.
+- [x] **Professional Smoothing:** Implemented **OneEuroFilter** (same as SystemAnimatorOnline) for jitter-free, low-latency tracking.
 
 ### 💾 Project Persistence
 **Goal:** Allow users to save their entire workspace state.
