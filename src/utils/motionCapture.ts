@@ -181,11 +181,12 @@ export class MotionCaptureManager {
     if (this.isTracking) return;
     
     try {
-        // Stop any active animations/poses on the AvatarManager to prevent conflict
-        // Use true (immediate) to ensure the mixer doesn't fight us this frame
-        avatarManager.stopAnimation(true);
+        // We do NOT stop animation here anymore.
+        // MocapTab handles the logic: 
+        // - Face Mode: Animation continues (for legs/idle), Mocap overwrites upper body.
+        // - Full Body: MocapTab freezes/stops animation so Mocap has full control.
         
-        // Also disable LookAt temporarily if it exists (it fights head rotation)
+        // Disable LookAt temporarily if it exists (it fights head rotation)
         if (this.vrm?.lookAt) {
             this.vrm.lookAt.target = undefined; 
             // We can't easily "disable" it without removing the plugin or setting weight to 0

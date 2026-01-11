@@ -28,7 +28,7 @@ import {
 export function MocapTab() {
   const { addToast } = useToastStore();
   const { addAnimation } = useAnimationStore();
-  const { startCalibration } = useUIStore();
+    const { startCalibration, isCalibrationActive } = useUIStore();
   const {
     liveModeEnabled,
     liveControlsEnabled,
@@ -499,6 +499,10 @@ export function MocapTab() {
                     <button
                         className="secondary full-width"
                         onClick={() => {
+                            if (!managerRef.current) {
+                                addToast("Please start the camera first!", "warning");
+                                return;
+                            }
                             startCalibration();
                         }}
                         style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
@@ -540,7 +544,7 @@ export function MocapTab() {
         </div>
 
         {/* Calibration Wizard Overlay */}
-        <CalibrationWizard manager={managerRef.current} />
+        {isCalibrationActive && <CalibrationWizard manager={managerRef.current} />}
       </div>
       
       <div className="tab-section">
