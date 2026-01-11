@@ -29,10 +29,11 @@ export class WebXRManager {
       return;
     }
 
-    this.renderer = sceneManager.getRenderer();
-    if (!this.renderer) {
+    const renderer = sceneManager.getRenderer();
+    if (!renderer) {
       throw new Error("Renderer not initialized");
     }
+    this.renderer = renderer;
 
     try {
       // Enable XR on renderer
