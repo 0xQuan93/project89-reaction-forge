@@ -42,9 +42,12 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
   const [now, setNow] = useState(() => new Date());
   const [isFocusSprintActive, setIsFocusSprintActive] = useState(false);
   const [showFocusGallery, setShowFocusGallery] = useState(false);
+  const [focusSecondsLeft, setFocusSecondsLeft] = useState(30);
+  const [focusShotsCaptured, setFocusShotsCaptured] = useState(0);
   const poseTimerRef = useRef<number | null>(null);
   const captureTimerRef = useRef<number | null>(null);
   const endTimerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
   const captureCountRef = useRef(0);
 
   // Sync with sceneManager on mount
@@ -94,6 +97,10 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
       window.clearTimeout(endTimerRef.current);
       endTimerRef.current = null;
     }
+    if (countdownTimerRef.current) {
+      window.clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
     setIsFocusSprintActive(false);
     setFocusModeActive(false);
     if (showGallery) {
@@ -125,6 +132,8 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
 
     clearAutoCaptures();
     captureCountRef.current = 0;
+    setFocusShotsCaptured(0);
+    setFocusSecondsLeft(Math.ceil(focusDurationMs / 1000));
     setShowFocusGallery(false);
     setIsFocusSprintActive(true);
     setFocusModeActive(true);
@@ -148,13 +157,19 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
       if (dataUrl) {
         addAutoCapture(dataUrl);
         captureCountRef.current += 1;
+        setFocusShotsCaptured(captureCountRef.current);
       }
     };
 
     captureShot();
     captureTimerRef.current = window.setInterval(captureShot, captureIntervalMs);
 
+    countdownTimerRef.current = window.setInterval(() => {
+      setFocusSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
     endTimerRef.current = window.setTimeout(() => {
+      setFocusSecondsLeft(0);
       stopFocusSprint(true);
       addToast('PoseLab Sprint complete — review your captures.', 'success');
     }, focusDurationMs);
@@ -290,7 +305,9 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
             aria-label={isFocusSprintActive ? 'End PoseLab Sprint' : 'Start PoseLab Sprint'}
           >
             <Sparkle size={16} weight="duotone" />
-            {isFocusSprintActive ? 'End Sprint' : 'PoseLab Sprint'}
+            {isFocusSprintActive
+              ? `End Sprint • ${focusSecondsLeft}s • ${focusShotsCaptured}/6`
+              : 'PoseLab Sprint'}
           </button>
         </div>
       )}
