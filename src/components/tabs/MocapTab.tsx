@@ -55,6 +55,7 @@ export function MocapTab() {
   const previousMocapActiveRef = useRef(false);
   const previousVoiceActiveRef = useRef(false);
   const liveModeEnabledRef = useRef(liveModeEnabled);
+  const previousLiveModeEnabledRef = useRef(liveModeEnabled);
   const liveShutdownRef = useRef(false);
   const mocapStartingRef = useRef(false);
   const voiceStartingRef = useRef(false);
@@ -326,7 +327,9 @@ export function MocapTab() {
   };
 
   useEffect(() => {
+    const wasLiveModeEnabled = previousLiveModeEnabledRef.current;
     liveModeEnabledRef.current = liveModeEnabled;
+    previousLiveModeEnabledRef.current = liveModeEnabled;
     if (liveModeEnabled) {
       liveShutdownRef.current = false;
       previousMocapModeRef.current = mocapMode;
@@ -344,7 +347,7 @@ export function MocapTab() {
       return;
     }
 
-    liveShutdownRef.current = true;
+    liveShutdownRef.current = wasLiveModeEnabled;
     if (previousMocapModeRef.current !== mocapMode) {
       if (!isActive && !previousMocapActiveRef.current) {
         setMocapModeOnly(previousMocapModeRef.current);
@@ -403,7 +406,7 @@ export function MocapTab() {
       <div className="tab-section">
         <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><VideoCamera size={18} weight="duotone" /> Webcam Motion Capture</h3>
         <p className="muted small">
-            Control your avatar with your webcam. Requires good lighting and full body visibility for best results.
+            Control your avatar with your webcam. Full Body mode uses pose + hands + face, so keep your full body in frame and ensure good lighting.
         </p>
         
         <div style={{ 
@@ -542,9 +545,10 @@ export function MocapTab() {
       <div className="tab-section">
           <h3>Instructions</h3>
           <ul className="small muted" style={{ paddingLeft: '1.2rem' }}>
-              <li><strong>Face Only:</strong> Good for streaming/talking. Body stays still.</li>
-              <li><strong>Full Body:</strong> Stand back to show your full body.</li>
+              <li><strong>Face Only:</strong> Good for streaming/talking. Body stays on idle animation.</li>
+              <li><strong>Full Body:</strong> Stand back so your head, torso, legs, and hands are visible.</li>
               <li><strong>Calibration:</strong> Use the <strong>Wizard</strong> button to align your body and gaze.</li>
+              <li>If the camera stops immediately, check browser camera permissions and close other apps using the camera.</li>
               <li>Ensure good lighting on your face.</li>
           </ul>
       </div>
