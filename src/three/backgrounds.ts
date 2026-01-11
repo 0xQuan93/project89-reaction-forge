@@ -80,7 +80,7 @@ export interface AnimatedBackground {
 }
 
 export function getBackgroundDefinition(id: BackgroundId | string): BackgroundDefinition {
-  if (id.startsWith('blob:')) {
+  if (id.startsWith('blob:') || id.startsWith('data:')) {
     return {
       id: id as BackgroundId,
       label: 'Custom Background',
