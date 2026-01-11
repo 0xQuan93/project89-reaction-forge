@@ -144,7 +144,7 @@ export const commands: Action[] = [
   {
       id: "stop-anim",
       name: "Stop Animation",
-      shortcut: ["space"],
+      shortcut: ["s"],
       keywords: "pause halt",
       perform: () => {
           animationManager.stopAnimation();

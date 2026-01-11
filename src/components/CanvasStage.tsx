@@ -14,6 +14,8 @@ import { multiAvatarManager } from '../three/multiAvatarManager';
 import { syncManager } from '../multiplayer/syncManager';
 import { introSequence } from '../intro/IntroSequence';
 import { Warning } from '@phosphor-icons/react';
+import { useToastStore } from '../state/useToastStore';
+import { getPoseLabTimestamp } from '../utils/exportNaming';
 
 // Simple Toast Component for Errors
 function ErrorToast({ message, onClose }: { message: string; onClose: () => void }) {
@@ -53,12 +55,20 @@ export function CanvasStage() {
   const animationMode = useReactionStore((state) => state.animationMode);
   const liveControlsEnabled = useReactionStore((state) => state.liveControlsEnabled);
   const setPresetById = useReactionStore((state) => state.setPresetById);
+  const { addToast } = useToastStore();
   const { currentUrl, avatarType, live2dSource } = useAvatarSource();
-  const { activeCssOverlay } = useUIStore();
+  const activeCssOverlay = useUIStore((state) => state.activeCssOverlay);
+  const mode = useUIStore((state) => state.mode);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [avatarReady, setAvatarReady] = useState(false);
+
+  const isEditableTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -218,12 +228,6 @@ export function CanvasStage() {
       ArrowRight: 'point',
     };
 
-    const isEditableTarget = (target: EventTarget | null) => {
-      if (!(target instanceof HTMLElement)) return false;
-      const tag = target.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return;
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -238,6 +242,40 @@ export function CanvasStage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [avatarReady, liveControlsEnabled, setPresetById]);
+
+  useEffect(() => {
+    const handleCaptureKeyDown = async (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.code !== 'Space') return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isEditableTarget(event.target)) return;
+
+      event.preventDefault();
+
+      if (!avatarReady) {
+        addToast('Load an avatar before capturing.', 'warning');
+        return;
+      }
+
+      const dataUrl = await sceneManager.captureSnapshot();
+      if (!dataUrl) {
+        addToast('Failed to capture snapshot.', 'error');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      const filename = mode === 'reactions'
+        ? `${preset.id}.png`
+        : `PoseLab_${getPoseLabTimestamp()}_capture.png`;
+      link.download = filename;
+      link.click();
+      addToast('📸 Snapshot saved.', 'success');
+    };
+
+    window.addEventListener('keydown', handleCaptureKeyDown);
+    return () => window.removeEventListener('keydown', handleCaptureKeyDown);
+  }, [addToast, avatarReady, mode, preset.id]);
 
   // Random auto-snapshot timer
   const randomSnapshotInterval = useIntroStore((s) => s.randomSnapshotInterval);
@@ -302,6 +340,8 @@ export function CanvasStage() {
       {errorMessage && (
         <ErrorToast message={errorMessage} onClose={() => setErrorMessage(null)} />
       )}
+
+      <div className="viewport-halo" aria-hidden="true" />
 
       <canvas ref={canvasRef} className="canvas-stage" />
 

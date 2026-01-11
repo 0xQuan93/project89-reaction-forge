@@ -53,7 +53,7 @@ const TUTORIAL_STEPS = [
   {
     id: 'camera',
     title: '6. Camera Controls',
-    description: 'Use hotkeys 1, 3, 5, 7 for quick camera views: Headshot, 3/4, Side, and Home. Scroll to zoom, drag to orbit.',
+    description: 'Use hotkeys 1, 3, 5, 7 for quick camera views: Headshot, 3/4, Side, and Home. Press Space to save a snapshot PNG, or P to export a PNG with effects. Scroll to zoom, drag to orbit.',
     targetId: 'canvas-stage',
     highlight: true
   },
