@@ -20,6 +20,7 @@ interface UIState {
 
   // Global UI State
   activeCssOverlay: string | null;
+  focusModeActive: boolean;
   
   setMode: (mode: AppMode) => void;
   setReactionTab: (tab: ReactionTab) => void;
@@ -37,6 +38,7 @@ interface UIState {
   setCalibrationStep: (step: number) => void;
   
   setActiveCssOverlay: (overlay: string | null) => void;
+  setFocusModeActive: (active: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -52,6 +54,7 @@ export const useUIStore = create<UIState>((set) => ({
   calibrationStep: 0,
   
   activeCssOverlay: null,
+  focusModeActive: false,
 
   setMode: (mode) => set({ mode }),
   setReactionTab: (tab) => set({ reactionTab: tab }),
@@ -69,5 +72,5 @@ export const useUIStore = create<UIState>((set) => ({
   setCalibrationStep: (step) => set({ calibrationStep: step }),
   
   setActiveCssOverlay: (overlay) => set({ activeCssOverlay: overlay }),
+  setFocusModeActive: (focusModeActive) => set({ focusModeActive }),
 }));
-

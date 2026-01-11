@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sceneManager } from '../three/sceneManager';
 
 import { usePopOutViewport } from '../hooks/usePopOutViewport';
 import { useUIStore } from '../state/useUIStore';
 import { MultiplayerPanel } from './MultiplayerPanel';
 import { notifySceneChange } from '../multiplayer/avatarBridge';
+import { useReactionStore } from '../state/useReactionStore';
+import { useIntroStore } from '../state/useIntroStore';
+import { useToastStore } from '../state/useToastStore';
 import { 
   House, 
   User, 
@@ -15,7 +18,8 @@ import {
   ArrowSquareIn,
   Play,
   Pause,
-  Stop
+  Stop,
+  Sparkle
 } from '@phosphor-icons/react';
 
 type AspectRatio = '16:9' | '1:1' | '9:16';
@@ -28,11 +32,20 @@ interface ViewportOverlayProps {
 }
 
 export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: ViewportOverlayProps) {
-  const { activeCssOverlay } = useUIStore();
+  const { activeCssOverlay, setFocusModeActive } = useUIStore();
+  const { randomize, isAvatarReady } = useReactionStore();
+  const { autoCaptures, addAutoCapture, clearAutoCaptures } = useIntroStore();
+  const { addToast } = useToastStore();
   const { isPoppedOut, togglePopOut } = usePopOutViewport(activeCssOverlay);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [showClock, setShowClock] = useState(true);
   const [now, setNow] = useState(() => new Date());
+  const [isFocusSprintActive, setIsFocusSprintActive] = useState(false);
+  const [showFocusGallery, setShowFocusGallery] = useState(false);
+  const poseTimerRef = useRef<number | null>(null);
+  const captureTimerRef = useRef<number | null>(null);
+  const endTimerRef = useRef<number | null>(null);
+  const captureCountRef = useRef(0);
 
   // Sync with sceneManager on mount
   useEffect(() => {
@@ -66,6 +79,94 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
 
   const handleSideView = () => {
     sceneManager.setCameraPreset('side');
+  };
+
+  const stopFocusSprint = (showGallery: boolean) => {
+    if (poseTimerRef.current) {
+      window.clearInterval(poseTimerRef.current);
+      poseTimerRef.current = null;
+    }
+    if (captureTimerRef.current) {
+      window.clearInterval(captureTimerRef.current);
+      captureTimerRef.current = null;
+    }
+    if (endTimerRef.current) {
+      window.clearTimeout(endTimerRef.current);
+      endTimerRef.current = null;
+    }
+    setIsFocusSprintActive(false);
+    setFocusModeActive(false);
+    if (showGallery) {
+      setShowFocusGallery(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => stopFocusSprint(false);
+  }, []);
+
+  const startFocusSprint = () => {
+    if (isFocusSprintActive) return;
+    if (!isAvatarReady) {
+      addToast('Load an avatar before starting a sprint.', 'warning');
+      return;
+    }
+
+    const focusDurationMs = 30000;
+    const shotCount = 6;
+    const poseIntervalMs = 3500;
+    const captureIntervalMs = Math.max(3000, Math.floor(focusDurationMs / shotCount));
+    const cameraPresets: Array<'headshot' | 'quarter' | 'side' | 'home'> = [
+      'headshot',
+      'quarter',
+      'side',
+      'home',
+    ];
+
+    clearAutoCaptures();
+    captureCountRef.current = 0;
+    setShowFocusGallery(false);
+    setIsFocusSprintActive(true);
+    setFocusModeActive(true);
+    addToast('PoseLab Sprint started — focus mode enabled.', 'info');
+
+    const applyRandomPoseAndCamera = () => {
+      randomize();
+      const nextCamera = cameraPresets[Math.floor(Math.random() * cameraPresets.length)];
+      sceneManager.setCameraPreset(nextCamera);
+    };
+
+    applyRandomPoseAndCamera();
+    poseTimerRef.current = window.setInterval(applyRandomPoseAndCamera, poseIntervalMs);
+
+    const captureShot = async () => {
+      if (captureCountRef.current >= shotCount) return;
+      const dataUrl = await sceneManager.captureSnapshot({
+        includeLogo: true,
+        transparentBackground: false,
+      });
+      if (dataUrl) {
+        addAutoCapture(dataUrl);
+        captureCountRef.current += 1;
+      }
+    };
+
+    captureShot();
+    captureTimerRef.current = window.setInterval(captureShot, captureIntervalMs);
+
+    endTimerRef.current = window.setTimeout(() => {
+      stopFocusSprint(true);
+      addToast('PoseLab Sprint complete — review your captures.', 'success');
+    }, focusDurationMs);
+  };
+
+  const handleDownloadAll = () => {
+    autoCaptures.forEach((dataUrl, index) => {
+      const link = document.createElement('a');
+      link.download = `PoseLab_${Date.now()}_sprint_${index + 1}.png`;
+      link.href = dataUrl;
+      link.click();
+    });
   };
 
   return (
@@ -180,6 +281,20 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
         </div>
       )}
 
+      {mode === 'poselab' && (
+        <div className="viewport-overlay focus-sprint">
+          <button
+            className={`pose-lab-sprint-btn ${isFocusSprintActive ? 'active' : ''}`}
+            onClick={isFocusSprintActive ? () => stopFocusSprint(true) : startFocusSprint}
+            title={isFocusSprintActive ? 'End PoseLab Sprint' : 'Start PoseLab Sprint'}
+            aria-label={isFocusSprintActive ? 'End PoseLab Sprint' : 'Start PoseLab Sprint'}
+          >
+            <Sparkle size={16} weight="duotone" />
+            {isFocusSprintActive ? 'End Sprint' : 'PoseLab Sprint'}
+          </button>
+        </div>
+      )}
+
       {/* Multiplayer widget - top right */}
       <div className="viewport-overlay top-right">
         <MultiplayerPanel compact />
@@ -212,6 +327,49 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
         />
       </div>
       */}
+
+      {showFocusGallery && (
+        <div className="modal-overlay" onClick={() => setShowFocusGallery(false)}>
+          <div className="modal-content focus-sprint-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowFocusGallery(false)}>×</button>
+            <h2>PoseLab Sprint Gallery</h2>
+            <p className="muted">
+              {autoCaptures.length === 0
+                ? 'No captures yet — try another sprint to generate shots.'
+                : `Captured ${autoCaptures.length} shots.`}
+            </p>
+            {autoCaptures.length > 0 && (
+              <>
+                <div className="focus-sprint-actions">
+                  <button className="primary" onClick={handleDownloadAll}>
+                    Download all
+                  </button>
+                  <button className="secondary" onClick={() => setShowFocusGallery(false)}>
+                    Close
+                  </button>
+                </div>
+                <div className="focus-sprint-gallery">
+                  {autoCaptures.map((url, index) => (
+                    <button
+                      key={`${url}-${index}`}
+                      className="focus-sprint-thumb"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.download = `PoseLab_${Date.now()}_sprint_${index + 1}.png`;
+                        link.href = url;
+                        link.click();
+                      }}
+                    >
+                      <img src={url} alt={`Sprint capture ${index + 1}`} />
+                      <span>Save</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
