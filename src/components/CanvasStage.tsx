@@ -58,7 +58,6 @@ export function CanvasStage() {
   const { addToast } = useToastStore();
   const { currentUrl, avatarType, live2dSource } = useAvatarSource();
   const activeCssOverlay = useUIStore((state) => state.activeCssOverlay);
-  const mode = useUIStore((state) => state.mode);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -275,17 +274,14 @@ export function CanvasStage() {
 
       const link = document.createElement('a');
       link.href = dataUrl;
-      const filename = mode === 'reactions'
-        ? `${preset.id}.png`
-        : `PoseLab_${getPoseLabTimestamp()}_capture.png`;
-      link.download = filename;
+      link.download = `PoseLab_${getPoseLabTimestamp()}_capture.png`;
       link.click();
       addToast('📸 Snapshot saved.', 'success');
     };
 
     window.addEventListener('keydown', handleCaptureKeyDown);
     return () => window.removeEventListener('keydown', handleCaptureKeyDown);
-  }, [addToast, avatarReady, mode, preset.id]);
+  }, [addToast, avatarReady]);
 
   // Random auto-snapshot timer
   const randomSnapshotInterval = useIntroStore((s) => s.randomSnapshotInterval);
