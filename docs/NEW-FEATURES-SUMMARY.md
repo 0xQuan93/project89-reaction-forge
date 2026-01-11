@@ -1,10 +1,15 @@
-# 🎨 New Features: Backgrounds, Logo & Animation Export
+# 🎨 New Features: Motion Capture v3.0, Backgrounds & Animation Export
 
 ## ✨ What's New
 
-You asked for three major features, and they're all implemented! Here's what you can now do:
+We have just deployed a massive update (**v3.0**) to the Motion Capture system, alongside the requested background and export features.
 
-### 1. 🖼️ Custom Background Images
+### 1. 🎥 Motion Capture v3.0 (System Animator Parity)
+- **Adaptive Smoothing**: "Sticky" when still, "Snappy" when moving. No more jitter.
+- **Physics Rails**: Hair and clothing now flow naturally, perfectly synced with your movement.
+- **AR Mode**: Use your phone to place your avatar in the real world.
+
+### 2. 🖼️ Custom Background Images
 - Upload SVG, PNG, JPG, or WebP backgrounds
 - Automatic fallback to solid colors if images fail
 - Texture caching for performance

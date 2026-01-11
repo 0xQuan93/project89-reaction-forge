@@ -4,6 +4,8 @@ import { VRM, VRMHumanBoneName } from '@pixiv/three-vrm';
 import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
 import { motionEngine } from '../poses/motionEngine';
+import {BVH} from 'three-stdlib'; // Import merely to ensure types if needed, but actually we need sceneManager
+import { sceneManager } from '../three/sceneManager';
 
 // ======================
 // Configuration Constants
@@ -11,14 +13,16 @@ import { motionEngine } from '../poses/motionEngine';
 
 /** Smoothing configuration for motion capture */
 const SMOOTHING = {
-  /** Base lerp factor for bone rotations (lower = smoother, higher = more responsive) */
-  BASE_LERP: 0.16,
+  /** Minimum lerp factor (when still) - higher smoothing */
+  MIN_LERP: 0.05,
+  /** Maximum lerp factor (when moving fast) - higher responsiveness */
+  MAX_LERP: 0.4,
+  /** Velocity threshold for max responsiveness (radians per second) */
+  VELOCITY_THRESHOLD: 4.0,
   /** Faster lerp for eye movements to reduce lag */
-  EYE_LERP: 0.4,
+  EYE_LERP: 0.6,
   /** Slower lerp for head to prevent jitter */
-  HEAD_LERP: 0.12,
-  /** Moderate lerp for hand tracking to balance responsiveness and stability */
-  HAND_LERP: 0.22,
+  HEAD_LERP: 0.15,
 };
 
 /** Gaze sensitivity multiplier for eye tracking */
@@ -94,7 +98,7 @@ export class MotionCaptureManager {
   private currentBoneRotations: Map<string, THREE.Quaternion> = new Map(); 
   private targetRootPosition: THREE.Vector3 | null = null;
   private currentRootPosition: THREE.Vector3 = new THREE.Vector3();
-  private updateLoopId: number | null = null;
+  private tickDispose?: () => void; // Replaces updateLoopId
 
   // Hand Tracking State
   private lastLeftHandLandmarks2D: HandLandmarks2D = null;
@@ -199,41 +203,47 @@ export class MotionCaptureManager {
   }
   
   private startUpdateLoop() {
-      if (this.updateLoopId) return;
-      const update = () => {
-          this.updateFrame();
-          this.updateLoopId = requestAnimationFrame(update);
-      };
-      this.updateLoopId = requestAnimationFrame(update);
+      // Use SceneManager's tick loop to ensure synchronization with rendering
+      this.tickDispose = sceneManager.registerTick((delta) => {
+          this.updateFrame(delta);
+      });
   }
   
   private stopUpdateLoop() {
-      if (this.updateLoopId) {
-          cancelAnimationFrame(this.updateLoopId);
-          this.updateLoopId = null;
+      if (this.tickDispose) {
+          this.tickDispose();
+          this.tickDispose = undefined;
       }
   }
 
   // --- Main Update Loop for Smoothing ---
-  private updateFrame() {
+  private updateFrame(delta: number) {
       if (!this.vrm || !this.vrm.humanoid || !this.vrm.expressionManager) return;
       
-      const lerpFactor = SMOOTHING.BASE_LERP;
-      
+      // Fixed time step for logic stability, but delta for visual smoothness
       // 1. Smooth Facial Expressions
       this.targetFaceValues.forEach((targetVal, name) => {
           const currentVal = this.currentFaceValues.get(name) || 0;
           
-          // Dynamic smoothing: Eyes need to be snappier, Mouth/Face smoother
-          let localLerp = lerpFactor;
-          if (name.toLowerCase().includes('eye') || name.toLowerCase().includes('blink') || name.toLowerCase().includes('look')) {
+          let localLerp = SMOOTHING.MIN_LERP;
+          
+          // Adaptive Smoothing for Face
+          const diff = Math.abs(targetVal - currentVal);
+          if (diff > 0.1) {
+              localLerp = SMOOTHING.MAX_LERP; // Snap to big changes (blinks, mouth open)
+          } else {
+              localLerp = SMOOTHING.MIN_LERP; // Smooth out micro-jitter
+          }
+
+          // Override for Eyes
+          if (name.toLowerCase().includes('eye') || name.toLowerCase().includes('blink')) {
               localLerp = SMOOTHING.EYE_LERP;
           }
           
           const newVal = THREE.MathUtils.lerp(currentVal, targetVal, localLerp);
           this.currentFaceValues.set(name, newVal);
           
-          if (Math.abs(newVal - currentVal) > 0.001) {
+          if (Math.abs(newVal - currentVal) > 0.0001) {
               this.vrm!.expressionManager!.setValue(name, newVal);
           }
       });
@@ -250,29 +260,35 @@ export class MotionCaptureManager {
           // @ts-ignore
           const node = this.vrm!.humanoid!.getNormalizedBoneNode(boneName);
           if (node) {
-              // STATE ISOLATION FIX:
-              // Instead of slerping from the node's current rotation (which is reset by animation loops),
-              // we slerp from our internal 'currentBoneRotations' state.
-              // This ensures the motion capture path remains smooth regardless of what the animation mixer does.
-              
               // 1. Get or Init current smoothed rotation
               let currentQ = this.currentBoneRotations.get(boneName);
               if (!currentQ) {
-                  // Initialize from current node state if first time
                   currentQ = node.quaternion.clone();
                   this.currentBoneRotations.set(boneName, currentQ);
               }
               
-              // 2. Slerp internal state towards target
-              // For Head bone specifically, use a higher smoothing factor (lower lerp)
-              let effectiveLerp = lerpFactor;
+              // 2. Adaptive Slerp based on Velocity
+              const angle = currentQ.angleTo(targetQ); // Radians difference
+              
+              // Calculate effective lerp
+              // If angle is large (moving fast), we want high lerp (responsiveness)
+              // If angle is small (jitter), we want low lerp (smoothness)
+              let adaptiveLerp = THREE.MathUtils.mapLinear(
+                  angle, 
+                  0.01, // 0.5 degrees
+                  0.5,  // ~30 degrees
+                  SMOOTHING.MIN_LERP, 
+                  SMOOTHING.MAX_LERP
+              );
+              adaptiveLerp = THREE.MathUtils.clamp(adaptiveLerp, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
+              
+              // Adjust for specific body parts
               if (boneName.toLowerCase().includes('head')) {
-                  effectiveLerp = SMOOTHING.HEAD_LERP;
-              } else if (boneName.toLowerCase().includes('hand') || boneName.toLowerCase().includes('thumb') || boneName.toLowerCase().includes('index') || boneName.toLowerCase().includes('middle') || boneName.toLowerCase().includes('ring') || boneName.toLowerCase().includes('little')) {
-                  effectiveLerp = SMOOTHING.HAND_LERP;
+                  adaptiveLerp = Math.min(adaptiveLerp, SMOOTHING.HEAD_LERP);
               }
               
-              currentQ.slerp(targetQ, effectiveLerp);
+              // Apply Slerp
+              currentQ.slerp(targetQ, adaptiveLerp);
               
               // 3. Apply to Scene Node (Overwriting animation mixer for this frame)
               node.quaternion.copy(currentQ);
@@ -283,8 +299,12 @@ export class MotionCaptureManager {
       if (this.mode === 'full' && this.targetRootPosition) {
           const hips = this.vrm.humanoid.getNormalizedBoneNode('hips');
           if (hips) {
-              this.currentRootPosition.lerp(this.targetRootPosition, lerpFactor);
-              // Apply to hips - Note: VRM0.0/1.0 differences might apply, but usually modifying the node directly works
+              // Adaptive lerp for position too
+              const dist = this.currentRootPosition.distanceTo(this.targetRootPosition);
+              let posLerp = THREE.MathUtils.mapLinear(dist, 0.01, 0.5, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
+              posLerp = THREE.MathUtils.clamp(posLerp, SMOOTHING.MIN_LERP, SMOOTHING.MAX_LERP);
+              
+              this.currentRootPosition.lerp(this.targetRootPosition, posLerp);
               hips.position.copy(this.currentRootPosition);
           }
       }
@@ -293,8 +313,10 @@ export class MotionCaptureManager {
       // Actually we should always update visual model
       
       // CRITICAL: Force update the humanoid to apply these changes
-      // This ensures that our manual Slerp modifications are respected by the VRM solver
       this.vrm.humanoid.update();
+      
+      // NOTE: We do NOT call vrm.update(delta) here because AvatarManager does it.
+      // By using sceneManager.registerTick, we ensure this runs in the same frame cycle.
       
       // IMPORTANT: In Face Only mode, if we are playing an animation, we need to ensure the animation mixer's 
       // updates (which happen in AvatarManager's tick) are not overwritten by our lack of body updates here.

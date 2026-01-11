@@ -9,6 +9,7 @@ import { useReactionStore } from '../../state/useReactionStore';
 import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToScenePaths';
 import { CalibrationWizard } from '../CalibrationWizard';
 import { sceneManager } from '../../three/sceneManager';
+import { webXRManager } from '../../utils/webXRManager';
 import { 
   VideoCamera, 
   Person, 
@@ -57,8 +58,11 @@ export function MocapTab() {
   const liveShutdownRef = useRef(false);
   const mocapStartingRef = useRef(false);
   const voiceStartingRef = useRef(false);
+  const [arSupported, setArSupported] = useState(false);
 
   useEffect(() => {
+    webXRManager.isSupported().then(setArSupported);
+
     if (videoRef.current && !managerRef.current) {
         managerRef.current = new MotionCaptureManager(videoRef.current);
     }
@@ -313,6 +317,14 @@ export function MocapTab() {
     }
   };
 
+  const startAR = async () => {
+    try {
+        await webXRManager.startAR();
+    } catch (e: any) {
+        addToast(e.message || "Failed to start AR", 'error');
+    }
+  };
+
   useEffect(() => {
     liveModeEnabledRef.current = liveModeEnabled;
     if (liveModeEnabled) {
@@ -509,6 +521,16 @@ export function MocapTab() {
                     title="Toggle Green Screen Background"
                 >
                     <Rectangle size={16} weight="fill" style={{ color: '#00ff00' }} /> Green Screen
+                </button>
+            )}
+
+            {arSupported && !isActive && (
+                 <button
+                    className="secondary full-width"
+                    onClick={startAR}
+                    style={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '10px' }}
+                >
+                    <MagicWand size={16} weight="fill" style={{ color: '#00ffff' }} /> Enter AR Mode
                 </button>
             )}
         </div>

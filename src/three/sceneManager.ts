@@ -96,6 +96,7 @@ class SceneManager {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.renderer.xr.enabled = true; // Enable WebXR support
 
     const hemisphere = new THREE.HemisphereLight(0xffffff, 0x080820, 1.2);
     const directional = new THREE.DirectionalLight(0xffffff, 1);

@@ -1,49 +1,30 @@
-# 🎥 Motion Capture Guide (v2.0)
+# 🎥 Motion Capture Guide (v3.0 - System Animator Parity)
 
 > "Motion is the language of the soul, translated into digital form."
 
-The **Motion Capture** system in PoseLab has been significantly upgraded in version 2.0 to provide professional-grade tracking using just a webcam. This guide covers the new features and how to get the best results.
+The **Motion Capture** system has been radically upgraded in version 3.0 to match the robustness of *SystemAnimatorOnline*. We have rebuilt the core loop to ensure physics synchronization and added professional-grade adaptive smoothing.
 
 ---
 
-## ✨ New Features in v2.0
+## ✨ Major Upgrades in v3.0
 
-### 1. Smoothing Engine
-We've introduced a sophisticated **Smoothing Engine** that eliminates the jitter common in webcam-based mocap.
-- **Interpolation**: Movements are smoothed over time (using `slerp` for rotations and `lerp` for blendshapes).
-- **Result**: Fluid, organic motion even if your camera drops frames.
+### 1. 🧠 Adaptive Smoothing Engine (The "Sticky/Snappy" Feel)
+We have replaced the old static smoothing with a dynamic **Adaptive Velocity Filter**.
+- **When you are still**: The system locks your avatar in place (Smoothing: 95%). No more jittery hands or shaking heads while idle.
+- **When you move**: The system instantly drops smoothing to track fast movements (Smoothing: 40%).
+- **Result**: You get the precision of raw tracking for action, with the stability of a statue for stillness.
 
-### 2. Rotation Constraints
-Bones now obey natural human limits.
-- **Joint Limits**: Elbows, knees, and neck have defined ranges of motion.
-- **Safety**: Prevents "broken" joints or impossible poses during tracking glitches.
+### 2. 🧶 Physics Rail Synchronization
+Previously, the webcam loop ran independently of the 3D rendering loop, causing hair and clothes to "lag" or vibrate.
+- **New Architecture**: The motion capture system now rides on the main `SceneManager` "Tick" loop.
+- **Benefit**: Every bone movement is perfectly synchronized with the physics engine (SpringBone).
+- **Visuals**: Hair sways naturally; clothes react instantly to your body.
 
-### 3. Enhanced Smile Detection
-Standard tracking often misses subtle smiles. We've added a custom **Landmark Calculation** algorithm:
-- Measures the relationship between mouth corners and face height.
-- Accurately detects smiles even without full "Joy" blendshape activation.
-- Maps to multiple smile blendshapes (`Joy`, `Happy`, `mouthSmile`) for maximum compatibility.
-
-### 4. ARKit Integration
-Improved support for ARKit-standard blendshapes (often found in iPhone-ready avatars).
-- **Eye Tracking**: Mapped `eyeLookIn`/`eyeLookOut` for precise gaze.
-- **Mouth Shapes**: Full support for `mouthFunnel`, `mouthPucker`, and more.
-
-### 5. Hand Tracking (3D + 2D)
-PoseLab now tracks both hands with stabilized finger rotations.
-- **3D Hand Rig**: Finger joints are retargeted to VRM hand bones for live mocap.
-- **2D Landmarks**: Hand landmarks are captured for overlays or gesture-driven UI.
-
-### 6. Green Screen Mode
-A dedicated toggle for easy compositing.
-- **Toggle**: Switch instantly between your selected background and a pure green screen.
-- **Workflow**: Record your motion against green, then key it out in OBS, Premiere, or After Effects.
-
-### 7. Tracking Modes
-- **Full Body**: Tracks both body and face. Requires full view of the user.
-- **Face Only**: Tracks only facial expressions and head rotation. 
-  - **Body Behavior**: Automatically loops the "Sunset Call" idle animation (or your currently playing animation) so the body stays alive while you talk.
-  - **Ideal For**: VTubing, streaming, or when space is limited.
+### 3. 👓 WebXR / AR Mode
+You can now bring your avatar into the real world.
+- **Supported Devices**: Android Phones (Chrome), Meta Quest, Vision Pro.
+- **Usage**: Click the **"Enter AR Mode"** button in the Mocap tab.
+- **Function**: The background becomes your camera feed, and the avatar stands on your floor/desk.
 
 ---
 
@@ -52,46 +33,46 @@ A dedicated toggle for easy compositing.
 ### Setup
 1. **Lighting**: Ensure your face is well-lit. Avoid strong backlighting.
 2. **Camera Position**: Place camera at eye level.
-3. **Distance**: Stand/sit where your head and shoulders are clearly visible. For full body, stand back to show your whole body.
+3. **Distance**: Stand/sit where your head and shoulders are clearly visible.
 
-### Workflow
-1. **Load Avatar**: Open PoseLab and load your VRM.
-2. **Open Mocap Tab**: Click on the **Motion Capture** tab.
-3. **Start Camera**: Click "Start Camera". Allow browser permissions.
-4. **Calibrate**:
-   - Stand in a **T-Pose** (arms out, straight).
-   - Click **"Calibrate"**.
-   - *Tip: Calibration sets the baseline for your skeleton. Do this every time you change position.*
-5. **Record**:
-   - Click **"Start Recording"**.
-   - Perform your motion.
-   - Click **"Stop Recording"**.
-   - The animation is automatically saved to your **Animations** list in Pose Lab.
+### Modes
+- **Full Body**: Tracks body + face + fingers. Best for full performance.
+- **Face Only**: Tracks face/head rotation. Body plays idle animation (e.g., "Sunset Call").
+- **AR Mode**: (New) Projects avatar into your room. Requires HTTPS and a compatible device.
 
-### Green Screen Usage
-1. In the Mocap tab, toggle the **"Green Screen"** switch.
-2. The background will turn bright green (#00FF00).
-3. Use your screen recording software (OBS) to capture the preview window.
-4. Apply a "Chroma Key" filter to remove the green background.
-
----
-
-## 🐛 Troubleshooting
+### Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| **Jittery Hands** | Ensure hands are visible and not overlapping with body. Move slower. |
-| **Wrong Head Angle** | Click "Calibrate" while looking straight ahead. |
-| **Mouth not opening** | Check if your avatar supports `A`, `I`, `U`, `E`, `O` blendshapes. |
-| **Eyes not blinking** | Ensure your room is bright enough for eye detection. |
+| **Jittery Hands** | The new Adaptive Engine handles this. If still jittery, improve lighting. |
+| **Physics Lag** | If hair looks "floaty", check your frame rate. The system expects >30fps. |
+| **AR Button Missing** | Only appears on WebXR-compatible browsers (Chrome Android, Quest Browser). |
 
 ---
 
-## 🔧 Technical Details
+## 🔧 Technical Architecture (The "Rail" System)
 
-The system uses **MediaPipe Holistic** for tracking and **Kalidokit** for solving IK.
-- **Smoothing Factor**: Default is `0.25` (responsive yet smooth).
-- **Smile Threshold**: Detects ratio changes > 0.02.
-- **Update Loop**: Runs on `requestAnimationFrame` for 60fps tracking.
+For developers, the system has moved from a `requestAnimationFrame` loop to a synchronized `SceneManager.registerTick` pattern.
 
-For developers, see `src/utils/motionCapture.ts`.
+### The Update Loop
+1. **MediaPipe** captures landmarks (async).
+2. **Kalidokit** solves the pose.
+3. **MotionCaptureManager** calculates target rotations.
+4. **SceneManager** calls `tick(delta)`.
+5. **MotionCaptureManager** updates bones using `delta` time.
+6. **AvatarManager** updates Physics/SpringBones.
+7. **Renderer** draws the frame.
+
+This ensures `Bone Update` -> `Physics Update` -> `Render` always happens in that exact order, every frame.
+
+### Adaptive Lerp Formula
+```typescript
+// Slower movement = Higher smoothing (Low Lerp)
+// Faster movement = Lower smoothing (High Lerp)
+lerp = map(velocity, 0, max_speed, 0.05, 0.4);
+```
+
+### Files
+- `src/utils/motionCapture.ts`: Core logic and adaptive engine.
+- `src/utils/webXRManager.ts`: AR session handling.
+- `src/three/sceneManager.ts`: Main render loop and XR support.
