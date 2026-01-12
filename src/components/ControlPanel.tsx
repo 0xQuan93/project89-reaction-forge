@@ -6,6 +6,7 @@ import { ExportTab } from './tabs/ExportTab';
 import { PosesTab } from './tabs/PosesTab';
 import { MocapTab } from './tabs/MocapTab';
 import { AnimationsTab } from './tabs/AnimationsTab';
+import { DiscordTab } from './tabs/DiscordTab';
 import { 
   Sliders, 
   PersonArmsSpread, 
@@ -14,7 +15,8 @@ import {
   Play,
   UserFocus,
   VideoCamera,
-  FloppyDisk
+  FloppyDisk,
+  DiscordLogo
 } from '@phosphor-icons/react';
 
 interface ControlPanelProps {
@@ -100,6 +102,13 @@ export function ControlPanel({ mode }: ControlPanelProps) {
           <FloppyDisk size={16} weight="duotone" />
           <span>Save</span>
         </button>
+        <button
+          className={poseLabTab === 'discord' ? 'active' : ''}
+          onClick={() => setPoseLabTab('discord')}
+        >
+          <DiscordLogo size={16} weight="duotone" />
+          <span>Discord</span>
+        </button>
       </div>
 
       <div className="control-panel__content">
@@ -107,8 +116,8 @@ export function ControlPanel({ mode }: ControlPanelProps) {
         {poseLabTab === 'poses' && <PosesTab />}
         {poseLabTab === 'mocap' && <MocapTab />}
         {poseLabTab === 'export' && <ExportTab mode="poselab" />}
+        {poseLabTab === 'discord' && <DiscordTab />}
       </div>
     </aside>
   );
 }
-
