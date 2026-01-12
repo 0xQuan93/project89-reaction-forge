@@ -235,6 +235,15 @@ export function SceneTab() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [isLoadingHdri, setIsLoadingHdri] = useState(false);
   
+  // Filter presets into Default (Old) and Custom (New)
+  const defaultEnvKeys = ['none', 'studio', 'outdoor', 'sunset', 'night', 'urban'];
+  const defaultEnvironments = Object.fromEntries(
+    Object.entries(HDRI_PRESETS).filter(([key]) => defaultEnvKeys.includes(key))
+  );
+  const customEnvironments = Object.fromEntries(
+    Object.entries(HDRI_PRESETS).filter(([key]) => !defaultEnvKeys.includes(key))
+  );
+  
   const vrmInputRef = useRef<HTMLInputElement>(null);
   const live2dInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
@@ -383,6 +392,28 @@ export function SceneTab() {
     
     // Notify multiplayer peers if we're the host
     notifySceneChange({ background: backgroundId });
+  };
+
+  const handleEnvironmentSelect = async (envId: string) => {
+    setSelectedBackground(envId);
+    setCurrentBackground(envId);
+    setIsLoadingHdri(true);
+    
+    try {
+      // Enable environment and set preset
+      await sceneSettings.setEnvironmentPreset(envId);
+      sceneSettings.setEnvironment({ enabled: true });
+      
+      addToast('Environment loaded', 'success');
+      
+      // Notify multiplayer
+      notifySceneChange({ background: envId });
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to load environment', 'error');
+    } finally {
+      setIsLoadingHdri(false);
+    }
   };
 
   const handleAspectRatioChange = (ratio: AspectRatio) => {
@@ -815,7 +846,7 @@ export function SceneTab() {
         </p>
         
         <PresetButtons
-          presets={HDRI_PRESETS}
+          presets={defaultEnvironments}
           activePreset={sceneSettings.environmentPreset}
           onSelect={handleHdriPreset}
         />
@@ -932,6 +963,80 @@ export function SceneTab() {
             </button>
           ))}
         </div>
+
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem', 
+          margin: '1rem 0 0.5rem', 
+          color: 'var(--text-tertiary)', 
+          fontSize: '0.8rem', 
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
+        }}>
+          <span style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }}></span>
+          <Sun size={14} weight="duotone" /> 360° Environments
+          <span style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }}></span>
+        </div>
+
+        <div className="background-grid">
+           {Object.entries(customEnvironments).map(([id, preset]) => (
+            <button
+              key={id}
+              className={`background-thumbnail ${selectedBackground === id ? 'active' : ''}`}
+              onClick={() => handleEnvironmentSelect(id)}
+              title={preset.name}
+            >
+              <div className="background-thumbnail__preview" style={{
+                backgroundImage: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem'
+              }}>
+                <Globe size={24} weight="duotone" style={{ opacity: 0.5, color: '#00ffd6' }} />
+              </div>
+              <span className="background-thumbnail__name">{preset.name}</span>
+            </button>
+           ))}
+        </div>
+        
+        {HDRI_PRESETS[selectedBackground] && (
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            background: 'rgba(255, 255, 255, 0.03)', 
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle)'
+          }}>
+            <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sun size={16} weight="duotone" /> Environment Settings
+            </div>
+            <Slider
+              label="Rotation"
+              value={sceneSettings.environment.rotation}
+              min={0}
+              max={360}
+              step={1}
+              onChange={(rotation) => sceneSettings.setEnvironment({ rotation })}
+            />
+            <Slider
+              label="Blur"
+              value={sceneSettings.environment.backgroundBlur}
+              min={0}
+              max={1}
+              onChange={(backgroundBlur) => sceneSettings.setEnvironment({ backgroundBlur })}
+            />
+            <Slider
+              label="Intensity"
+              value={sceneSettings.environment.intensity}
+              min={0}
+              max={3}
+              onChange={(intensity) => sceneSettings.setEnvironment({ intensity })}
+            />
+          </div>
+        )}
 
         <button 
           className="secondary full-width"

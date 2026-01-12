@@ -29,14 +29,12 @@
 
 ### 🛠️ **Pose Lab**
 *Deep dive into character posing and animation.*
-- **Timeline Editor**: Capture keyframes and build animation sequences.
+- **Batch Export**: One-click regeneration of all pose JSONs using your custom avatar.
 - **AI Pose Gen**: Describe a pose and let Gemini generate it.
 - **Webcam Mocap**: Real-time body + face tracking with calibration and smoothing.
 - **Manual Posing**: Fine-tune joints with **Gizmos** (Rotate/Translate).
 - **Full Expression Control**: Blendshape editing for facial expressions.
-- **Retargeting Engine**: Import Mixamo FBX animations and retarget to VRM.
 - **Project Persistence**: Save and load your entire workspace (`.pose` files).
-- **Batch Export**: One-click regeneration of all pose JSONs using your custom avatar.
 - **Live2D Support**: Load Live2D models and adjust expressions.
 
 ### 🚀 **Production Ready**
@@ -55,12 +53,10 @@
 ## 👩‍🍳 Quickstart Recipes
 
 ### 🎬 **For Animators**
-**Goal: Create a custom emote.**
-1.  **Pose Lab**: Open **Timeline** tab.
-2.  **Frame 0**: Use AI to generate "start pose", click **Add Keyframe**.
-3.  **Frame 1.0**: Move scrubber to 1s, use Gizmos to change pose, click **Add Keyframe**.
-4.  **Preview**: Hit **Play** to see the smooth transition.
-5.  **Export**: Click **Export** to save the animation JSON.
+**Goal: Retarget custom animations.**
+1.  **Pose Lab**: Open **Save** tab.
+2.  **Load Avatar**: Ensure your VRM is loaded.
+3.  **Batch Export**: Click "Batch Export All Poses" to retarget the library to your avatar.
 
 ### 📸 **For YouTubers & Streamers**
 **Goal: Create a clean thumbnail asset.**

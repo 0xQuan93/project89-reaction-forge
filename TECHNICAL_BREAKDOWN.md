@@ -54,11 +54,11 @@ The Reaction Forge is the main interface for creating and exporting VRM avatar r
 
 ### Pose Lab
 
-The Pose Lab is a tool for creating custom poses and animations for use in the Reaction Forge. It allows users to:
+The Pose Lab is a dedicated environment for advanced animation management. It allows users to:
 
-*   Retarget Mixamo FBX animations to the VRM format.
-*   Preview animations in real-time.
-*   Export pose and animation data as JSON files.
+*   **Batch Retarget**: Automatically convert a library of Mixamo FBX files to the current VRM avatar's skeleton.
+*   **Preview**: Play back animations on the loaded avatar.
+*   **Export**: Save pose definitions and animation clips as JSON.
 
 ## State Management
 
@@ -73,5 +73,6 @@ The 3D rendering is handled by Three.js. The core logic is separated into a set 
 
 *   **`animationManager.ts`**: Manages animations.
 *   **`avatarManager.ts`**: Manages VRM avatars.
-*   **`backgrounds.ts`**: Manages backgrounds.
+*   **`backgrounds.ts`**: Manages standard 2D/video backgrounds.
+*   **`environmentManager.ts`**: Manages HDRI environments and lighting.
 *   **`sceneManager.ts`**: Manages the main Three.js scene.

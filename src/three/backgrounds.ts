@@ -94,6 +94,8 @@ export function getBackgroundDefinition(id: BackgroundId | string): BackgroundDe
 export async function applyBackground(scene: THREE.Scene, id: BackgroundId | string): Promise<AnimatedBackground | null> {
   const definition = getBackgroundDefinition(id);
   
+  // Note: We don't clear scene.environment here anymore, to allow mixing Backgrounds with HDRI lighting.
+
   // Try to load image if specified
   if (definition.image) {
     try {
@@ -166,7 +168,7 @@ export async function applyBackground(scene: THREE.Scene, id: BackgroundId | str
       console.log('[Background] Applied image:', definition.image);
       return null;
     } catch (error) {
-      console.warn('[Background] Image load failed, using color fallback');
+      console.warn('[Background] Image load failed, using color fallback', error);
     }
   }
   

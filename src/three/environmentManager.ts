@@ -57,6 +57,42 @@ export const HDRI_PRESETS: Record<string, { name: string; url: string | null; pr
     name: '🏙️ Urban',
     url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/potsdamer_platz_1k.hdr',
   },
+  'cyber-alley': {
+    name: '🌃 Cyber Alley',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_cyber-city_alleyway_at_midnight_422831616_14844286.hdr',
+  },
+  'lush-forest': {
+    name: '🌲 Lush Forest',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_deep_in_a_lush_1051738730_14844291.hdr',
+  },
+  volcano: {
+    name: '🌋 Volcano',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_inside_an_active_volcano_1527142368_14844295.hdr',
+  },
+  'deep-sea': {
+    name: '🌊 Deep Sea',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_underwater_deep_sea_trench_2030061023_14844424.hdr',
+  },
+  'glass-platform': {
+    name: '💎 Glass Platform',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_a_glass_platform_in_81034329_14844536.hdr',
+  },
+  'hacker-room': {
+    name: '💻 Hacker Room',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_interior_of_a_cluttered_661225116_14844563.hdr',
+  },
+  industrial: {
+    name: '🏭 Industrial',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_inside_a_massive_industrial_1117188263_14844712.hdr',
+  },
+  'rooftop-garden': {
+    name: '🌸 Rooftop',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_ooftop_garden_of_a_419291268_14844925.hdr',
+  },
+  'shinto-shrine': {
+    name: '⛩️ Shrine',
+    url: '/backgrounds/hdr/M3_Anime_hdri-hdr_pathway_to_a_shinto_1505440517_14844939.hdr',
+  },
 };
 
 // ======================

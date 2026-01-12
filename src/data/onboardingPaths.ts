@@ -16,7 +16,7 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
   {
     id: 'vtuber',
     label: 'VTuber Starter',
-    description: 'Build your first streaming-ready avatar scenes with expression control and looping reactions.',
+    description: 'Build your first streaming-ready avatar scenes with reaction presets and looping animations.',
     steps: [
       {
         id: 'vtuber-load-avatar',
@@ -26,15 +26,15 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
       },
       {
         id: 'vtuber-expressions',
-        title: 'Dial in expressions',
-        description: 'Adjust joy/surprise/calm sliders to match your stream persona.',
-        cta: 'Open the Reactions tab and move expression sliders.',
+        title: 'Choose a reaction',
+        description: 'Pick an Action, Emote, or Idle animation from the library.',
+        cta: 'Reactions tab → Reaction Library.',
       },
       {
         id: 'vtuber-loop',
         title: 'Create a looping reaction',
-        description: 'Pick a preset and export a clean WebM loop for OBS.',
-        cta: 'Try “Simple Wave” then export WebM (9:16).',
+        description: 'Set animation mode to Loop and export for OBS.',
+        cta: 'Set Mode to “Loop Animation” -> Export WebM.',
       },
     ],
   },
@@ -46,20 +46,20 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
       {
         id: 'pngtuber-pose',
         title: 'Pose your avatar',
-        description: 'Use AI or manual posing to create your hero stance.',
-        cta: 'Pose Lab → AI Gen: “confident smile”.',
+        description: 'Select a preset pose to create your hero stance.',
+        cta: 'Reactions tab → Reaction Library.',
       },
       {
         id: 'pngtuber-expression',
         title: 'Capture expression variants',
         description: 'Generate a set of emotions for quick swaps in your scene.',
-        cta: 'Export PNG with Joy, Surprise, Calm.',
+        cta: 'Export PNGs for Joy, Surprise, Calm.',
       },
       {
         id: 'pngtuber-export',
         title: 'Export transparent PNGs',
         description: 'Deliver clean cutouts ready for Photoshop or OBS.',
-        cta: 'Export PNG with transparent background.',
+        cta: 'Export tab → Check “Transparent background”.',
       },
     ],
   },
@@ -72,13 +72,13 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
         id: 'creator-scene',
         title: 'Set your scene style',
         description: 'Pick a background and lighting mood that matches your brand.',
-        cta: 'Scene → Backgrounds & Lighting presets.',
+        cta: 'Scene tab → 360° Environments.',
       },
       {
         id: 'creator-aspect',
         title: 'Choose aspect ratios',
         description: 'Switch between 16:9, 9:16, and 1:1 for distribution.',
-        cta: 'Use Aspect Ratio toggle before export.',
+        cta: 'Scene tab → Aspect Ratio buttons.',
       },
       {
         id: 'creator-export',
@@ -91,7 +91,7 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
   {
     id: 'animator',
     label: 'Animator / Mocap',
-    description: 'Capture motion and refine sequences for storytelling.',
+    description: 'Capture motion and retarget sequences for storytelling.',
     steps: [
       {
         id: 'animator-mocap',
@@ -100,10 +100,10 @@ export const ONBOARDING_PERSONAS: OnboardingPersona[] = [
         cta: 'Mocap tab → Start Camera + Record.',
       },
       {
-        id: 'animator-keyframes',
-        title: 'Refine with keyframes',
-        description: 'Blend captured motion with manual adjustments.',
-        cta: 'Pose Lab → Timeline keyframes.',
+        id: 'animator-retarget',
+        title: 'Retarget animations',
+        description: 'Batch process standard animations to your avatar.',
+        cta: 'Pose Lab → Save tab → Batch Export.',
       },
       {
         id: 'animator-export',

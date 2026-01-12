@@ -1,4 +1,4 @@
-# PoseLab v1.5 - Complete Platform Overview
+# PoseLab v1.2.1 - Complete Platform Overview
 
 > **The Future of Avatar Interaction is Here**
 
@@ -14,20 +14,21 @@ PoseLab is a browser-based VRM avatar studio that combines professional-grade po
 | **Who** | Content creators, VTubers, developers, artists, and communities |
 | **Why** | Professional avatar tools without downloads, accounts, or servers |
 | **How** | WebGL + WebRTC + MediaPipe ML - pure browser technology |
+| **Current Version** | v1.2.1 (January 2026) |
 
 ---
 
-## 🚀 Current Capabilities (v1.5)
+## 🚀 Current Capabilities (v1.2.1)
 
 ### Core Avatar Features
 
 | Feature | Description | Technology |
 |---------|-------------|------------|
 | **VRM Loading** | Load any VRM 0.x or 1.0 avatar | @pixiv/three-vrm |
-| **Pose Presets** | 8+ preset poses with animations | Three.js AnimationMixer |
+| **Pose Presets** | 14+ preset poses (Action, Emotes, Idle) | Three.js AnimationMixer |
 | **Manual Posing** | Direct bone manipulation via gizmo | TransformControls |
 | **Expressions** | Facial expression control (Joy, Calm, Surprise) | VRM ExpressionManager |
-| **Animation Import** | Load FBX/GLB animations | Three.js loaders + retargeting |
+| **Batch Export** | Retarget Mixamo library to any VRM instantly | BatchFBXConverter |
 
 ### Visual & Rendering
 
@@ -36,7 +37,7 @@ PoseLab is a browser-based VRM avatar studio that combines professional-grade po
 | **3-Point Lighting** | Professional key/fill/rim/ambient lighting system |
 | **6 Lighting Presets** | Studio, Dramatic, Soft, Neon, Sunset, Moonlight |
 | **Toon Shader Control** | MToon outline and shading customization |
-| **HDRI Environments** | 360° environment maps with reflections |
+| **HDRI Environments** | 360° environments with rotation/blur/intensity control |
 | **Post-Processing** | Bloom, color grading, vignette, film grain |
 | **Custom Backgrounds** | Upload images, videos, or use built-in gradients |
 | **FX Overlays** | Scanlines, glitch, CRT, vignette effects |
@@ -67,7 +68,7 @@ PoseLab is a browser-based VRM avatar studio that combines professional-grade po
 |--------|----------|
 | **PNG** | High-quality images with optional transparency |
 | **JPG** | Compressed images for web |
-| **WebM** | Video recordings with animations |
+| **WebM** | Video recordings with animation + microphone audio |
 | **GLB** | 3D model export for Blender/Unity |
 | **JSON** | Pose library export/import |
 
@@ -77,7 +78,7 @@ PoseLab is a browser-based VRM avatar studio that combines professional-grade po
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        PoseLab v1.5                             │
+│                        PoseLab v1.2.1                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
@@ -97,10 +98,11 @@ PoseLab is a browser-based VRM avatar studio that combines professional-grade po
 │  │  │(Renderer)   │ │(VRM/Poses)  │ │(Multiplayer Avatars)│ │   │
 │  │  └─────────────┘ └─────────────┘ └─────────────────────┘ │   │
 │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │   │
-│  │  │Interaction  │ │MotionCapture│ │  VoiceLipSync       │ │   │
+│  │  │Environment  │ │MotionCapture│ │  VoiceLipSync       │ │   │
 │  │  │Manager      │ │Manager      │ │  (Audio Analysis)   │ │   │
 │  │  └─────────────┘ └─────────────┘ └─────────────────────┘ │   │
 │  └──────────────────────────────────────────────────────────┘   │
+
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                  Multiplayer Layer                        │   │

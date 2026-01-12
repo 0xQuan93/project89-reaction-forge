@@ -31,7 +31,16 @@ export type BackgroundId =
   | 'signal-breach'
   | 'quantum-field'
   | 'protocol-dawn'
-  | 'green-screen';
+  | 'green-screen'
+  | 'cyber-alley'
+  | 'lush-forest'
+  | 'volcano'
+  | 'deep-sea'
+  | 'glass-platform'
+  | 'hacker-room'
+  | 'industrial'
+  | 'rooftop-garden'
+  | 'shinto-shrine';
 
 // Animation playback mode
 export type AnimationMode = 'static' | 'loop' | 'once';
