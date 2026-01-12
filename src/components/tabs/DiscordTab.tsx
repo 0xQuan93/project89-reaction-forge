@@ -8,6 +8,7 @@ import { canUseDiscordSdk, openDiscordLink, setDiscordActivity } from '../../ser
 import { useDiscordStore } from '../../state/useDiscordStore';
 import { useMultiplayerStore } from '../../state/useMultiplayerStore';
 import { useToastStore } from '../../state/useToastStore';
+import { useShallow } from 'zustand/shallow';
 import {
   DiscordLogo,
   MonitorPlay,
@@ -26,23 +27,37 @@ const getDisplayName = (profile: DiscordProfile | null) => {
 };
 
 export function DiscordTab() {
-  const hydrate = useDiscordStore((state) => state.hydrate);
-  const completeOAuth = useDiscordStore((state) => state.completeOAuth);
-  const connect = useDiscordStore((state) => state.connect);
-  const disconnect = useDiscordStore((state) => state.disconnect);
-  const refreshProfile = useDiscordStore((state) => state.refreshProfile);
-  const { status, profile, lastError, connectionType } = useDiscordStore((state) => ({
-    status: state.status,
-    profile: state.profile,
-    lastError: state.lastError,
-    connectionType: state.connectionType,
-  }));
-  const { isConnected, roomId, role, peers } = useMultiplayerStore((state) => ({
-    isConnected: state.isConnected,
-    roomId: state.roomId,
-    role: state.role,
-    peers: state.peers,
-  }));
+  const {
+    hydrate,
+    completeOAuth,
+    connect,
+    disconnect,
+    refreshProfile,
+    status,
+    profile,
+    lastError,
+    connectionType,
+  } = useDiscordStore(
+    useShallow((state) => ({
+      hydrate: state.hydrate,
+      completeOAuth: state.completeOAuth,
+      connect: state.connect,
+      disconnect: state.disconnect,
+      refreshProfile: state.refreshProfile,
+      status: state.status,
+      profile: state.profile,
+      lastError: state.lastError,
+      connectionType: state.connectionType,
+    })),
+  );
+  const { isConnected, roomId, role, peers } = useMultiplayerStore(
+    useShallow((state) => ({
+      isConnected: state.isConnected,
+      roomId: state.roomId,
+      role: state.role,
+      peers: state.peers,
+    })),
+  );
   const { addToast } = useToastStore();
   const [selectedObsProfile, setSelectedObsProfile] = useState(OBS_PROFILES[0]);
   const [sdkReady, setSdkReady] = useState(false);
