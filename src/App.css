@@ -598,6 +598,180 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DISCORD INTEGRATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.discord-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.discord-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.discord-card__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.discord-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.discord-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  object-fit: cover;
+}
+
+.discord-avatar--placeholder {
+  display: grid;
+  place-items: center;
+  background: rgba(88, 101, 242, 0.2);
+  color: #cdd1ff;
+}
+
+.discord-status {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.discord-status--connected {
+  color: #9cf5d4;
+  border: 1px solid rgba(156, 245, 212, 0.5);
+}
+
+.discord-status--connecting {
+  color: #ffd58a;
+  border: 1px solid rgba(255, 213, 138, 0.5);
+}
+
+.discord-status--error {
+  color: #ff9b9b;
+  border: 1px solid rgba(255, 155, 155, 0.5);
+}
+
+.discord-status--disconnected {
+  color: var(--text-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.discord-error {
+  margin: 0;
+  color: #ffb0b0;
+  background: rgba(255, 85, 85, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+}
+
+.discord-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.discord-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: var(--transition-all);
+}
+
+.discord-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-default);
+}
+
+.discord-button.primary {
+  background: rgba(88, 101, 242, 0.25);
+  border-color: rgba(88, 101, 242, 0.6);
+  color: #dce0ff;
+}
+
+.discord-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.discord-card__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.discord-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+}
+
+.discord-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.discord-progress {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.discord-progress__bar {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.discord-progress__bar span {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(88, 101, 242, 0.9), rgba(0, 255, 214, 0.85));
+}
+
+.discord-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.discord-pill {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(88, 101, 242, 0.18);
+  border: 1px solid rgba(88, 101, 242, 0.4);
+  font-size: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PRESET GRID (Reactions/Poses)
    ═══════════════════════════════════════════════════════════════════════════ */
 
