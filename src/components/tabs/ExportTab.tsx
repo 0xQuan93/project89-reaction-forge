@@ -18,8 +18,10 @@ import {
   Square, 
   DeviceMobileCamera,
   Lightbulb,
-  FileJs as FileJson
+  FileJs as FileJson,
+  Package
 } from '@phosphor-icons/react';
+import { batchConfigs, applyMixamoBuffer, savePoseToDisk } from '../../pose-lab/batchUtils';
 
 interface ExportTabProps {
   mode?: 'reactions' | 'poselab';
@@ -29,6 +31,7 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
   const { activePreset, animationMode, isAvatarReady } = useReactionStore();
   const { addToast } = useToastStore();
   const [isExporting, setIsExporting] = useState(false);
+  const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportFormat, setExportFormat] = useState<'png' | 'webm' | 'glb' | 'json'>('png');
   const [resolution, setResolution] = useState<'720p' | '1080p' | 'square'>('720p');
@@ -320,6 +323,53 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     }
   };
 
+  const handleBatchExport = async () => {
+    const vrm = avatarManager.getVRM();
+    if (!vrm) {
+      addToast('Load an avatar first', 'warning');
+      return;
+    }
+    
+    if (!confirm('This will overwrite existing pose JSON files in src/poses. Continue?')) {
+        return;
+    }
+
+    setIsBatchExporting(true);
+    addToast('Starting batch export...', 'info');
+    
+    try {
+      const DEFAULT_SCENE_ROTATION = { y: 180 };
+      let successCount = 0;
+      
+      for (const config of batchConfigs) {
+        console.log(`Exporting ${config.label}...`);
+        
+        try {
+            const response = await fetch(config.source);
+            if (!response.ok) throw new Error(`Failed to fetch ${config.source}`);
+            
+            const buffer = await response.arrayBuffer();
+            const { pose, animationClip } = await applyMixamoBuffer(buffer, config.fileName, vrm);
+            
+            await savePoseToDisk(config.id, {
+              sceneRotation: config.sceneRotation ?? DEFAULT_SCENE_ROTATION,
+              vrmPose: pose,
+              animationClip,
+            });
+            successCount++;
+        } catch (err) {
+            console.error(`Failed to export ${config.label}:`, err);
+        }
+      }
+      addToast(`Batch export complete! (${successCount}/${batchConfigs.length})`, 'success');
+    } catch (error) {
+      console.error('Batch export failed', error);
+      addToast('Batch export failed', 'error');
+    } finally {
+      setIsBatchExporting(false);
+    }
+  };
+
   const handleExport = () => {
     if (exportFormat === 'png') {
       handleExportPNG();
@@ -493,6 +543,28 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
           </p>
         )}
       </div>
+
+      {mode === 'poselab' && (
+        <div className="tab-section" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+            <h3>Batch Processing</h3>
+            <p className="muted small">Regenerate all pose JSONs from source FBX files.</p>
+            <button 
+                className="secondary full-width"
+                onClick={handleBatchExport}
+                disabled={isBatchExporting || !isAvatarReady}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+                {isBatchExporting ? (
+                    'Processing...' 
+                ) : (
+                    <>
+                        <Package size={16} weight="duotone" /> 
+                        Batch Export All Poses
+                    </>
+                )}
+            </button>
+        </div>
+      )}
     </div>
   );
 }

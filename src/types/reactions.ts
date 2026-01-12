@@ -9,7 +9,16 @@ export type PoseId =
   | 'agent-clapping'
   | 'silly-agent'
   | 'simple-wave'
-  | 'point';
+  | 'point'
+  | 'defeat'
+  | 'focus'
+  | 'rope-climb'
+  | 'climb-top'
+  | 'thumbs-up'
+  | 'offensive-idle'
+  | 'waking'
+  | 'treading-water'
+  | 'cheering';
 
 export type ExpressionId = 'calm' | 'joy' | 'surprise';
 

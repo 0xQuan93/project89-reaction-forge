@@ -3,16 +3,14 @@ import './pose-lab.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three-stdlib';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { VRMLoaderPlugin, type VRM } from '@pixiv/three-vrm';
-import { getMixamoAnimation } from './getMixamoAnimation';
-import { poseFromClip } from './poseFromClip';
-import { convertAnimationToScenePaths } from './convertAnimationToScenePaths';
 import { BatchFBXConverter } from './BatchFBXConverter';
-// import type { PoseId } from '../types/reactions';
-// import type { VRMPose } from '@pixiv/three-vrm';
-
-// const DEFAULT_SCENE_ROTATION = { y: 180 };
+import { useAvatarSource } from '../state/useAvatarSource';
+import { 
+  batchConfigs, 
+  applyMixamoBuffer, 
+  savePoseToDisk 
+} from './batchUtils';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
@@ -34,40 +32,13 @@ let controls: OrbitControls | null = null;
 let mixer: THREE.AnimationMixer | null = null;
 let currentAction: THREE.AnimationAction | null = null;
 
-// const mixamoSources = {
-//   crouch: new URL('../poses/fbx/Male Crouch Pose.fbx', import.meta.url).href,
-//   dance: new URL('../poses/fbx/Male Dance Pose.fbx', import.meta.url).href,
-//   dynamic: new URL('../poses/fbx/Male Dynamic Pose.fbx', import.meta.url).href,
-//   locomotion: new URL('../poses/fbx/Male Locomotion Pose.fbx', import.meta.url).href,
-//   sitting: new URL('../poses/fbx/Male Sitting Pose.fbx', import.meta.url).href,
-//   standing: new URL('../poses/fbx/Male Standing Pose.fbx', import.meta.url).href,
-// };
-
-// type BatchPoseConfig = {
-//   id: PoseId;
-//   label: string;
-//   source: string;
-//   fileName: string;
-//   sceneRotation?: { x?: number; y?: number; z?: number };
-// };
-
-// const batchConfigs: BatchPoseConfig[] = [
-//   { id: 'dawn-runner' as PoseId, label: 'Dawn Runner', source: mixamoSources.dynamic, fileName: 'Male Dynamic Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'green-loom' as PoseId, label: 'Green Loom', source: mixamoSources.dance, fileName: 'Male Dance Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'sunset-call' as PoseId, label: 'Sunset Call', source: mixamoSources.standing, fileName: 'Male Standing Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'cipher-whisper' as PoseId, label: 'Cipher Whisper', source: mixamoSources.sitting, fileName: 'Male Sitting Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'nebula-drift' as PoseId, label: 'Nebula Drift', source: mixamoSources.locomotion, fileName: 'Male Locomotion Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'loom-vanguard' as PoseId, label: 'Loom Vanguard', source: mixamoSources.standing, fileName: 'Male Standing Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'signal-reverie' as PoseId, label: 'Signal Reverie', source: mixamoSources.crouch, fileName: 'Male Crouch Pose.fbx', sceneRotation: { y: 180 } },
-//   { id: 'protocol-enforcer' as PoseId, label: 'Protocol Enforcer', source: mixamoSources.locomotion, fileName: 'Male Locomotion Pose.fbx', sceneRotation: { y: 180 } },
-// ];
-
 function PoseLab() {
+  const { currentUrl, avatarType } = useAvatarSource();
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const vrmRef = useRef<VRM | null>(null);
   const animationClipRef = useRef<THREE.AnimationClip | null>(null);
   const [status, setStatus] = useState('🎭 Drag & drop a VRM file to begin');
-  // const [isBatchExporting, setIsBatchExporting] = useState(false);
+  const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [isDraggingVRM, setIsDraggingVRM] = useState(false);
   const [isDraggingFBX, setIsDraggingFBX] = useState(false);
   const [currentAnimationClip, setCurrentAnimationClip] = useState<THREE.AnimationClip | null>(null);
@@ -114,7 +85,14 @@ function PoseLab() {
     };
   }, []);
 
-  const loadVRM = async (file: File, _options?: { syncSource?: boolean }) => {
+  // Auto-load avatar from main app
+  useEffect(() => {
+    if (avatarType === 'vrm' && currentUrl && !vrmRef.current) {
+        loadVRM(currentUrl);
+    }
+  }, [avatarType, currentUrl]);
+
+  const loadVRM = async (source: File | string, _options?: { syncSource?: boolean }) => {
     setStatus('Loading VRM…');
     
     // Dispose of old VRM if exists
@@ -134,7 +112,14 @@ function PoseLab() {
       vrmRef.current = null;
     }
     
-    const arrayBuffer = await file.arrayBuffer();
+    let arrayBuffer: ArrayBuffer;
+    if (typeof source === 'string') {
+      const res = await fetch(source);
+      arrayBuffer = await res.arrayBuffer();
+    } else {
+      arrayBuffer = await source.arrayBuffer();
+    }
+
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
     const gltf = await loader.parseAsync(arrayBuffer, '');
@@ -149,8 +134,6 @@ function PoseLab() {
     renderer.render(scene, camera);
   };
 
-  // No auto-loading - user must manually drop VRM file
-
   const retarget = async (file: File) => {
     if (!vrmRef.current) {
       setStatus('Load a VRM first.');
@@ -159,7 +142,8 @@ function PoseLab() {
 
     setStatus('Loading Mixamo pose…');
     try {
-      const { animationClip } = await applyMixamoBuffer(await file.arrayBuffer(), file.name);
+      const arrayBuffer = await file.arrayBuffer();
+      const { animationClip } = await applyMixamoBuffer(arrayBuffer, file.name, vrmRef.current);
       animationClipRef.current = animationClip;
       setCurrentAnimationClip(animationClip);
       
@@ -248,67 +232,6 @@ function PoseLab() {
     setStatus(newLooping ? '🔁 Loop enabled' : '1️⃣ Play once');
   };
 
-  const loadMixamoFromBuffer = async (arrayBuffer: ArrayBuffer, fileName: string) => {
-    const ext = fileName.toLowerCase().split('.').pop();
-    let mixamoRoot: THREE.Object3D;
-    let animations: THREE.AnimationClip[] = [];
-
-    if (ext === 'fbx') {
-      const loader = new FBXLoader();
-      const group = loader.parse(arrayBuffer, '');
-      mixamoRoot = group;
-      animations = group.animations;
-    } else {
-      const loader = new GLTFLoader();
-      const gltf = await loader.parseAsync(arrayBuffer, '');
-      mixamoRoot = gltf.scene || gltf;
-      animations = gltf.animations;
-    }
-
-    return { mixamoRoot, animations };
-  };
-
-  const applyMixamoBuffer = async (arrayBuffer: ArrayBuffer, fileName: string) => {
-    const vrm = vrmRef.current;
-    if (!vrm) throw new Error('Load a VRM first.');
-
-    const { mixamoRoot, animations } = await loadMixamoFromBuffer(arrayBuffer, fileName);
-
-    const vrmClip = getMixamoAnimation(animations, mixamoRoot, vrm);
-    if (!vrmClip) {
-      throw new Error('Failed to convert Mixamo data for this VRM.');
-    }
-
-    // Convert animation to use scene node paths (critical for playback in main app)
-    const scenePathClip = convertAnimationToScenePaths(vrmClip, vrm);
-    console.log('[PoseLab] Converted animation to scene paths');
-
-    const pose = poseFromClip(vrmClip);
-    if (!pose || !Object.keys(pose).length) {
-      throw new Error('Mixamo clip did not contain pose data.');
-    }
-
-    vrm.humanoid?.setNormalizedPose(pose);
-    vrm.update(0);
-
-    // Reframe Pose Lab camera so avatar stays centered per pose
-    const box = new THREE.Box3().setFromObject(vrm.scene);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-    const height = size.y || 1;
-    const fov = THREE.MathUtils.degToRad(camera.fov);
-    const distance = (height * 1.2) / (2 * Math.tan(fov / 2));
-    camera.position.set(center.x, center.y, center.z + distance);
-    camera.lookAt(center);
-
-    renderer.render(scene, camera);
-
-    // Return both pose and animation clip (with scene paths)
-    return { pose, animationClip: scenePathClip };
-  };
-
   const exportPose = async () => {
     const vrm = vrmRef.current;
     if (!vrm) {
@@ -352,93 +275,36 @@ function PoseLab() {
     }
   };
 
-  // const savePoseToDisk = async (
-  //   poseId: PoseId,
-  //   payload: {
-  //     sceneRotation?: { x?: number; y?: number; z?: number };
-  //     vrmPose: VRMPose;
-  //     animationClip?: THREE.AnimationClip;
-  //   }
-  // ) => {
-  //   // Save pose JSON
-  //   const response = await fetch('/__pose-export', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({ poseId, data: payload }),
-  //   });
-  //   if (!response.ok) {
-  //     const text = await response.text();
-  //     throw new Error(text || 'Failed to save pose');
-  //   }
-
-  //   // If animation clip exists, save it separately
-  //   if (payload.animationClip) {
-  //     const { serializeAnimationClip } = await import('../poses/animationClipSerializer');
-  //     const serialized = serializeAnimationClip(payload.animationClip);
-      
-  //     const animResponse = await fetch('/__pose-export', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         poseId: `${poseId}-animation`,
-  //         data: serialized,
-  //       }),
-  //     });
-  //     if (!animResponse.ok) {
-  //       console.warn('Failed to save animation clip for', poseId);
-  //     }
-  //   }
-  // };
-
   const batchExport = async () => {
-    // if (!vrmRef.current) {
-    //   setStatus('Load a VRM before running batch export.');
-    //   return;
-    // }
-    // setIsBatchExporting(true);
-    // try {
-    //   for (const config of batchConfigs) {
-    //     setStatus(`Exporting ${config.label}…`);
-    //     const response = await fetch(config.source);
-    //     if (!response.ok) {
-    //       throw new Error(`Failed to fetch ${config.label} (${response.status})`);
-    //     }
-    //     const buffer = await response.arrayBuffer();
-    //     const { pose, animationClip } = await applyMixamoBuffer(buffer, config.fileName);
-    //     await savePoseToDisk(config.id, {
-    //       sceneRotation: config.sceneRotation ?? DEFAULT_SCENE_ROTATION,
-    //       vrmPose: pose,
-    //       animationClip, // Include animation clip
-    //     });
-    //   }
-    //   setStatus('Batch export complete! Updated files in src/poses.');
-    // } catch (error) {
-    //   console.error('Batch export failed', error);
-    //   setStatus(`Batch export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    // } finally {
-    //   setIsBatchExporting(false);
-    // }
-    alert("Batch export is disabled because sample FBX files are not included in the repo.");
-  };
-
-  /*
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files?.[0];
-    if (!file) return;
-    if (file.name.toLowerCase().endsWith('.vrm')) {
-      await loadVRM(file, { syncSource: true });
-    } else if (/\.(fbx|gltf|glb)$/i.test(file.name)) {
-      await retarget(file);
-    } else {
-      setStatus('Unsupported file type. Drop VRM or FBX/GLTF.');
+    if (!vrmRef.current) {
+      setStatus('Load a VRM before running batch export.');
+      return;
+    }
+    setIsBatchExporting(true);
+    try {
+      const DEFAULT_SCENE_ROTATION = { y: 180 };
+      for (const config of batchConfigs) {
+        setStatus(`Exporting ${config.label}…`);
+        const response = await fetch(config.source);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${config.label} (${response.status})`);
+        }
+        const buffer = await response.arrayBuffer();
+        const { pose, animationClip } = await applyMixamoBuffer(buffer, config.fileName, vrmRef.current);
+        await savePoseToDisk(config.id, {
+          sceneRotation: config.sceneRotation ?? DEFAULT_SCENE_ROTATION,
+          vrmPose: pose,
+          animationClip, // Include animation clip
+        });
+      }
+      setStatus('Batch export complete! Updated files in src/poses.');
+    } catch (error) {
+      console.error('Batch export failed', error);
+      setStatus(`Batch export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsBatchExporting(false);
     }
   };
-  */
 
   const handleVRMDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -599,8 +465,8 @@ function PoseLab() {
         <button type="button" onClick={exportPose} disabled={!vrmRef.current}>
           💾 Export Pose JSON
         </button>
-        <button type="button" onClick={batchExport} disabled={!vrmRef.current}>
-          📦 Batch Export All Poses (Disabled)
+        <button type="button" onClick={batchExport} disabled={!vrmRef.current || isBatchExporting}>
+          {isBatchExporting ? 'Processing...' : '📦 Batch Export All Poses'}
         </button>
       </div>
 
@@ -613,4 +479,3 @@ function PoseLab() {
 }
 
 export default PoseLab;
-

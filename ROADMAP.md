@@ -68,7 +68,7 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 ### 2. ♾️ Evergreen Utility
 **Goal:** Make PoseLab a daily driver for creators.
 - [ ] **Preset Library Sync:** Save/share presets between devices.
-- [ ] **Batch Exporting:** Queue multiple poses/animations for overnight renders.
+- [x] **Batch Exporting:** Queue multiple poses/animations for overnight renders.
 - [ ] **Quickshot Templates:** Reusable layout presets for shorts, thumbnails, and panels.
 
 ### 3. 🧩 Workflow Reliability

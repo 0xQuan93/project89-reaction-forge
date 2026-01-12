@@ -32,8 +32,10 @@ export function MocapTab() {
   const {
     liveModeEnabled,
     liveControlsEnabled,
+    mocapMode,
     setLiveModeEnabled,
     setLiveControlsEnabled,
+    setMocapMode,
   } = useReactionStore();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -45,7 +47,6 @@ export function MocapTab() {
   const timerRef = useRef<number | null>(null);
   
   const [isGreenScreen, setIsGreenScreen] = useState(false);
-  const [mocapMode, setMocapMode] = useState<'full' | 'face'>('full');
   const [isSelfieMode, setIsSelfieMode] = useState(false);
   
   // Voice Lip Sync state
@@ -67,6 +68,7 @@ export function MocapTab() {
 
     if (videoRef.current && !managerRef.current) {
         managerRef.current = new MotionCaptureManager(videoRef.current);
+        managerRef.current.setMode(mocapMode);
     }
     
     return () => {
@@ -79,8 +81,9 @@ export function MocapTab() {
 
   const toggleGreenScreen = () => {
       if (isGreenScreen) {
-          // Revert to default background (midnight-circuit)
-          sceneManager.setBackground('midnight-circuit');
+          // Revert to active preset background
+          const currentPreset = useReactionStore.getState().activePreset;
+          sceneManager.setBackground(currentPreset.background);
           setIsGreenScreen(false);
       } else {
           // Set to Green Screen
@@ -95,29 +98,16 @@ export function MocapTab() {
           managerRef.current.setMode(mode);
       }
       
-      if (mode === 'face') {
-          if (isActive) {
-              // Face + Upper Body tracking should take priority over any idle animation.
-              // Freeze current pose so mocap can drive the upper body without animation sway.
-              avatarManager.freezeCurrentPose();
-              avatarManager.setInteraction(true);
+      // Only apply avatar state changes if actively tracking
+      if (isActive) {
+          // Freeze current pose to ensure clean transition and no fighting with animation
+          avatarManager.freezeCurrentPose();
+          avatarManager.setInteraction(true);
+          
+          if (mode === 'face') {
               addToast("Upper Body Tracking: Animation paused for mocap control", "info");
           } else {
-              avatarManager.setInteraction(false);
-          }
-          
-      } else {
-          // Switching back to Full Body
-          // We MUST freeze the animation so the body doesn't fight the mocap.
-          // The mixer would otherwise overwrite our arm/leg movements.
-          if (isActive) {
-              avatarManager.freezeCurrentPose();
-              
-              // Pause animation mixer so mocap has full control
-              avatarManager.setInteraction(true);
               addToast("Full Body Mode: Animation Frozen for Tracking", "info");
-          } else {
-              avatarManager.setInteraction(false);
           }
       }
   }, [addToast, isActive]);

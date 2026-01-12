@@ -310,9 +310,8 @@ export class MotionCaptureManager {
           }
       });
 
-      // 3. Smooth Root Position (Full Body & Face Mode)
-      // We allow position updates in Face mode to support leaning/ducking
-      if (this.targetRootPosition) {
+      // 3. Smooth Root Position (Full Body Only)
+      if (this.mode === 'full' && this.targetRootPosition) {
           const hips = this.vrm.humanoid.getNormalizedBoneNode('hips');
           if (hips) {
              const smoothedPos = this.rootPositionFilter.filter(

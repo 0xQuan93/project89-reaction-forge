@@ -1,7 +1,7 @@
 {
   "name": "poselab",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "WebGL-powered VRM pose and reaction generator for Project 89",
   "author": "Project 89 Development Team",
   "license": "MIT",

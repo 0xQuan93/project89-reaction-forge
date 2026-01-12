@@ -2,6 +2,30 @@
 
 All notable changes to the Project 89 Reaction Forge will be documented in this file.
 
+## [1.2.1] - 2026-01-12
+
+### 🚀 New Features
+- **Batch Export Tool**: 
+  - Integrated a "Batch Export All Poses" button in the Pose Lab Save tab.
+  - Automatically retargets all 14+ system animations to your current VRM avatar in one click.
+  - Generates updated JSON pose files instantly.
+- **Expanded Pose Library**:
+  - Added 9 new reaction presets: **Defeat, Focus, Rope Climb, Climb Top, Thumbs Up, Offensive Idle, Waking, Treading Water, Cheering**.
+  - Refreshed animations for **Wave** and **Point** to fix jankiness.
+- **Audio Recording**:
+  - Video exports now capture microphone audio if available (perfect for voiceovers).
+
+### 🐛 Bug Fixes & Improvements
+- **Motion Capture Reliability**:
+  - Fixed an issue where "Upper Body" mode would incorrectly allow hip translation, looking like full body mode.
+  - Fixed "Upper Body" / "Full Body" toggle reverting to default when switching tabs.
+  - Fixed Green Screen toggle resetting the background to default instead of the previous choice.
+- **UI Polish**:
+  - Updated recording button style and position.
+  - Added Phosphor icons to new batch tools.
+
+---
+
 ## [1.1.0] - 2025-12-18
 
 ### 🌟 Major Improvements

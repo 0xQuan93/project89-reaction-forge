@@ -9,11 +9,13 @@ interface ReactionState {
   animationMode: AnimationMode;
   liveModeEnabled: boolean;
   liveControlsEnabled: boolean;
+  mocapMode: 'full' | 'face';
   setNameInput: (value: string) => void;
   setAvatarReady: (ready: boolean) => void;
   setAnimationMode: (mode: AnimationMode) => void;
   setLiveModeEnabled: (enabled: boolean) => void;
   setLiveControlsEnabled: (enabled: boolean) => void;
+  setMocapMode: (mode: 'full' | 'face') => void;
   applyName: () => ReactionPreset;
   randomize: () => ReactionPreset;
   setPresetById: (id: string) => ReactionPreset | undefined;
@@ -26,11 +28,13 @@ export const useReactionStore = create<ReactionState>((set, get) => ({
   animationMode: 'loop',
   liveModeEnabled: false,
   liveControlsEnabled: true,
+  mocapMode: 'full',
   setNameInput: (value) => set({ nameInput: value }),
   setAvatarReady: (ready) => set({ isAvatarReady: ready }),
   setAnimationMode: (mode) => set({ animationMode: mode }),
   setLiveModeEnabled: (enabled) => set({ liveModeEnabled: enabled }),
   setLiveControlsEnabled: (enabled) => set({ liveControlsEnabled: enabled }),
+  setMocapMode: (mode) => set({ mocapMode: mode }),
   applyName: () => {
     const preset = pickPresetForName(get().nameInput);
     set({ activePreset: preset });

@@ -36,6 +36,7 @@
 - **Full Expression Control**: Blendshape editing for facial expressions.
 - **Retargeting Engine**: Import Mixamo FBX animations and retarget to VRM.
 - **Project Persistence**: Save and load your entire workspace (`.pose` files).
+- **Batch Export**: One-click regeneration of all pose JSONs using your custom avatar.
 - **Live2D Support**: Load Live2D models and adjust expressions.
 
 ### 🚀 **Production Ready**

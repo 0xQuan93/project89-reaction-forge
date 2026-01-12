@@ -10,6 +10,15 @@ import agentClapping from './agent-clapping.json';
 import sillyAgent from './silly-agent.json';
 import simpleWave from './simple-wave.json';
 import point from './point.json';
+import defeat from './defeat.json';
+import focus from './focus.json';
+import ropeClimb from './rope-climb.json';
+import climbTop from './climb-top.json';
+import thumbsUp from './thumbs-up.json';
+import offensiveIdle from './offensive-idle.json';
+import waking from './waking.json';
+import treadingWater from './treading-water.json';
+import cheering from './cheering.json';
 import type { PoseId } from '../types/reactions';
 import type { VRMPose } from '@pixiv/three-vrm';
 
@@ -30,17 +39,26 @@ export type PoseDefinition = {
 };
 
 const poseLibrary: Record<PoseId, PoseDefinition> = {
-  'dawn-runner': dawnRunner as PoseDefinition,
-  'sunset-call': sunsetCall as PoseDefinition,
-  'cipher-whisper': cipherWhisper as PoseDefinition,
-  'nebula-drift': nebulaDrift as PoseDefinition,
-  'signal-reverie': signalReverie as PoseDefinition,
-  'agent-taunt': agentTaunt as PoseDefinition,
-  'agent-dance': agentDance as PoseDefinition,
-  'agent-clapping': agentClapping as PoseDefinition,
-  'silly-agent': sillyAgent as PoseDefinition,
-  'simple-wave': simpleWave as PoseDefinition,
+  'dawn-runner': dawnRunner as unknown as PoseDefinition,
+  'sunset-call': sunsetCall as unknown as PoseDefinition,
+  'cipher-whisper': cipherWhisper as unknown as PoseDefinition,
+  'nebula-drift': nebulaDrift as unknown as PoseDefinition,
+  'signal-reverie': signalReverie as unknown as PoseDefinition,
+  'agent-taunt': agentTaunt as unknown as PoseDefinition,
+  'agent-dance': agentDance as unknown as PoseDefinition,
+  'agent-clapping': agentClapping as unknown as PoseDefinition,
+  'silly-agent': sillyAgent as unknown as PoseDefinition,
+  'simple-wave': simpleWave as unknown as PoseDefinition,
   'point': point as unknown as PoseDefinition,
+  'defeat': defeat as unknown as PoseDefinition,
+  'focus': focus as unknown as PoseDefinition,
+  'rope-climb': ropeClimb as unknown as PoseDefinition,
+  'climb-top': climbTop as unknown as PoseDefinition,
+  'thumbs-up': thumbsUp as unknown as PoseDefinition,
+  'offensive-idle': offensiveIdle as unknown as PoseDefinition,
+  'waking': waking as unknown as PoseDefinition,
+  'treading-water': treadingWater as unknown as PoseDefinition,
+  'cheering': cheering as unknown as PoseDefinition,
 };
 
 /**
