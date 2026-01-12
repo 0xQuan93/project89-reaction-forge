@@ -27,7 +27,7 @@ export const getDiscordRedirectUri = () => {
     return configuredRedirect;
   }
 
-  return window.location.origin + window.location.pathname;
+  return `${window.location.origin}${window.location.pathname}${window.location.search}`;
 };
 
 export const buildDiscordOAuthUrl = () => {
