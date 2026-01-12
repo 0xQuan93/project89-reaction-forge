@@ -214,10 +214,16 @@ export class MotionCaptureManager {
 
   stop() {
     if (this.camera) {
-        const stream = this.videoElement.srcObject as MediaStream;
+        if (typeof (this.camera as any).stop === 'function') {
+            (this.camera as any).stop();
+        }
+
+        const stream = this.videoElement.srcObject as MediaStream | null;
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
+        this.videoElement.srcObject = null;
+        this.videoElement.pause();
         this.camera = undefined;
     }
     

@@ -524,16 +524,14 @@ export function MocapTab() {
                 </div>
             )}
 
-            {isActive && (
-                <button
-                    className={`secondary full-width ${isSelfieMode ? 'active' : ''}`}
-                    onClick={toggleSelfieMode}
-                    style={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                    title="Follow head motion with the camera"
-                >
-                    <UserFocus size={16} weight="duotone" /> Selfie Mode
-                </button>
-            )}
+            <button
+                className={`secondary full-width ${isSelfieMode ? 'active' : ''}`}
+                onClick={toggleSelfieMode}
+                style={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                title="Follow head motion with the camera"
+            >
+                <UserFocus size={16} weight="duotone" /> Selfie Mode
+            </button>
 
             {!isActive && (
                 <button
