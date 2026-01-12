@@ -5,7 +5,6 @@ import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
 import { motionEngine } from '../poses/motionEngine';
 import { sceneManager } from '../three/sceneManager';
-// import { avatarManager } from '../three/avatarManager';
 import { OneEuroFilter, OneEuroFilterQuat, OneEuroFilterVec3 } from './OneEuroFilter';
 
 // ======================
@@ -237,9 +236,11 @@ export class MotionCaptureManager {
   
   private startUpdateLoop() {
       // Use SceneManager's tick loop to ensure synchronization with rendering
+      // Priority 100 ensures we run BEFORE AvatarManager (which is default 0)
+      // This guarantees: 1. Set Bones -> 2. Physics Update (AvatarManager) -> 3. Render
       this.tickDispose = sceneManager.registerTick((delta) => {
           this.updateFrame(delta);
-      });
+      }, 100);
   }
   
   private stopUpdateLoop() {

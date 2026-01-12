@@ -61,7 +61,7 @@ class SceneManager {
   private scene?: THREE.Scene;
   private controls?: OrbitControls;
   private animationFrameId?: number;
-  private readonly tickHandlers = new Set<TickHandler>();
+  private readonly tickHandlers = new Map<number, Set<TickHandler>>();
   private readonly clock = new THREE.Clock();
   private canvas?: HTMLCanvasElement;
   private readonly box = new THREE.Box3();
@@ -205,7 +205,12 @@ class SceneManager {
     const loop = () => {
       const delta = this.clock.getDelta();
       this.controls?.update();
-      this.tickHandlers.forEach((handler) => handler(delta));
+      
+      // Execute tick handlers in order of priority (higher first)
+      const sortedPriorities = Array.from(this.tickHandlers.keys()).sort((a, b) => b - a);
+      sortedPriorities.forEach(priority => {
+          this.tickHandlers.get(priority)?.forEach(handler => handler(delta));
+      });
 
       if (this.followTarget && this.camera) {
         this.followTarget.getWorldPosition(this.followTargetPosition);
@@ -382,9 +387,21 @@ class SceneManager {
     }
   }
 
-  registerTick(handler: TickHandler) {
-    this.tickHandlers.add(handler);
-    return () => this.tickHandlers.delete(handler);
+  registerTick(handler: TickHandler, priority = 0) {
+    if (!this.tickHandlers.has(priority)) {
+        this.tickHandlers.set(priority, new Set());
+    }
+    this.tickHandlers.get(priority)!.add(handler);
+    
+    return () => {
+        const set = this.tickHandlers.get(priority);
+        if (set) {
+            set.delete(handler);
+            if (set.size === 0) {
+                this.tickHandlers.delete(priority);
+            }
+        }
+    };
   }
 
   getScene() {
@@ -945,7 +962,7 @@ class SceneManager {
     }
     if (this.animationFrameId) window.cancelAnimationFrame(this.animationFrameId);
     window.removeEventListener('resize', this.handleResize);
-    this.tickHandlers.clear();
+      this.tickHandlers.clear();
     
     // Dispose visual managers
     lightingManager.dispose();

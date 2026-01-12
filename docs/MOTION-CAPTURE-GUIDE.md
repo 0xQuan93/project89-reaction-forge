@@ -1,24 +1,29 @@
-# 🎥 Motion Capture Guide (v3.0 - System Animator Parity)
+# 🎥 Motion Capture Guide (v3.1 - System Animator Parity)
 
 > "Motion is the language of the soul, translated into digital form."
 
-The **Motion Capture** system has been radically upgraded in version 3.0 to match the robustness of *SystemAnimatorOnline*. We have rebuilt the core loop to ensure physics synchronization and added professional-grade adaptive smoothing.
+The **Motion Capture** system has been radically upgraded in version 3.1 to match the robustness of *SystemAnimatorOnline*. We have rebuilt the core loop to ensure physics synchronization and added professional-grade adaptive smoothing using the **OneEuroFilter**.
 
 ---
 
-## ✨ Major Upgrades in v3.0
+## ✨ Major Upgrades in v3.1
 
-### 1. 🧠 Adaptive Smoothing Engine (The "Sticky/Snappy" Feel)
-We have replaced the old static smoothing with a dynamic **Adaptive Velocity Filter**.
-- **When you are still**: The system locks your avatar in place (Smoothing: 95%). No more jittery hands or shaking heads while idle.
-- **When you move**: The system instantly drops smoothing to track fast movements (Smoothing: 40%).
+### 1. 🧠 Adaptive Smoothing (OneEuroFilter)
+We have replaced simple Lerp with the **OneEuroFilter** (1€ Filter), a standard in academic and professional motion capture.
+- **Problem**: Simple smoothing is either too jittery (low smoothing) or too laggy (high smoothing).
+- **Solution**: The OneEuroFilter adapts its cutoff frequency based on velocity.
+  - **When still**: It lowers the cutoff frequency (heavy smoothing) to eliminate "jitter" and "webcam breathing".
+  - **When moving**: It raises the cutoff frequency (light smoothing) to capture fast movements with near-zero latency.
 - **Result**: You get the precision of raw tracking for action, with the stability of a statue for stillness.
 
-### 2. 🧶 Physics Rail Synchronization
-Previously, the webcam loop ran independently of the 3D rendering loop, causing hair and clothes to "lag" or vibrate.
-- **New Architecture**: The motion capture system now rides on the main `SceneManager` "Tick" loop.
-- **Benefit**: Every bone movement is perfectly synchronized with the physics engine (SpringBone).
-- **Visuals**: Hair sways naturally; clothes react instantly to your body.
+### 2. 🧶 Physics Rail Synchronization (Priority Tick)
+Previously, physics often updated *before* bones moved, causing hair and clothes to "lag" or vibrate.
+- **New Architecture**: The motion capture system now runs on a **High Priority Tick** within the `SceneManager`.
+- **Order of Execution**:
+  1. **Mocap Tick (Priority 100)**: Sets bone rotations from webcam data.
+  2. **Avatar Tick (Priority 0)**: Updates `VRM` and physics (SpringBone) based on the *new* bone positions.
+  3. **Render**: Draws the frame.
+- **Benefit**: Every bone movement is perfectly synchronized with the physics engine.
 
 ### 3. 👓 WebXR / AR Mode
 You can now bring your avatar into the real world.
@@ -44,35 +49,31 @@ You can now bring your avatar into the real world.
 
 | Issue | Solution |
 |-------|----------|
-| **Jittery Hands** | The new Adaptive Engine handles this. If still jittery, improve lighting. |
-| **Physics Lag** | If hair looks "floaty", check your frame rate. The system expects >30fps. |
+| **Jittery Hands** | The OneEuroFilter handles this. If still jittery, improve lighting. |
+| **Physics Lag** | The new Priority Tick system should eliminate this. Ensure FPS > 30. |
 | **AR Button Missing** | Only appears on WebXR-compatible browsers (Chrome Android, Quest Browser). |
 
 ---
 
-## 🔧 Technical Architecture (The "Rail" System)
-
-For developers, the system has moved from a `requestAnimationFrame` loop to a synchronized `SceneManager.registerTick` pattern.
+## 🔧 Technical Architecture
 
 ### The Update Loop
 1. **MediaPipe** captures landmarks (async).
 2. **Kalidokit** solves the pose.
 3. **MotionCaptureManager** calculates target rotations.
-4. **SceneManager** calls `tick(delta)`.
-5. **MotionCaptureManager** updates bones using `delta` time.
-6. **AvatarManager** updates Physics/SpringBones.
-7. **Renderer** draws the frame.
+4. **SceneManager** calls `tick(delta)` handlers in priority order.
+   - **Priority 100**: `MotionCaptureManager` applies smooth rotations to bones.
+   - **Priority 0**: `AvatarManager` updates Physics/SpringBones.
+5. **Renderer** draws the frame.
 
-This ensures `Bone Update` -> `Physics Update` -> `Render` always happens in that exact order, every frame.
-
-### Adaptive Lerp Formula
-```typescript
-// Slower movement = Higher smoothing (Low Lerp)
-// Faster movement = Lower smoothing (High Lerp)
-lerp = map(velocity, 0, max_speed, 0.05, 0.4);
-```
+### OneEuroFilter Configuration
+We use specific tuning for different body parts:
+- **Body**: `minCutoff: 1.0`, `beta: 0.5` (Balanced)
+- **Eyes**: `minCutoff: 2.0` (More responsive)
+- **Head**: `minCutoff: 0.5` (More stable)
 
 ### Files
-- `src/utils/motionCapture.ts`: Core logic and adaptive engine.
+- `src/utils/OneEuroFilter.ts`: The adaptive filter implementation.
+- `src/utils/motionCapture.ts`: Core logic and filter application.
 - `src/utils/webXRManager.ts`: AR session handling.
-- `src/three/sceneManager.ts`: Main render loop and XR support.
+- `src/three/sceneManager.ts`: Priority-based render loop.

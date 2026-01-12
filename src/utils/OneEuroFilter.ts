@@ -67,15 +67,14 @@ export class OneEuroFilter {
     this.dx = new LowPassFilter(this.alpha(dCutoff));
   }
 
-  private alpha(cutoff: number): number {
-    const te = 1.0 / 60.0; // Assume 60fps initially
+  private alpha(cutoff: number, te: number): number {
     const tau = 1.0 / (2 * Math.PI * cutoff);
     return 1.0 / (1.0 + tau / te);
   }
 
   reset() {
-      this.x = new LowPassFilter(this.alpha(this.minCutoff));
-      this.dx = new LowPassFilter(this.alpha(this.dCutoff));
+      this.x = new LowPassFilter(this.alpha(this.minCutoff, 1/60));
+      this.dx = new LowPassFilter(this.alpha(this.dCutoff, 1/60));
       this.lastTime = null;
   }
 
@@ -85,13 +84,14 @@ export class OneEuroFilter {
    * @param timestamp Timestamp in seconds (or milliseconds, just be consistent).
    */
   filter(value: number, timestamp: number = -1): number {
+    let te = 1.0 / 60.0;
+    
     if (this.lastTime !== null && timestamp !== -1) {
        // Recalculate alpha based on actual dt if timestamp provided
        const dt = timestamp - this.lastTime;
        // Avoid divide by zero or negative time
        if (dt > 0) {
-           // We re-compute alpha inside the logic effectively by feeding it to the low pass filter
-           // But here we need dynamic alpha based on speed
+           te = dt;
        }
     }
     
@@ -101,16 +101,16 @@ export class OneEuroFilter {
     const prevX = this.x.lastValue();
     // 1. Estimate derivative (velocity)
     // For the first frame, dx is 0
-    const dx = (prevX !== null) ? (value - prevX) * 60 : 0; // Approx velocity assuming 60fps for simplicity or use timestamp
+    const dx = (prevX !== null) ? (value - prevX) / te : 0; 
 
     // 2. Smooth the derivative
-    const edx = this.dx.filter(dx, this.alpha(this.dCutoff));
+    const edx = this.dx.filter(dx, this.alpha(this.dCutoff, te));
 
     // 3. Use smoothed derivative to calculate cutoff frequency
     const cutoff = this.minCutoff + this.beta * Math.abs(edx);
 
     // 4. Filter the signal using this dynamic cutoff
-    return this.x.filter(value, this.alpha(cutoff));
+    return this.x.filter(value, this.alpha(cutoff, te));
   }
 }
 
