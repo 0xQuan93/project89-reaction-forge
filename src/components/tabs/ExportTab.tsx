@@ -8,6 +8,8 @@ import { exportAsGLB } from '../../export/exportGLB';
 import { useToastStore } from '../../state/useToastStore';
 import { postProcessingManager } from '../../three/postProcessingManager';
 import { getPoseLabTimestamp } from '../../utils/exportNaming';
+import { serializeAnimationClip } from '../../poses/animationClipSerializer';
+import { animationManager } from '../../three/animationManager';
 import { 
   Image, 
   FilmStrip, 
@@ -15,7 +17,8 @@ import {
   Monitor, 
   Square, 
   DeviceMobileCamera,
-  Lightbulb
+  Lightbulb,
+  FileJs as FileJson
 } from '@phosphor-icons/react';
 
 interface ExportTabProps {
@@ -27,7 +30,7 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
   const { addToast } = useToastStore();
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-  const [exportFormat, setExportFormat] = useState<'png' | 'webm' | 'glb'>('png');
+  const [exportFormat, setExportFormat] = useState<'png' | 'webm' | 'glb' | 'json'>('png');
   const [resolution, setResolution] = useState<'720p' | '1080p' | 'square'>('720p');
   const [includeLogo, setIncludeLogo] = useState(true);
   const [transparentBg, setTransparentBg] = useState(false);
@@ -269,13 +272,63 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
     }
   };
 
+  const handleExportJSON = async () => {
+    try {
+      setIsExporting(true);
+      const timestamp = getPoseLabTimestamp();
+      const isAnimated = animationManager.isPlaying();
+      
+      let data: any;
+      let filename = `PoseLab_${timestamp}`;
+
+      if (isAnimated) {
+        // Export Animation Clip
+        const action = animationManager.getCurrentAction();
+        if (action) {
+          const clip = action.getClip();
+          data = serializeAnimationClip(clip);
+          filename += `_anim_${clip.name}`;
+        } else {
+            throw new Error('No active animation action found');
+        }
+      } else {
+        // Export Static Pose
+        const pose = avatarManager.captureCurrentPose();
+        data = {
+           type: 'VRMPose',
+           version: '1.0',
+           timestamp,
+           pose
+        };
+        filename += `_pose`;
+      }
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${filename}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      addToast(`✅ ${isAnimated ? 'Animation' : 'Pose'} JSON Exported!`, 'success');
+    } catch (error) {
+       console.error('JSON Export failed:', error);
+       addToast('JSON Export failed', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleExport = () => {
     if (exportFormat === 'png') {
       handleExportPNG();
     } else if (exportFormat === 'webm') {
       handleExportWebM();
-    } else {
+    } else if (exportFormat === 'glb') {
       handleExportGLB();
+    } else {
+      handleExportJSON();
     }
   };
 
@@ -324,6 +377,19 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
               GLB (3D Model + Animation)
             </span>
           </label>
+          <label className="radio-option">
+            <input
+              type="radio"
+              name="format"
+              value="json"
+              checked={exportFormat === 'json'}
+              onChange={(e) => setExportFormat(e.target.value as any)}
+            />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileJson size={16} weight="duotone" />
+              JSON (Pose/Animation Data)
+            </span>
+          </label>
         </div>
       </div>
 
@@ -331,6 +397,8 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
         <h3>Smart Presets</h3>
         {exportFormat === 'glb' ? (
           <p className="muted small">Exports the current avatar mesh with the currently playing animation clip baked in.</p>
+        ) : exportFormat === 'json' ? (
+             <p className="muted small">Exports raw data: <b>VRMPose</b> (if static) or <b>AnimationClip</b> (if playing). Perfect for sharing!</p>
         ) : (
           <>
             <p className="muted small">Quickly set resolution for common platforms</p>
@@ -371,6 +439,8 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
         <h3>Options</h3>
         {exportFormat === 'glb' ? (
            <p className="muted small">GLB export includes standard materials and skeletal animation.</p>
+        ) : exportFormat === 'json' ? (
+           <p className="muted small">JSON files are lightweight text files containing bone rotations and positions.</p>
         ) : (
           <>
             <label className="checkbox-option">

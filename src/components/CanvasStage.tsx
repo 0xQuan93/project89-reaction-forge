@@ -13,7 +13,7 @@ import { useMultiplayerStore } from '../state/useMultiplayerStore';
 import { multiAvatarManager } from '../three/multiAvatarManager';
 import { syncManager } from '../multiplayer/syncManager';
 import { introSequence } from '../intro/IntroSequence';
-import { Warning } from '@phosphor-icons/react';
+import { VideoCamera, StopCircle, Warning } from '@phosphor-icons/react';
 import { useToastStore } from '../state/useToastStore';
 import { getPoseLabTimestamp } from '../utils/exportNaming';
 
@@ -62,6 +62,61 @@ export function CanvasStage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [avatarReady, setAvatarReady] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      // Stop Recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+    } else {
+      // Start Recording
+      const canvas = avatarType === 'live2d' ? live2dManager.getCanvas() : canvasRef.current;
+      if (!canvas) {
+        addToast('No canvas available to record', 'error');
+        return;
+      }
+
+      try {
+        const stream = canvas.captureStream(30); // 30 FPS
+        
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+          ? 'video/webm;codecs=vp9' 
+          : 'video/webm';
+
+        const recorder = new MediaRecorder(stream, { mimeType });
+        
+        chunksRef.current = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunksRef.current.push(e.data);
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `PoseLab_Recording_${getPoseLabTimestamp()}.webm`;
+          a.click();
+          URL.revokeObjectURL(url);
+          addToast('🎬 Video saved!', 'success');
+        };
+
+        recorder.start();
+        mediaRecorderRef.current = recorder;
+        setIsRecording(true);
+        addToast('🔴 Recording started...', 'success');
+      } catch (e) {
+        console.error('Recording failed:', e);
+        addToast('Failed to start recording', 'error');
+        setIsRecording(false);
+      }
+    }
+  };
 
   const isEditableTarget = (target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false;
@@ -366,6 +421,52 @@ export function CanvasStage() {
           }}
         />
       )}
+
+      {/* Recording Button (Kawaii Style) */}
+      <button
+        onClick={handleToggleRecording}
+        title={isRecording ? "Stop Recording" : "Record Video"}
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 50,
+          width: '50px',
+          height: '50px',
+          borderRadius: '50%',
+          border: 'none',
+          background: isRecording ? 'rgba(255, 68, 68, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          color: 'white',
+          boxShadow: isRecording 
+            ? '0 0 15px #ff4444, 0 0 5px #ff4444' 
+            : '0 4px 6px rgba(0,0,0,0.3)',
+          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          transform: isRecording ? 'scale(1.1)' : 'scale(1)',
+        }}
+        onMouseEnter={(e) => {
+          if (!isRecording) {
+            e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
+            e.currentTarget.style.background = 'rgba(255, 68, 68, 0.6)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isRecording) {
+            e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.5)';
+          }
+        }}
+      >
+        {isRecording ? (
+          <StopCircle size={32} weight="fill" />
+        ) : (
+          <VideoCamera size={28} weight="fill" />
+        )}
+      </button>
     </div>
   );
 }
