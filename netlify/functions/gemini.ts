@@ -16,7 +16,7 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-pro-latest';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
 // Rate limiting (simple in-memory, resets on cold start)
@@ -194,10 +194,21 @@ async function handleChat(
 async function handleGenerate(prompt: string) {
   // For pose generation, use a specific system prompt
   const systemPrompt = `You are a VRM pose generator for 3D avatars. 
-Generate ONLY valid JSON with bone rotations in degrees. 
-Use standard VRM humanoid bone names like: hips, spine, chest, neck, head, 
-leftUpperArm, leftLowerArm, leftHand, rightUpperArm, rightLowerArm, rightHand, etc.
-Output format: { "boneName": { "x": degrees, "y": degrees, "z": degrees }, ... }`;
+Generate ONLY valid JSON with bone rotations in degrees, expressions, background, and scene rotation. 
+
+Output format:
+{
+  "vrmPose": {
+    "boneName": { "rotation": [x, y, z], "position": [x, y, z] }
+  },
+  "expressions": { "joy": 0.5 },
+  "background": "midnight-circuit",
+  "sceneRotation": { "y": 180 }
+}
+
+Bone names: hips, spine, chest, neck, head, leftUpperArm, leftLowerArm, leftHand, rightUpperArm, rightLowerArm, rightHand, etc.
+Backgrounds: midnight-circuit, protocol-sunset, green-loom-matrix, neural-grid, cyber-waves, signal-breach, quantum-field, protocol-dawn, green-screen.
+`;
 
   return handleChat(prompt, [], systemPrompt);
 }

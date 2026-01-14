@@ -1,5 +1,8 @@
 # API Key Security Guide
 
+> [!NOTE]
+> **Feature Status:** AI-driven features (AIAgent, AI Pose Generator) are currently disabled in the public UI. This documentation is preserved for internal scaffolding and future development.
+
 PoseLab uses Google's Gemini API for AI features. This guide explains how to securely configure your API key.
 
 ## Security Options (Best to Worst)

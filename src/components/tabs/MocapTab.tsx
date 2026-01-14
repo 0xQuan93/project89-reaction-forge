@@ -11,6 +11,7 @@ import { CalibrationWizard } from '../CalibrationWizard';
 import { sceneManager } from '../../three/sceneManager';
 import { webXRManager } from '../../utils/webXRManager';
 import { vmcInputManager } from '../../utils/vmcInput';
+import { setMocapManager } from '../../utils/mocapInstance';
 import { 
   VideoCamera, 
   Person, 
@@ -76,6 +77,7 @@ export function MocapTab() {
     if (videoRef.current && !managerRef.current) {
         managerRef.current = new MotionCaptureManager(videoRef.current);
         managerRef.current.setMode(mocapMode);
+        setMocapManager(managerRef.current);
     }
     
     return () => {

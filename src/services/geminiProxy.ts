@@ -16,7 +16,7 @@
 // Vercel functions are at /api/[name]
 const PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL || '/.netlify/functions/gemini';
 const DIRECT_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const DEFAULT_MODEL = 'gemini-pro-latest';
+const DEFAULT_MODEL = 'gemini-1.5-flash';
 
 export type GeminiMode = 'proxy' | 'direct';
 

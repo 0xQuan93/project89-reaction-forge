@@ -40,10 +40,6 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '8px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Robot size={18} weight="duotone" style={{ color: 'var(--accent)' }} />
-              <span><strong>AI Avatar Agent:</strong> Chat-driven posing & expressions via Gemini</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Users size={18} weight="duotone" style={{ color: 'var(--accent)' }} />
               <span><strong>Multiplayer Co-op:</strong> Real-time P2P sessions with WebRTC</span>
             </li>

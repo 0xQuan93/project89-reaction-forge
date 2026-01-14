@@ -26,7 +26,7 @@ export function AIGeneratorTab() {
   const [generatedAnimation, setGeneratedAnimation] = useState<{ data: any; loop: boolean } | null>(null);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [showModels, setShowModels] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('gemini-pro');
+  const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
   const [customModelInput, setCustomModelInput] = useState('');
   const [useLimits, setUseLimits] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -125,8 +125,15 @@ export function AIGeneratorTab() {
            await avatarManager.applyRawPose(result, isLoop ? 'loop' : 'once'); // Play animation
         } else if (result.vrmPose) {
            setGeneratedPose(result.vrmPose);
-           await avatarManager.applyRawPose({ vrmPose: result.vrmPose, expressions: result.expressions }, 'static');
+           await avatarManager.applyRawPose({ vrmPose: result.vrmPose, expressions: result.expressions, sceneRotation: result.sceneRotation }, 'static');
         }
+
+        // Apply background if returned
+        if ((result as any).background) {
+           await (await import('../../three/sceneManager')).sceneManager.setBackground((result as any).background);
+           addToast(`AI set background to: ${(result as any).background}`, 'info');
+        }
+
         setRawResponse(result.rawJson || '');
       } else {
         throw new Error('Invalid response format from AI');
@@ -280,9 +287,9 @@ export function AIGeneratorTab() {
               onChange={handleModelChange}
               style={{ flex: 1, fontSize: '0.9em' }}
             >
-              <option value="gemini-pro">gemini-pro (Default)</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash (Default)</option>
               <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+              <option value="gemini-pro">gemini-pro-latest</option>
               {availableModels.map(m => (
                  !['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'].includes(m) && 
                  <option key={m} value={m}>{m}</option>

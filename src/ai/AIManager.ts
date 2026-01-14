@@ -111,6 +111,15 @@ class AIManager {
     [REACT: excitement] - Celebrate + excited
     [REACT: success] - Thumbsup + excited
 
+    ### Environment & Scene (NEW):
+    [BACKGROUND: id] - Change background (e.g., midnight-circuit, green-screen, lush-forest)
+    [SCENE_ROTATION: degrees] - Rotate the avatar (0-360, 180 is front)
+    [EXPORT: png|webm] - Take a photo or record a video
+    [VMC: connect|disconnect] - Control the VMC bridge
+    [LOOK_AT_USER] - Capture webcam data and interpret your real-world pose/expression (Visual Awareness)
+    [LIGHTING: preset_id] - Change lighting (presets: studio, dramatic, soft, neon, sunset, moonlight)
+    [EFFECTS: preset_id] - Change visual effects (presets: cinematic, vibrant, noir, dreamy, retro, none)
+
     ## ABOUT POSELAB
     PoseLab is a browser-based VRM avatar studio with:
     - Multiplayer co-op sessions & voice chat
@@ -118,6 +127,7 @@ class AIManager {
     - Voice lip sync
     - Post-processing effects (bloom, contrast, filters)
     - Export to PNG/WebM/GLB
+    - Backgrounds: midnight-circuit, protocol-sunset, green-loom-matrix, neural-grid, cyber-waves, signal-breach, quantum-field, protocol-dawn, green-screen, cyber-alley, lush-forest, volcano, deep-sea, glass-platform, hacker-room, industrial, rooftop-garden, shinto-shrine
     
     Shortcuts: 'P' = screenshot, 'Space' = play/pause, 'Cmd+K' = command palette
 
@@ -146,7 +156,7 @@ class AIManager {
         this.useProxy = false;
         this.apiKey = apiKey;
         this.genAI = new GoogleGenerativeAI(this.apiKey);
-        this.model = this.genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+        this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         geminiService.initialize(this.apiKey);
         this.startChatSession();
         console.log("🧠 AI Brain Initialized (Direct API)");
@@ -204,7 +214,7 @@ class AIManager {
         }
 
         // List of models to try in order of preference/reliability
-        const modelsToTry = ["gemini-pro-latest", "gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
+        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-latest", "gemini-pro"];
         let lastError = null;
         let success = false;
 
@@ -330,12 +340,21 @@ class AIManager {
                 console.warn('[AIManager] Gemini service not ready for pose generation');
             } else {
                 const result = await geminiService.generatePose(description);
-                if (result && result.vrmPose) {
-                    await avatarManager.applyRawPose({
-                        vrmPose: result.vrmPose,
-                        sceneRotation: result.sceneRotation
-                    }, 'static');
-                    console.log("[AIManager] ✅ Generated pose applied successfully");
+                if (result) {
+                    // Apply generated pose
+                    if (result.vrmPose) {
+                        await avatarManager.applyRawPose({
+                            vrmPose: result.vrmPose,
+                            sceneRotation: result.sceneRotation
+                        }, 'static');
+                    }
+                    
+                    // Apply generated background if provided
+                    if ((result as any).background) {
+                        await sceneManager.setBackground((result as any).background);
+                    }
+                    
+                    console.log("[AIManager] ✅ Generated pose/scene applied successfully");
                     actionTaken = true;
                 }
             }
@@ -343,6 +362,101 @@ class AIManager {
             console.error("[AIManager] Failed to generate pose:", e);
         }
         useAIStore.getState().setThought(null);
+    }
+
+    // 5b. Check for Background command
+    const bgMatch = response.match(/\[BACKGROUND:\s*(.*?)\]/i);
+    if (bgMatch && bgMatch[1]) {
+        const bgId = bgMatch[1].trim();
+        console.log(`[AIManager] Changing background to: ${bgId}`);
+        await sceneManager.setBackground(bgId);
+        actionTaken = true;
+    }
+
+    // 5c. Check for Scene Rotation command
+    const rotMatch = response.match(/\[SCENE_ROTATION:\s*(\d+)\]/i);
+    if (rotMatch && rotMatch[1]) {
+        const deg = parseInt(rotMatch[1]);
+        console.log(`[AIManager] Rotating scene to: ${deg}deg`);
+        const vrm = avatarManager.getVRM();
+        if (vrm) {
+            vrm.scene.rotation.y = THREE.MathUtils.degToRad(deg);
+            actionTaken = true;
+        }
+    }
+
+    // 5d. Check for Export command
+    const exportMatch = response.match(/\[EXPORT:\s*(\w+)\]/i);
+    if (exportMatch && exportMatch[1]) {
+        const type = exportMatch[1].toLowerCase();
+        console.log(`[AIManager] Triggering export: ${type}`);
+        // We'll use the sceneManager capture for PNG
+        if (type === 'png' || type === 'photo') {
+            const dataUrl = await sceneManager.captureSnapshot();
+            if (dataUrl) {
+                const link = document.createElement('a');
+                link.download = `poselab-ai-snapshot-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+                actionTaken = true;
+            }
+        }
+    }
+
+    // 5e. Check for VMC command
+    const vmcMatch = response.match(/\[VMC:\s*(\w+)\]/i);
+    if (vmcMatch && vmcMatch[1]) {
+        const cmd = vmcMatch[1].toLowerCase();
+        console.log(`[AIManager] VMC command: ${cmd}`);
+        const { setVmcEnabled } = (await import('../state/useReactionStore')).useReactionStore.getState();
+        if (cmd === 'connect' || cmd === 'on') {
+            setVmcEnabled(true);
+            actionTaken = true;
+        } else if (cmd === 'disconnect' || cmd === 'off') {
+            setVmcEnabled(false);
+            actionTaken = true;
+        }
+    }
+
+    // 5f. Check for Visual Awareness command
+    if (response.includes('[LOOK_AT_USER]')) {
+        console.log(`[AIManager] Visual Awareness triggered: Looking at user...`);
+        useAIStore.getState().setThought("Watching...");
+        try {
+            // This is handled by a singleton or we need access to the manager instance
+            // In PoseLab, we usually have a ref in a component, but let's see if we can find it globally
+            // For now, let's assume we can trigger it via a message or a global access
+            // (Note: In a real app, you'd export the manager instance)
+            const { getMocapManager } = await import('../utils/mocapInstance');
+            const manager = getMocapManager();
+            if (manager) {
+                await manager.aiInterpret("The user wants you to look at them and interpret their state.");
+                actionTaken = true;
+            }
+        } catch (e) {
+            console.error("[AIManager] Failed to look at user:", e);
+        }
+        useAIStore.getState().setThought(null);
+    }
+
+    // 5g. Check for Lighting command
+    const lightMatch = response.match(/\[LIGHTING:\s*(\w+)\]/i);
+    if (lightMatch && lightMatch[1]) {
+        const presetId = lightMatch[1].toLowerCase();
+        console.log(`[AIManager] Changing lighting to: ${presetId}`);
+        const { lightingManager } = await import('../three/lightingManager');
+        lightingManager.applyPreset(presetId);
+        actionTaken = true;
+    }
+
+    // 5h. Check for Effects command
+    const effectMatch = response.match(/\[EFFECTS:\s*(\w+)\]/i);
+    if (effectMatch && effectMatch[1]) {
+        const presetId = effectMatch[1].toLowerCase();
+        console.log(`[AIManager] Changing effects to: ${presetId}`);
+        const { postProcessingManager } = await import('../three/postProcessingManager');
+        postProcessingManager.applyPreset(presetId);
+        actionTaken = true;
     }
 
     // 6. Check for Preset Pose commands

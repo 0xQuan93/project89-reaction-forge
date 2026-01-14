@@ -577,6 +577,50 @@ export class MotionCaptureManager {
     this.shouldCalibrateFace = true;
   }
 
+  /**
+   * Captures a still frame from the webcam and uses AI to "Interpret" the pose.
+   * This acts as an "Under the Hood" corrector/enhancer for the vision data.
+   */
+  async aiInterpret(prompt?: string) {
+      if (!this.isTracking || !this.videoElement) {
+          console.warn('[MotionCaptureManager] Cannot AI interpret: Tracking not active');
+          return;
+      }
+
+      try {
+          const frame = this.captureWebcamFrame();
+          if (!frame) return;
+
+          const { geminiService } = await import('../services/gemini');
+          const result = await geminiService.interpretWebcam(frame, prompt);
+          
+          if (result && result.vrmPose) {
+              console.log('[MotionCaptureManager] AI Interpretation applied');
+              // Apply smoothly over 0.5s to avoid a "pop"
+              const { avatarManager } = await import('../three/avatarManager');
+              await avatarManager.applyRawPose({
+                  vrmPose: result.vrmPose,
+                  expressions: result.expressions
+              }, 'static', true);
+          }
+      } catch (error) {
+          console.error('[MotionCaptureManager] AI Interpretation failed:', error);
+      }
+  }
+
+  private captureWebcamFrame(): string | null {
+      if (!this.videoElement || this.videoElement.videoWidth === 0) return null;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = this.videoElement.videoWidth;
+      canvas.height = this.videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      ctx.drawImage(this.videoElement, 0, 0);
+      return canvas.toDataURL('image/jpeg', 0.8);
+  }
+
   private applyPoseRig(rig: any) {
     if (!this.vrm?.humanoid) return;
     const getVRMBoneName = (key: string): string => {

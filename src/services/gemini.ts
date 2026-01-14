@@ -18,6 +18,10 @@ The output MUST be a valid JSON object with the following structure:
   },
   "expressions": {
     "presetName": value // 0.0 to 1.0
+  },
+  "background": "id", // Optional: id from available backgrounds
+  "sceneRotation": {
+    "y": degrees // Optional: Rotate the entire avatar/scene
   }
 }
 
@@ -43,15 +47,19 @@ Supported Expression/BlendShape Names:
 - Application Presets: joy, calm, surprise
 - ARKit (52 keys) if available on model (e.g. jawOpen, mouthSmileLeft, eyeBlinkLeft, browInnerUp, etc.)
 
+Supported Background IDs:
+midnight-circuit, protocol-sunset, green-loom-matrix, neural-grid, cyber-waves, signal-breach, quantum-field, protocol-dawn, green-screen, cyber-alley, lush-forest, volcano, deep-sea, glass-platform, hacker-room, industrial, rooftop-garden, shinto-shrine
+
 IMPORTANT GUIDELINES:
-1. Use Euler Angles in DEGREES (x, y, z). Do NOT use Quaternions.
+1. Use Euler Angles in DEGREES (x, y, z). Do NOT use Quaternions for vrmPose.
 2. The avatar is in a T-Pose by default.
 3. Coordinate System (Right-Handed, Y-Up, -Z Forward):
    - X Axis (Pitch): Positive = Bend Forward/Down. Negative = Bend Backward/Up.
    - Y Axis (Yaw): Positive = Turn Left. Negative = Turn Right.
-   - Z Axis (Roll): Positive = Tilt Left. Negative = Tilt Right.
+   - Z Axis (Roll): Positive = Tilt Left. Negative = Turn Right.
 4. "hips" position is [x, y, z]. Default standing is [0, 0.85, 0].
 5. Ensure the pose is physically possible.
+6. Scene Rotation: Y is typically 180 for front-facing.
 
 BIO-CONSTRAINTS & HEURISTICS (Strictly follow these ranges):
 
@@ -138,32 +146,35 @@ The output MUST be a valid JSON object with the following structure (compatible 
   "duration": 2.0, // Length in seconds
   "tracks": [
     {
-      "name": "boneName.rotation", // OR "hips.position"
-      "type": "quaternion",        // OR "vector" for position
-      "times": [0, 1, 2],          // Keyframe times in seconds
-      "values": [x, y, z, w, ...]  // Flat array of values (4 per quaternion, 3 per vector)
+      "name": "boneName.quaternion", // Use .quaternion for rotations
+      "type": "quaternion",
+      "times": [0, 1, 2],
+      "values": [x, y, z, w, ...]  // 4 per quaternion
+    },
+    {
+      "name": "hips.position",
+      "type": "vector",
+      "times": [0, 1, 2],
+      "values": [x, y, z, ...]     // 3 per position
     }
-  ]
+  ],
+  "expressions": {
+     "name": value // 0 to 1
+  },
+  "background": "id"
 }
 
-Supported bones: SAME AS POSE SYSTEM (hips, spine, rightUpperArm, etc).
-For rotation tracks, use type "quaternion".
-For position tracks, use type "vector" (only for hips).
+Supported bones: hips, spine, chest, head, neck, leftUpperArm, leftLowerArm, rightUpperArm, rightLowerArm, leftUpperLeg, leftLowerLeg, rightUpperLeg, rightLowerLeg, etc.
 
 CRITICAL ANIMATION GUIDELINES:
-1. Interpolation: Use smooth transitions. The "times" array must have at least 3 keyframes (start, middle, end) for simple moves, more for complex ones.
+1. Interpolation: Use smooth transitions. The "times" array must have at least 3-5 keyframes for natural movement.
 2. Natural Motion: 
    - Move multiple bones (e.g., if arm moves, adjust spine/shoulder slightly).
-   - Avoid robotic linear movement.
-   - For "breathing" or "idle", use subtle sine-wave motions on chest/spine.
-3. Looping vs One-Shot:
-   - If the request implies a LOOP (e.g. "dance", "idle", "walk"): Ensure the start values (time=0) and end values (time=duration) are IDENTICAL for all tracks.
-   - If One-Shot (e.g. "jump", "fall"): Start from T-pose or neutral, execute action, and hold or return to neutral.
-4. Timing:
-   - Fast actions (punch): 0.5 - 1.0s.
-   - Slow actions (idle): 2.0 - 4.0s.
-5. Quaternion Math: Ensure quaternions are normalized.
-6. Hips Position: Use "hips.position" to move the entire body (e.g. jumping up/down). Default Y is ~0.85.
+   - Use slight arcs in movement.
+3. Looping:
+   - For LOOPS: Ensure start values (t=0) and end values (t=duration) are IDENTICAL.
+4. Quaternion Math: Quaternions MUST be normalized.
+5. Hips Position: Use "hips.position" to move the entire body. Default Y is ~0.85.
 
 Output raw JSON only.
 `;
@@ -206,7 +217,7 @@ export class GeminiService {
     // Fallback to gemini-pro-latest as strictly requested.
     // We will let the user configure this or we'll detect availability.
     this.model = this.genAI.getGenerativeModel({ 
-      model: 'gemini-pro-latest',
+      model: 'gemini-1.5-flash',
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -223,10 +234,10 @@ export class GeminiService {
       const data = await response.json();
       return data.models
         ?.filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
-        .map((m: any) => m.name.replace('models/', '')) || [];
+        .map((m: any) => m.name.replace('models/', '')) || ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
     } catch (error) {
       console.error('[GeminiService] Failed to list models:', error);
-      return [];
+      return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
     }
   }
 
@@ -446,16 +457,68 @@ export class GeminiService {
       
       console.log('[GeminiService] Raw response:', text);
 
+      return this.parseAiResponse(text, useLimits, isAnimation);
+    } catch (error) {
+      console.error('[GeminiService] Generation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Use Gemini 1.5 Vision to interpret a webcam frame and convert it to a VRM pose.
+   * This is the "Under the Hood" AI interpretation layer.
+   */
+  async interpretWebcam(base64Image: string, prompt = "Interpret the person's pose and expression in this image."): Promise<{ vrmPose?: VRMPose; expressions?: Record<string, number>; rawJson: string } | null> {
+    if (!this.model) {
+      throw new Error('Gemini API not initialized.');
+    }
+
+    try {
+      const visionPrompt = `
+        ${SYSTEM_PROMPT}
+        
+        ADDITIONAL VISION INSTRUCTIONS:
+        You are looking at a webcam frame of a user. 
+        Your goal is to mirror their pose and facial expression as accurately as possible within the VRM skeletal constraints.
+        - If they are leaning, rotate the hips and spine.
+        - If they are smiling, set the "joy" expression.
+        - If their hands are raised, mirror that.
+        
+        USER CONTEXT: ${prompt}
+      `;
+
+      // Format for Gemini 1.5 multimodal
+      const result = await this.model.generateContent([
+        visionPrompt,
+        {
+          inlineData: {
+            data: base64Image.split(',')[1], // Remove data:image/jpeg;base64, prefix
+            mimeType: "image/jpeg"
+          }
+        }
+      ]);
+
+      const text = result.response.text();
+      console.log('[GeminiService] Vision Interpretation:', text);
+      
+      return this.parseAiResponse(text, true, false);
+    } catch (error) {
+      console.error('[GeminiService] Vision interpretation failed:', error);
+      throw error;
+    }
+  }
+
+  private parseAiResponse(text: string, useLimits: boolean, isAnimation: boolean) {
       // Clean up potential markdown code blocks
       const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
       const firstBrace = cleanJson.indexOf('{');
       const lastBrace = cleanJson.lastIndexOf('}');
-      const jsonOnly = cleanJson.substring(firstBrace, lastBrace + 1);
+      if (firstBrace === -1) throw new Error('No JSON found in response');
       
+      const jsonOnly = cleanJson.substring(firstBrace, lastBrace + 1);
       const parsed = JSON.parse(jsonOnly);
       
       if (isAnimation) {
-         // Return animation structure directly
          return { ...parsed, rawJson: text };
       }
       
@@ -463,20 +526,14 @@ export class GeminiService {
       
       if (parsed.vrmPose) {
         if (useLimits) {
-          console.log('[GeminiService] Enforcing skeleton limits...');
           finalPose = this.enforceLimits(parsed.vrmPose);
         } else {
-          console.log('[GeminiService] Converting Euler to Quaternion...');
           finalPose = this.convertEulerToQuaternion(parsed.vrmPose);
         }
         parsed.vrmPose = finalPose;
       }
       
       return { ...parsed, rawJson: text };
-    } catch (error) {
-      console.error('[GeminiService] Generation failed:', error);
-      throw error;
-    }
   }
 }
 

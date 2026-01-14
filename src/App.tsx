@@ -13,7 +13,7 @@ import { projectManager } from './persistence/projectManager';
 import { autosaveManager } from './persistence/autosaveManager';
 import { initAvatarBridge } from './multiplayer/avatarBridge';
 import { ConnectionProgressPanel } from './components/ConnectionProgressPanel';
-import { AIAgentWidget } from './components/AIAgentWidget';
+// import { AIAgentWidget } from './components/AIAgentWidget';
 import { SessionHUD } from './components/SessionHUD';
 
 // import { LobbyPanel } from './components/LobbyPanel';
@@ -123,7 +123,7 @@ function App() {
 
       <ToastHost />
       <ConnectionProgressPanel />
-      <AIAgentWidget />
+      {/* <AIAgentWidget /> */}
       <SessionHUD />
       {/* <LobbyPanel /> */}
     </div>
