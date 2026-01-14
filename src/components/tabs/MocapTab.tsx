@@ -10,6 +10,7 @@ import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToS
 import { CalibrationWizard } from '../CalibrationWizard';
 import { sceneManager } from '../../three/sceneManager';
 import { webXRManager } from '../../utils/webXRManager';
+import { vmcInputManager } from '../../utils/vmcInput';
 import { 
   VideoCamera, 
   Person, 
@@ -33,9 +34,13 @@ export function MocapTab() {
     liveModeEnabled,
     liveControlsEnabled,
     mocapMode,
+    vmcEnabled,
+    vmcWebSocketUrl,
     setLiveModeEnabled,
     setLiveControlsEnabled,
     setMocapMode,
+    setVmcEnabled,
+    setVmcWebSocketUrl,
   } = useReactionStore();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -62,6 +67,8 @@ export function MocapTab() {
   const mocapStartingRef = useRef(false);
   const voiceStartingRef = useRef(false);
   const [arSupported, setArSupported] = useState(false);
+  const [vmcStatus, setVmcStatus] = useState(vmcInputManager.getStatus());
+  const [vmcError, setVmcError] = useState<string | null>(null);
 
   useEffect(() => {
     webXRManager.isSupported().then(setArSupported);
@@ -75,9 +82,49 @@ export function MocapTab() {
         if (managerRef.current) {
             managerRef.current.stop();
         }
+        vmcInputManager.disconnect();
         if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = vmcInputManager.subscribeStatus((status) => {
+      setVmcStatus(status);
+      if (status === 'error') {
+        setVmcError(vmcInputManager.getLastError());
+      } else {
+        setVmcError(null);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!managerRef.current) return;
+    vmcInputManager.setMotionCaptureManager(managerRef.current);
+    if (!vmcEnabled) {
+      vmcInputManager.disconnect();
+      return;
+    }
+    const vrm = avatarManager.getVRM();
+    if (!vrm) {
+      addToast('Load an avatar before enabling VMC input.', 'warning');
+      return;
+    }
+    managerRef.current.setVRM(vrm);
+    vmcInputManager.connect(vmcWebSocketUrl);
+  }, [addToast, vmcEnabled, vmcWebSocketUrl]);
+
+  useEffect(() => {
+    if (vmcStatus === 'connected') {
+      avatarManager.freezeCurrentPose();
+      avatarManager.setInteraction(true);
+      return;
+    }
+    if (!isActive) {
+      avatarManager.setInteraction(false);
+    }
+  }, [vmcStatus, isActive]);
 
   const toggleGreenScreen = () => {
       if (isGreenScreen) {
@@ -549,6 +596,37 @@ export function MocapTab() {
         {isCalibrationActive && <CalibrationWizard manager={managerRef.current} />}
       </div>
       
+      <div className="tab-section">
+        <h3>VMC Input</h3>
+        <p className="muted small">
+          Connect to a local VMC bridge (OSC → WebSocket) to drive the avatar from XR Animator or Warudo.
+        </p>
+
+        <label className="small muted" htmlFor="vmc-url">WebSocket URL</label>
+        <input
+          id="vmc-url"
+          className="full-width"
+          value={vmcWebSocketUrl}
+          onChange={(event) => setVmcWebSocketUrl(event.target.value)}
+          placeholder="ws://localhost:39540"
+          style={{ marginBottom: '10px' }}
+        />
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+          <button
+            className={`primary full-width ${vmcEnabled ? 'secondary' : ''}`}
+            onClick={() => setVmcEnabled(!vmcEnabled)}
+          >
+            {vmcEnabled ? 'Disconnect VMC' : 'Connect VMC'}
+          </button>
+        </div>
+
+        <div className="small muted">
+          Status: <strong>{vmcStatus}</strong>
+          {vmcError && <div className="error-message" style={{ marginTop: '6px' }}>{vmcError}</div>}
+        </div>
+      </div>
+
       <div className="tab-section">
           <h3>Instructions</h3>
           <ul className="small muted" style={{ paddingLeft: '1.2rem' }}>

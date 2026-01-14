@@ -83,6 +83,7 @@ export class MotionCaptureManager {
   private vrm?: VRM;
   private videoElement: HTMLVideoElement;
   private isTracking = false;
+  private updateSources: Set<'camera' | 'vmc'> = new Set();
   
   // Track available blendshapes on the current avatar for fuzzy matching
   private availableBlendshapes: Set<string> = new Set();
@@ -103,6 +104,7 @@ export class MotionCaptureManager {
   private targetRootPosition: THREE.Vector3 | null = null;
   private currentRootPosition: THREE.Vector3 = new THREE.Vector3();
   private tickDispose?: () => void; // Replaces updateLoopId
+  private baseHipsPosition: THREE.Vector3 = new THREE.Vector3(0, 1.0, 0);
 
   // Hand Tracking State
   private lastLeftHandLandmarks2D: HandLandmarks2D = null;
@@ -134,6 +136,10 @@ export class MotionCaptureManager {
 
   setVRM(vrm: VRM) {
     this.vrm = vrm;
+    const hipsNode = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
+    if (hipsNode) {
+      this.baseHipsPosition.copy(hipsNode.position);
+    }
     this.updateAvailableBlendshapes();
   }
 
@@ -206,7 +212,7 @@ export class MotionCaptureManager {
 
         await this.camera.start();
         this.isTracking = true;
-        this.startUpdateLoop();
+        this.startUpdateLoop('camera');
     } catch (e) {
         console.error('Failed to start camera:', e);
         throw e;
@@ -233,10 +239,36 @@ export class MotionCaptureManager {
     // or we could call avatarManager.resetPose();
     
     this.isTracking = false;
-    this.stopUpdateLoop();
+    this.stopUpdateLoop('camera');
   }
   
-  private startUpdateLoop() {
+  startExternalInput() {
+      this.startUpdateLoop('vmc');
+  }
+
+  stopExternalInput() {
+      this.stopUpdateLoop('vmc');
+  }
+
+  applyExternalBoneRotation(boneName: VRMHumanBoneName, rotation: THREE.Quaternion) {
+      this.targetBoneRotations.set(boneName, rotation);
+  }
+
+  applyExternalRootPosition(position: THREE.Vector3) {
+      this.targetRootPosition = position.clone().add(this.baseHipsPosition);
+  }
+
+  applyExternalExpression(name: string, value: number) {
+      if (this.availableBlendshapes.has(name)) {
+          this.targetFaceValues.set(name, value);
+      }
+  }
+
+  private startUpdateLoop(source: 'camera' | 'vmc') {
+      this.updateSources.add(source);
+      if (this.tickDispose) {
+          return;
+      }
       // Use SceneManager's tick loop to ensure synchronization with rendering
       // Priority 100 ensures we run BEFORE AvatarManager (which is default 0)
       // This guarantees: 1. Set Bones -> 2. Physics Update (AvatarManager) -> 3. Render
@@ -245,8 +277,9 @@ export class MotionCaptureManager {
       }, 100);
   }
   
-  private stopUpdateLoop() {
-      if (this.tickDispose) {
+  private stopUpdateLoop(source: 'camera' | 'vmc') {
+      this.updateSources.delete(source);
+      if (this.tickDispose && this.updateSources.size === 0) {
           this.tickDispose();
           this.tickDispose = undefined;
       }
