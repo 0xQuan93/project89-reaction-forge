@@ -1,5 +1,7 @@
+import * as THREE from 'three';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { avatarManager } from "../three/avatarManager";
+import { sceneManager } from "../three/sceneManager";
 import { useAIStore } from "../state/useAIStore";
 import { geminiService } from "../services/gemini";
 import { geminiProxy } from "../services/geminiProxy";
