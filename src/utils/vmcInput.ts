@@ -141,30 +141,57 @@ class VmcInputManager {
     }
   }
 
+  private debugLogCount = 0;
+
+  private hasReceivedRootPos = false;
+
   private applyOscMessage(message: OscMessage) {
     if (!this.motionCaptureManager) return;
     const args = normalizeArgs(message.args);
+
+    // Debug log every 300 messages
+    if (this.debugLogCount++ % 300 === 0) {
+        console.log('[VMC] Received message:', message.address, args.length, 'args');
+    }
+    // Explicitly log bone messages for debugging
+    if (message.address === VMC_BONE_ADDRESS && Math.random() < 0.001) {
+        console.log('[VMC] BONE message received:', args[0]);
+    }
+
     if (message.address === VMC_BONE_ADDRESS) {
       const [name, px, py, pz, qx, qy, qz, qw] = args;
       if (typeof name !== 'string' || [qx, qy, qz, qw].some((v) => typeof v !== 'number')) return;
       const boneName = toVrmBoneName(name);
       if (!boneName) return;
       const rotation = new THREE.Quaternion(qx as number, qy as number, qz as number, qw as number);
+      
+      // VMC coordinate system conversion (Left-Handed to Right-Handed/GL)
+      rotation.x = -rotation.x;
+      rotation.y = -rotation.y; 
+      
       this.motionCaptureManager.applyExternalBoneRotation(boneName, rotation);
-      if (boneName === 'hips' && [px, py, pz].every((v) => typeof v === 'number')) {
-        this.motionCaptureManager.applyExternalRootPosition(new THREE.Vector3(px as number, py as number, pz as number));
+      
+      // Only use Hips position if we haven't received explicit Root position updates
+      // This prevents conflict/jitter where both Root and Hips try to drive the character position
+      if (boneName === 'hips' && !this.hasReceivedRootPos && [px, py, pz].every((v) => typeof v === 'number')) {
+        this.motionCaptureManager.applyExternalRootPosition(new THREE.Vector3(px as number, py as number, -(pz as number)));
       }
       return;
     }
 
     if (message.address === VMC_ROOT_ADDRESS) {
+      this.hasReceivedRootPos = true;
       const [name, px, py, pz, qx, qy, qz, qw] = args;
       if ([px, py, pz].every((v) => typeof v === 'number')) {
-        this.motionCaptureManager.applyExternalRootPosition(new THREE.Vector3(px as number, py as number, pz as number));
+         // Position X, Y, -Z
+        this.motionCaptureManager.applyExternalRootPosition(new THREE.Vector3(px as number, py as number, -(pz as number)));
       }
       if (typeof name === 'string' && [qx, qy, qz, qw].every((v) => typeof v === 'number')) {
         const boneName = toVrmBoneName(name) ?? 'hips';
         const rotation = new THREE.Quaternion(qx as number, qy as number, qz as number, qw as number);
+        // Coordinate conversion
+        rotation.x = -rotation.x;
+        rotation.y = -rotation.y;
         this.motionCaptureManager.applyExternalBoneRotation(boneName, rotation);
       }
       return;

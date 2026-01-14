@@ -149,6 +149,7 @@ export class OneEuroFilterQuat {
     private yF: OneEuroFilter;
     private zF: OneEuroFilter;
     private wF: OneEuroFilter;
+    private lastQ = { x: 0, y: 0, z: 0, w: 1 };
 
     constructor(minCutoff = 1.0, beta = 0.0) {
         this.xF = new OneEuroFilter(minCutoff, beta);
@@ -158,6 +159,17 @@ export class OneEuroFilterQuat {
     }
 
     filter(x: number, y: number, z: number, w: number, timestamp: number = -1) {
+        // Handle Quaternion Double Cover (q and -q are same rotation)
+        // Ensure we are filtering towards the closest representation
+        // If dot product with previous is negative, we are on the "other side" of the sphere
+        // Flip signs to ensure shortest path interpolation
+        if (this.lastQ.x * x + this.lastQ.y * y + this.lastQ.z * z + this.lastQ.w * w < 0) {
+            x = -x;
+            y = -y;
+            z = -z;
+            w = -w;
+        }
+
         const nx = this.xF.filter(x, timestamp);
         const ny = this.yF.filter(y, timestamp);
         const nz = this.zF.filter(z, timestamp);
@@ -165,9 +177,13 @@ export class OneEuroFilterQuat {
         
         // Normalize
         const len = Math.sqrt(nx*nx + ny*ny + nz*nz + nw*nw);
+        let res = { x: 0, y: 0, z: 0, w: 1 };
+        
         if (len > 0) {
-            return { x: nx/len, y: ny/len, z: nz/len, w: nw/len };
+            res = { x: nx/len, y: ny/len, z: nz/len, w: nw/len };
         }
-        return { x: 0, y: 0, z: 0, w: 1 };
+        
+        this.lastQ = res;
+        return res;
     }
 }

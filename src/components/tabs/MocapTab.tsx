@@ -619,6 +619,21 @@ export function MocapTab() {
           >
             {vmcEnabled ? 'Disconnect VMC' : 'Connect VMC'}
           </button>
+          
+          {vmcEnabled && vmcStatus === 'connected' && (
+              <button
+                className="secondary full-width"
+                onClick={() => {
+                    if (managerRef.current) {
+                        managerRef.current.recalibrateVMC();
+                        addToast("Calibrated VMC position to center.", "success");
+                    }
+                }}
+                title="Recalibrate VMC drift (sets current position as center)"
+              >
+                Recalibrate Center
+              </button>
+          )}
         </div>
 
         <div className="small muted">

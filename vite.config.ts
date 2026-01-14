@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { WebSocketServer } from 'ws'
+import { Server as OscServer } from 'node-osc'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -25,6 +27,57 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    {
+      name: 'vmc-bridge',
+      configureServer(server) {
+        try {
+          console.log('[vmc-bridge] Starting WebSocket server on port 39540...')
+          const wss = new WebSocketServer({ port: 39540 })
+          
+          console.log('[vmc-bridge] Starting UDP listener on port 39539...')
+          const oscServer = new OscServer(39539, '0.0.0.0', () => {
+             console.log('[vmc-bridge] UDP listener active on 39539')
+          })
+
+          const handleOscMessage = (msg: any) => {
+              // msg is [address, arg1, arg2...]
+              const address = msg[0];
+              const args = msg.slice(1);
+              const json = JSON.stringify({ address, args });
+              wss.clients.forEach((client) => {
+                  if (client.readyState === 1) { 
+                      client.send(json);
+                  }
+              });
+          };
+
+          oscServer.on('message', (msg) => {
+              handleOscMessage(msg);
+          });
+
+          oscServer.on('bundle', (bundle) => {
+              bundle.elements.forEach((element: any) => {
+                  if (Array.isArray(element)) {
+                      handleOscMessage(element);
+                  } else if (element.elements) {
+                      element.elements.forEach((subElement: any) => {
+                          if (Array.isArray(subElement)) handleOscMessage(subElement);
+                      });
+                  }
+              });
+          });
+
+          // Cleanup when Vite server closes
+          server.httpServer?.on('close', () => {
+              console.log('[vmc-bridge] Closing servers...')
+              wss.close()
+              oscServer.close()
+          })
+        } catch (err) {
+          console.error('[vmc-bridge] Failed to start:', err)
+        }
+      }
+    },
     {
       name: 'pose-export-endpoint',
       configureServer(server) {
