@@ -80,6 +80,10 @@ export function MocapTab() {
         setMocapManager(managerRef.current);
     }
     
+    // cleanup in separate effect
+  }, []); // Run once on mount
+
+  useEffect(() => {
     return () => {
         if (managerRef.current) {
             managerRef.current.stop();
