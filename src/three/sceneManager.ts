@@ -201,9 +201,29 @@ class SceneManager {
     // AvatarManager handles the VRM meshes.
   }
 
-  private startLoop() {
-    const loop = () => {
-      const delta = this.clock.getDelta();
+  private isRunning = true;
+
+  setRunning(running: boolean) {
+    this.isRunning = running;
+    if (running && !this.animationFrameId) {
+      this.clock.start();
+      this.startLoop();
+    } else if (!running && this.animationFrameId) {
+      window.cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+      this.clock.stop();
+    }
+  }
+
+  manualRender(delta: number) {
+    if (this.isRunning) {
+        console.warn('[SceneManager] manualRender called while loop is running. Pausing loop.');
+        this.setRunning(false);
+    }
+    this.processFrame(delta);
+  }
+
+  private processFrame(delta: number) {
       this.controls?.update();
       
       // Execute tick handlers in order of priority (higher first)
@@ -241,7 +261,13 @@ class SceneManager {
       } else {
         this.renderer?.render(this.scene!, this.camera!);
       }
-      
+  }
+
+  private startLoop() {
+    const loop = () => {
+      if (!this.isRunning) return;
+      const delta = this.clock.getDelta();
+      this.processFrame(delta);
       this.animationFrameId = window.requestAnimationFrame(loop);
     };
     this.animationFrameId = window.requestAnimationFrame(loop);

@@ -111,7 +111,19 @@ class PeerManager {
       this.peer.on('error', (err) => {
         clearTimeout(timeout);
         console.error('[PeerManager] Error:', err);
-        store.setError(err.message);
+        
+        // Specific error handling
+        if (err.type === 'peer-unavailable') {
+             store.setError(`Session ${roomId} not found or expired.`);
+        } else if (err.type === 'unavailable-id') {
+             store.setError(`Session ID collision. Please try again.`);
+        } else if (err.type === 'network') {
+             store.setError(`Network error. Please check your connection.`);
+             // Potentially trigger auto-reconnect logic here if appropriate
+        } else {
+             store.setError(err.message);
+        }
+        
         this.notifyError(err);
         reject(err);
       });
@@ -690,8 +702,14 @@ class PeerManager {
   private handleDisconnect() {
     const store = useMultiplayerStore.getState();
     
+    // Check if we are already handling a disconnect or destroyed
+    if (this.isDestroyed) return;
+
+    // Notify listeners
+    this.notifyError(new Error('Disconnected from signaling server'));
+
     // Try to reconnect using PeerJS built-in reconnect first
-    if (!this.isDestroyed && this.peer && this.peer.disconnected) {
+    if (this.peer && this.peer.disconnected) {
       console.log('[PeerManager] Attempting PeerJS reconnect...');
       try {
         this.peer.reconnect();
@@ -725,6 +743,7 @@ class PeerManager {
         
         // Attempt to rejoin
         if (this.lastRole === 'guest' && this.lastRoomId && this.lastDisplayName) {
+          console.log('[PeerManager] Attempting to rejoin session:', this.lastRoomId);
           this.joinSession(this.lastRoomId, this.lastDisplayName)
             .then(() => {
               console.log('[PeerManager] Auto-reconnect successful');
@@ -732,6 +751,9 @@ class PeerManager {
             })
             .catch((err) => {
               console.error('[PeerManager] Auto-reconnect failed:', err);
+              // Force destroy before retrying to ensure clean state
+              try { this.peer?.destroy(); } catch (e) { /* ignore */ }
+              this.peer = null;
               this.handleDisconnect(); // Try again
             });
         } else if (this.lastRole === 'host' && this.lastDisplayName) {

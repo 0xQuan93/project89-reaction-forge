@@ -67,7 +67,7 @@ PoseLab is a browser-based VRM avatar studio that combines posing, real-time mot
 | Format | Capability | Limitation |
 |--------|------------|------------|
 | **PNG** | High-quality snapshot | - |
-| **WebM** | Real-time canvas recording | Frame rate depends on client performance |
+| **WebM** | **Offline Render** (Perfect 60fps) | Slower processing time (rendering frame-by-frame) |
 | **GLB** | 3D model export | - |
 | **JSON** | Pose library export | Internal format only |
 
@@ -99,7 +99,11 @@ PoseLab is a browser-based VRM avatar studio that combines posing, real-time mot
 │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │   │
 │  │  │Environment  │ │MotionCapture│ │  AIManager          │ │   │
 │  │  │Manager      │ │Manager      │ │  (Gemini Service)   │ │   │
-│  │  └─────────────┘ └─────────────┘ └─────────────────────┘ │   │
+│  │  └─────────────┘ └──────┬──────┘ └─────────────────────┘ │   │
+│  │                         │                                │   │
+│  │                  ┌──────▼──────┐                         │   │
+│  │                  │ MocapWorker │ (Web Worker)            │   │
+│  │                  └─────────────┘                         │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
@@ -123,8 +127,8 @@ PoseLab is a browser-based VRM avatar studio that combines posing, real-time mot
 ## 🔮 Future Roadmap
 
 ### Near-Term
-*   **Performance:** Move MediaPipe to Web Worker.
-*   **Video Export:** Implement offline frame-by-frame rendering for smooth 60fps.
+*   **Video Export:** (✅ Done) Implement offline frame-by-frame rendering for smooth 60fps.
+*   **Performance:** (✅ Done) Move MediaPipe to Web Worker.
 *   **Retargeting:** Improved IK solver for non-standard avatars.
 
 ### Long-Term

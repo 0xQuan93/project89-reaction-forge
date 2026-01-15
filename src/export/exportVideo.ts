@@ -4,6 +4,8 @@
  */
 import { useUIStore } from '../state/useUIStore';
 import { live2dManager } from '../live2d/live2dManager';
+import { sceneManager } from '../three/sceneManager';
+import { createVideoFromFrames } from './ffmpegConverter';
 
 export interface ExportOptions {
   duration: number; // Total duration in seconds
@@ -12,6 +14,91 @@ export interface ExportOptions {
   width?: number; // Target width (optional, uses canvas width if not provided)
   height?: number; // Target height (optional, uses canvas height if not provided)
   includeLogo?: boolean;
+}
+
+/**
+ * Convert Base64 DataURL to Blob
+ */
+function dataURLtoBlob(dataurl: string): Blob {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+}
+
+/**
+ * Export canvas animation as Offline Rendered WebM (High Quality, Deterministic)
+ */
+export async function exportOfflineWebM(
+  options: ExportOptions
+): Promise<void> {
+  const fps = options.fps || 60;
+  const duration = options.duration;
+  const totalFrames = Math.ceil(duration * fps);
+  const dt = 1 / fps;
+  
+  console.log('[OfflineExporter] Starting offline render:', { fps, duration, totalFrames });
+  
+  // Pause real-time loop
+  sceneManager.setRunning(false);
+  
+  const frames: Blob[] = [];
+  
+  try {
+    for (let i = 0; i < totalFrames; i++) {
+      // 1. Advance simulation
+      sceneManager.manualRender(dt);
+      
+      // 2. Capture frame
+      // We rely on captureSnapshot to handle compositing (logo, overlays)
+      const dataUrl = await sceneManager.captureSnapshot({
+        width: options.width,
+        height: options.height,
+        includeLogo: options.includeLogo,
+        transparentBackground: false 
+      });
+      
+      if (dataUrl) {
+        frames.push(dataURLtoBlob(dataUrl));
+      }
+      
+      // Progress update (0 - 0.5 for capture phase)
+      options.onProgress?.((i / totalFrames) * 0.5);
+      
+      // Yield to UI to prevent freeze
+      await new Promise(r => setTimeout(r, 0));
+    }
+    
+    console.log('[OfflineExporter] Frames captured. Stitching video...');
+    
+    // 3. Stitch with FFmpeg
+    // Pass a progress callback that maps 0-1 to 0.5-1.0 range
+    const videoBlob = await createVideoFromFrames(frames, fps, (p) => {
+        options.onProgress?.(0.5 + (p * 0.5));
+    });
+    
+    // 4. Download
+    const url = URL.createObjectURL(videoBlob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `recording-${Date.now()}.webm`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    
+    console.log('[OfflineExporter] Export complete.');
+    
+  } catch (error) {
+    console.error('[OfflineExporter] Export failed:', error);
+    throw error;
+  } finally {
+    // Resume real-time loop
+    sceneManager.setRunning(true);
+  }
 }
 
 /**

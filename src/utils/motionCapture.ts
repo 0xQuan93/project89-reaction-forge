@@ -1,13 +1,11 @@
-import { Holistic, type Results } from '@mediapipe/holistic';
 import { Camera } from '@mediapipe/camera_utils';
 import { VRM, VRMHumanBoneName } from '@pixiv/three-vrm';
-import * as Kalidokit from 'kalidokit';
 import * as THREE from 'three';
 import { motionEngine } from '../poses/motionEngine';
 import { sceneManager } from '../three/sceneManager';
 import { OneEuroFilter, OneEuroFilterQuat, OneEuroFilterVec3 } from './OneEuroFilter';
-
 import { live2dManager } from '../live2d/live2dManager';
+import MocapWorker from './mocapWorker?worker';
 
 // ======================
 // Configuration Constants
@@ -61,24 +59,16 @@ const CAMERA_CONFIG = {
   FACING_MODE: 'user' as const,
 };
 
-/** MediaPipe Holistic configuration */
-const HOLISTIC_CONFIG = {
-  modelComplexity: 1 as const,
-  smoothLandmarks: true,
-  minDetectionConfidence: 0.7,
-  minTrackingConfidence: 0.7,
-  refineFaceLandmarks: true,
-};
-
 interface RecordedFrame {
     time: number;
     bones: Record<string, { rotation: THREE.Quaternion, position?: THREE.Vector3 }>;
 }
 
-type HandLandmarks2D = Results['leftHandLandmarks'] | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HandLandmarks2D = any; 
 
 export class MotionCaptureManager {
-  private holistic: Holistic;
+  private worker: Worker | null = null;
   private camera?: Camera;
   private vrm?: VRM;
   private videoElement: HTMLVideoElement;
@@ -127,16 +117,28 @@ export class MotionCaptureManager {
 
   constructor(videoElement: HTMLVideoElement) {
     this.videoElement = videoElement;
-    
-    this.holistic = new Holistic({
-      locateFile: (file: string) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+    this.initWorker();
+  }
+
+  private initWorker() {
+      this.worker = new MocapWorker();
+      this.worker.onmessage = this.handleWorkerMessage.bind(this);
+      this.worker.postMessage({ type: 'init' });
+  }
+
+  private handleWorkerMessage(e: MessageEvent) {
+      const { type, rigs } = e.data;
+      if (type === 'result' && rigs) {
+          if (rigs.pose) this.applyPoseRig(rigs.pose);
+          if (rigs.face) this.applyFaceRig(rigs.face);
+          if (rigs.rightHand) this.applyHandRig(rigs.rightHand, 'Right');
+          if (rigs.leftHand) this.applyHandRig(rigs.leftHand, 'Left');
+          
+          if (rigs.landmarks) {
+              this.lastLeftHandLandmarks2D = rigs.landmarks.leftHand;
+              this.lastRightHandLandmarks2D = rigs.landmarks.rightHand;
+          }
       }
-    });
-
-    this.holistic.setOptions(HOLISTIC_CONFIG);
-
-    this.holistic.onResults(this.handleResults);
   }
 
   setVRM(vrm: VRM) {
@@ -179,6 +181,7 @@ export class MotionCaptureManager {
     if (manager.expressionMap) {
        Object.keys(manager.expressionMap).forEach(name => this.availableBlendshapes.add(name));
     } else if (manager.expressions) {
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
        manager.expressions.forEach((expr: any) => {
           if (expr.expressionName) this.availableBlendshapes.add(expr.expressionName);
        });
@@ -197,9 +200,20 @@ export class MotionCaptureManager {
             this.vrm.lookAt.target = undefined; 
         }
 
+        if (!this.worker) this.initWorker();
+
         this.camera = new Camera(this.videoElement, {
             onFrame: async () => {
-                await this.holistic.send({ image: this.videoElement });
+                if (this.worker && this.videoElement.videoWidth > 0) {
+                    const bitmap = await createImageBitmap(this.videoElement);
+                    this.worker.postMessage({ 
+                        type: 'frame', 
+                        image: bitmap,
+                        width: this.videoElement.videoWidth,
+                        height: this.videoElement.videoHeight,
+                        timestamp: Date.now()
+                    }, [bitmap]);
+                }
             },
             width: CAMERA_CONFIG.WIDTH,
             height: CAMERA_CONFIG.HEIGHT,
@@ -327,6 +341,11 @@ export class MotionCaptureManager {
       if (!this.vrm || !this.vrm.humanoid || !this.vrm.expressionManager) return;
       
       const timestamp = performance.now() / 1000;
+
+      // Capture frame for recording if active (captures smoothed state)
+      if (this.isRecording) {
+          this.captureFrame();
+      }
       
       // 1. Smooth Facial Expressions
       this.targetFaceValues.forEach((targetVal, name) => {
@@ -467,95 +486,6 @@ export class MotionCaptureManager {
 
       return new THREE.AnimationClip(`Mocap_Take_${Date.now()}`, duration, tracks);
   }
-
-  private calculateSmile(landmarks: any[]): number {
-      if (!landmarks || landmarks.length < 300) return 0;
-      const y10 = landmarks[10].y;
-      const y152 = landmarks[152].y;
-      const faceHeight = Math.abs(y152 - y10);
-      if (faceHeight === 0) return 0;
-      const leftCornerY = landmarks[61].y;
-      const rightCornerY = landmarks[291].y;
-      const avgCornerY = (leftCornerY + rightCornerY) / 2;
-      const upperLipY = landmarks[0].y; 
-      const lowerLipY = landmarks[17].y; 
-      const centerMouthY = (upperLipY + lowerLipY) / 2;
-      const delta = centerMouthY - avgCornerY;
-      const ratio = delta / faceHeight;
-      const minRatio = 0.02; 
-      const maxRatio = 0.08;
-      return THREE.MathUtils.clamp((ratio - minRatio) / (maxRatio - minRatio), 0, 1);
-  }
-
-  private handleResults = (results: Results) => {
-    if (!this.vrm) return;
-    if (this.isRecording) {
-        this.captureFrame();
-    }
-    if (!results.poseLandmarks && !results.faceLandmarks && !results.leftHandLandmarks && !results.rightHandLandmarks) return;
-    const poseWorldLandmarks = (results as any).poseWorldLandmarks || (results as any).ea;
-    if (results.poseLandmarks && results.poseLandmarks.length >= 33 && 
-        poseWorldLandmarks && poseWorldLandmarks.length >= 33) {
-        try {
-            const poseRig = Kalidokit.Pose.solve(results.poseLandmarks, poseWorldLandmarks, {
-                runtime: 'mediapipe',
-                video: this.videoElement
-            });
-            if (poseRig) {
-                this.applyPoseRig(poseRig);
-            }
-        } catch (error) {
-            console.warn("[MotionCapture] Pose solver error:", error);
-        }
-    }
-    if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-        try {
-            const faceRig = Kalidokit.Face.solve(results.faceLandmarks, {
-                runtime: 'mediapipe',
-                video: this.videoElement,
-                smoothBlink: true, 
-                blinkSettings: [0.25, 0.75], 
-            });
-            const smile = this.calculateSmile(results.faceLandmarks);
-            // @ts-ignore
-            faceRig.smile = smile;
-            if (faceRig) {
-                if (faceRig.eye && faceRig.head) {
-                    const stabilized = Kalidokit.Face.stabilizeBlink(faceRig.eye, faceRig.head.y, {
-                        enableWink: false,
-                        maxRot: 0.5,
-                    });
-                    faceRig.eye = stabilized;
-                }
-                this.applyFaceRig(faceRig);
-            }
-        } catch (error) {
-            console.warn("[MotionCapture] Face solver error:", error);
-        }
-    }
-    if (results.rightHandLandmarks && results.rightHandLandmarks.length > 0) {
-        try {
-            this.lastRightHandLandmarks2D = results.rightHandLandmarks;
-            const rightHandRig = Kalidokit.Hand.solve(results.rightHandLandmarks, 'Right');
-            if (rightHandRig) {
-                this.applyHandRig(rightHandRig, 'Right');
-            }
-        } catch (error) {
-            console.warn("[MotionCapture] Right hand solver error:", error);
-        }
-    }
-    if (results.leftHandLandmarks && results.leftHandLandmarks.length > 0) {
-        try {
-            this.lastLeftHandLandmarks2D = results.leftHandLandmarks;
-            const leftHandRig = Kalidokit.Hand.solve(results.leftHandLandmarks, 'Left');
-            if (leftHandRig) {
-                this.applyHandRig(leftHandRig, 'Left');
-            }
-        } catch (error) {
-            console.warn("[MotionCapture] Left hand solver error:", error);
-        }
-    }
-  };
 
   calibrate() {
     this.calibrateBody();

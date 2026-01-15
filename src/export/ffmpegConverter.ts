@@ -35,3 +35,58 @@ export async function convertWebMToMp4(webmBlob: Blob, onProgress?: (progress: n
   // ffmpeg.readFile returns Uint8Array which is a valid BlobPart, but type definitions might conflict
   return new Blob([data as any], { type: 'video/mp4' });
 }
+
+export async function createVideoFromFrames(
+  frames: Blob[], 
+  fps: number, 
+  onProgress?: (progress: number) => void
+): Promise<Blob> {
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  
+  if (!ffmpeg.loaded) {
+    console.log('[FFmpeg] Loading core...');
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+  }
+
+  ffmpeg.on('progress', ({ progress }) => {
+    onProgress?.(progress);
+  });
+
+  console.log(`[FFmpeg] Writing ${frames.length} frames...`);
+  
+  // Write frames to FS
+  for (let i = 0; i < frames.length; i++) {
+    const filename = `frame_${i.toString().padStart(3, '0')}.png`;
+    await ffmpeg.writeFile(filename, await fetchFile(frames[i]));
+  }
+
+  console.log('[FFmpeg] Stitching frames...');
+  // -r sets input framerate
+  // -c:v libvpx-vp9 for WebM
+  // -pix_fmt yuv420p for compatibility
+  // -crf 30 for decent quality/size balance
+  // -b:v 0 to allow CRF to control quality
+  await ffmpeg.exec([
+    '-framerate', fps.toString(),
+    '-i', 'frame_%03d.png',
+    '-c:v', 'libvpx-vp9',
+    '-pix_fmt', 'yuv420p',
+    '-b:v', '2M', // Target bitrate 2M
+    'output.webm'
+  ]);
+
+  console.log('[FFmpeg] Reading output video...');
+  const data = await ffmpeg.readFile('output.webm');
+
+  // Cleanup files
+  for (let i = 0; i < frames.length; i++) {
+    const filename = `frame_${i.toString().padStart(3, '0')}.png`;
+    try { await ffmpeg.deleteFile(filename); } catch(e) {}
+  }
+  try { await ffmpeg.deleteFile('output.webm'); } catch(e) {}
+
+  return new Blob([data as any], { type: 'video/webm' });
+}

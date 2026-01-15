@@ -55,10 +55,10 @@ Reaction Forge is a client-side heavy application relying on browser technologie
 
 ## 3. Areas for Improvement
 
-### High Priority
-1.  **Video Export Upgrade:** Implement `ccapture.js` or a similar frame-by-frame capture technique to ensure smooth 60fps export regardless of device power.
-2.  **Performance Optimization:** Move `MediaPipe` processing to a Web Worker to unblock the main thread for rendering.
-3.  **Error Handling:** Improve error recovery for PeerJS disconnections (currently relies on basic auto-reconnect logic).
+### High Priority (✅ Implemented)
+1.  **Video Export Upgrade:** Implemented offline frame-by-frame rendering with `ffmpeg.wasm` stitching. This ensures smooth 60fps export regardless of device power.
+2.  **Performance Optimization:** Moved `MediaPipe` processing to a dedicated Web Worker (`mocapWorker.ts`) to unblock the main thread for rendering.
+3.  **Error Handling:** Improved error recovery for PeerJS disconnections with robust auto-reconnect logic.
 
 ### Medium Priority
 1.  **Avatar Retargeting:** Implement an IK-based solver (like `kalidokit`'s solver but tuned for VRM constraints) to handle non-standard avatar proportions better.
@@ -66,7 +66,7 @@ Reaction Forge is a client-side heavy application relying on browser technologie
 3.  **Live2D Integration:** Explore rendering Live2D to a `Three.js` texture (render-to-texture) to allow true 3D integration (lighting, depth).
 
 ### Low Priority
-1.  **Native GIF:** Add `ffmpeg.wasm` for client-side high-quality GIF generation (trade-off: huge download size).
+1.  **Native GIF:** Add `ffmpeg.wasm` for client-side high-quality GIF generation (trade-off: huge download size). (Note: FFmpeg is now integrated for WebM, GIF is a logical next step).
 2.  **Server-Authoritative Mode:** Optional server for larger rooms (>8 peers).
 
 ## 4. Transparency Statement
