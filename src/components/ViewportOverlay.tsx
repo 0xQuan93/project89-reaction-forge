@@ -19,6 +19,8 @@ import {
   EyeSlash, 
   ArrowSquareOut, 
   ArrowSquareIn, 
+  CaretLeft,
+  CaretRight,
   Play, 
   Pause, 
   Stop, 
@@ -57,6 +59,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
   const [isFocusSprintActive, setIsFocusSprintActive] = useState(false);
   const [showFocusGallery, setShowFocusGallery] = useState(false);
   const [focusSecondsLeft, setFocusSecondsLeft] = useState(30);
+  const [focusCaptureIndex, setFocusCaptureIndex] = useState(0);
   // const [focusShotsCaptured, setFocusShotsCaptured] = useState(0); // Removing unused state to fix lint error
   const poseTimerRef = useRef<number | null>(null);
   const captureTimerRef = useRef<number | null>(null);
@@ -76,6 +79,30 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
     // Ensure avatar list is loaded
     fetchAvatars();
   }, [fetchAvatars]);
+
+  useEffect(() => {
+    if (!showFocusGallery) return;
+    setFocusCaptureIndex((prev) => {
+      if (autoCaptures.length === 0) return 0;
+      return Math.min(prev, autoCaptures.length - 1);
+    });
+  }, [autoCaptures.length, showFocusGallery]);
+
+  useEffect(() => {
+    if (!showFocusGallery) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePrevCapture();
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleNextCapture();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFocusGallery, autoCaptures.length]);
 
   const handleToggleRecording = async () => {
     if (isRecording) {
@@ -230,6 +257,7 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
     setIsFocusSprintActive(false);
     setFocusModeActive(false);
     if (showGallery) {
+      setFocusCaptureIndex(Math.max(0, autoCaptures.length - 1));
       setShowFocusGallery(true);
     }
   };
@@ -316,11 +344,25 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
 
   const handleDownloadAll = () => {
     autoCaptures.forEach((dataUrl, index) => {
-      const link = document.createElement('a');
-      link.download = `PoseLab_${Date.now()}_sprint_${index + 1}.png`;
-      link.href = dataUrl;
-      link.click();
+      handleDownloadCapture(dataUrl, index);
     });
+  };
+
+  const handleDownloadCapture = (dataUrl: string, index: number) => {
+    const link = document.createElement('a');
+    link.download = `PoseLab_${getPoseLabTimestamp()}_sprint_${index + 1}.png`;
+    link.href = dataUrl;
+    link.click();
+  };
+
+  const handlePrevCapture = () => {
+    if (autoCaptures.length === 0) return;
+    setFocusCaptureIndex((prev) => (prev - 1 + autoCaptures.length) % autoCaptures.length);
+  };
+
+  const handleNextCapture = () => {
+    if (autoCaptures.length === 0) return;
+    setFocusCaptureIndex((prev) => (prev + 1) % autoCaptures.length);
   };
 
   return (
@@ -558,21 +600,61 @@ export function ViewportOverlay({ mode, isPlaying, onPlayPause, onStop }: Viewpo
                     Close
                   </button>
                 </div>
+                <div className="focus-sprint-carousel">
+                  <button
+                    className="focus-sprint-nav"
+                    onClick={handlePrevCapture}
+                    aria-label="Previous capture"
+                    disabled={autoCaptures.length <= 1}
+                  >
+                    <CaretLeft size={20} weight="bold" />
+                  </button>
+                  <div className="focus-sprint-preview">
+                    <img
+                      src={autoCaptures[focusCaptureIndex]}
+                      alt={`Sprint capture ${focusCaptureIndex + 1}`}
+                    />
+                    <div className="focus-sprint-preview-actions">
+                      <span className="focus-sprint-count">
+                        {focusCaptureIndex + 1} / {autoCaptures.length}
+                      </span>
+                      <button
+                        className="secondary"
+                        onClick={() => handleDownloadCapture(autoCaptures[focusCaptureIndex], focusCaptureIndex)}
+                      >
+                        Save capture
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    className="focus-sprint-nav"
+                    onClick={handleNextCapture}
+                    aria-label="Next capture"
+                    disabled={autoCaptures.length <= 1}
+                  >
+                    <CaretRight size={20} weight="bold" />
+                  </button>
+                </div>
                 <div className="focus-sprint-gallery">
                   {autoCaptures.map((url, index) => (
-                    <button
+                    <div
                       key={`${url}-${index}`}
-                      className="focus-sprint-thumb"
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.download = `PoseLab_${Date.now()}_sprint_${index + 1}.png`;
-                        link.href = url;
-                        link.click();
-                      }}
+                      className={`focus-sprint-thumb ${index === focusCaptureIndex ? 'active' : ''}`}
                     >
-                      <img src={url} alt={`Sprint capture ${index + 1}`} />
-                      <span>Save</span>
-                    </button>
+                      <button
+                        className="focus-sprint-thumb-button"
+                        onClick={() => setFocusCaptureIndex(index)}
+                        aria-label={`View sprint capture ${index + 1}`}
+                      >
+                        <img src={url} alt={`Sprint capture ${index + 1}`} />
+                      </button>
+                      <button
+                        className="focus-sprint-thumb-save"
+                        onClick={() => handleDownloadCapture(url, index)}
+                      >
+                        Save
+                      </button>
+                    </div>
                   ))}
                 </div>
               </>
