@@ -57,7 +57,7 @@ Reaction Forge is a client-side heavy application relying on browser technologie
 
 ### High Priority (✅ Implemented)
 1.  **Video Export Upgrade:** Implemented offline frame-by-frame rendering with `ffmpeg.wasm` stitching. This ensures smooth 60fps export regardless of device power.
-2.  **Performance Optimization:** Moved `MediaPipe` processing to a dedicated Web Worker (`mocapWorker.ts`) to unblock the main thread for rendering.
+2.  **Performance Optimization:** **In progress.** MediaPipe Holistic is currently processed on the main thread. A worker-based approach is planned but not active.
 3.  **Error Handling:** Improved error recovery for PeerJS disconnections with robust auto-reconnect logic.
 
 ### Medium Priority

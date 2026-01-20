@@ -13,7 +13,14 @@ PoseLab accepts **VMC input** through a local OSC → WebSocket bridge because b
 
 ## ✅ Local Development Bridge
 
-In the development environment, PoseLab starts a bridge automatically on `ws://localhost:39540`.
+In the development environment, PoseLab can start a bridge automatically on `ws://localhost:39540`.
+This is **disabled by default**. Enable it with:
+
+```bash
+VITE_ENABLE_VMC_BRIDGE=true npm run dev
+```
+
+The built-in bridge binds to `127.0.0.1` only to avoid exposing ports on your LAN.
 
 ## ✅ Production / Deployed Usage
 
@@ -30,8 +37,8 @@ import { Server as OscServer } from 'node-osc';
 const WS_PORT = 39540;
 const OSC_PORT = 39539;
 
-const wss = new WebSocketServer({ port: WS_PORT });
-const oscServer = new OscServer(OSC_PORT, '0.0.0.0');
+const wss = new WebSocketServer({ port: WS_PORT, host: '127.0.0.1' });
+const oscServer = new OscServer(OSC_PORT, '127.0.0.1');
 
 console.log(`VMC Bridge Active!`);
 console.log(`Listening for OSC on UDP:${OSC_PORT}`);

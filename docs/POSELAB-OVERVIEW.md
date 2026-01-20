@@ -102,7 +102,7 @@ PoseLab is a browser-based VRM avatar studio that combines posing, real-time mot
 │  │  └─────────────┘ └──────┬──────┘ └─────────────────────┘ │   │
 │  │                         │                                │   │
 │  │                  ┌──────▼──────┐                         │   │
-│  │                  │ MocapWorker │ (Web Worker)            │   │
+│  │                  │ MocapWorker │ (planned)               │   │
 │  │                  └─────────────┘                         │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -128,7 +128,7 @@ PoseLab is a browser-based VRM avatar studio that combines posing, real-time mot
 
 ### Near-Term
 *   **Video Export:** (✅ Done) Implement offline frame-by-frame rendering for smooth 60fps.
-*   **Performance:** (✅ Done) Move MediaPipe to Web Worker.
+*   **Performance:** (🛠️ In progress) Move MediaPipe to Web Worker.
 *   **Retargeting:** Improved IK solver for non-standard avatars.
 
 ### Long-Term

@@ -20,7 +20,7 @@ PoseLab is built on a modern web stack designed for "Local-First" processing and
 *   **`SceneManager`**: Handles the Three.js scene, camera, renderer, and background composition.
 *   **`AvatarManager`**: Manages VRM loading, bone manipulation, blendshapes, and pose application.
 *   **`AnimationManager`**: Handles the `AnimationMixer`, clip playback, looping, and blending.
-*   **`MotionCaptureManager`**: Bridges MediaPipe Holistic results to VRM bone rotations via Kalidokit.
+*   **`MotionCaptureManager`**: Bridges MediaPipe Holistic results to VRM bone rotations via Kalidokit (currently main-thread; worker migration planned).
 *   **`Live2DManager`**: Manages PixiJS application and Live2D Cubism model loading/rendering.
 
 ---

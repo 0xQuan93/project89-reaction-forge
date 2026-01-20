@@ -12,7 +12,7 @@ import { live2dManager } from '../live2d/live2dManager';
 // Configuration Constants
 // ======================
 
-// MediaPipe Configuration (Moved from worker)
+// MediaPipe Configuration
 const HOLISTIC_CONFIG = {
   modelComplexity: 1 as const,
   smoothLandmarks: true,
@@ -217,9 +217,6 @@ export class MotionCaptureManager {
       if (rigs.rightHand) this.applyHandRig(rigs.rightHand, 'Right');
       if (rigs.leftHand) this.applyHandRig(rigs.leftHand, 'Left');
   }
-
-  // private initWorker() { ... removed ... }
-  // private handleWorkerMessage(e: MessageEvent) { ... removed ... }
 
   setVRM(vrm: VRM) {
     this.vrm = vrm;

@@ -116,7 +116,12 @@ PoseLab has two primary routes:
 Create a `.env` file in the root for AI features:
 ```env
 VITE_GEMINI_API_KEY=your_api_key_here
+VITE_ENABLE_VMC_BRIDGE=true
+VITE_ENABLE_POSE_EXPORT=true
 ```
+
+> [!NOTE]
+> `VITE_ENABLE_VMC_BRIDGE` and `VITE_ENABLE_POSE_EXPORT` are **off by default**. Enable them only for trusted local development.
 
 ---
 

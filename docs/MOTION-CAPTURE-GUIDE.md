@@ -58,7 +58,7 @@ You can now bring your avatar into the real world.
 ## 🔧 Technical Architecture
 
 ### The Update Loop
-1. **MediaPipe** captures landmarks (async).
+1. **MediaPipe** captures landmarks (async) on the main thread today. A worker-based pipeline is planned for a future performance pass.
 2. **Kalidokit** solves the pose.
 3. **MotionCaptureManager** calculates target rotations.
 4. **SceneManager** calls `tick(delta)` handlers in priority order.
