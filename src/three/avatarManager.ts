@@ -237,8 +237,12 @@ class AvatarManager {
     this.currentUrl = url;
 
     vrm.scene.position.set(0, 0, 0);
-    // Rotate 180° on Y so the avatar faces the camera (VRMs export facing +Z, camera looks at -Z)
+    // Most VRMs are exported facing +Z but poses were authored with avatar at 180°.
+    // Start at 180° rotation so avatar faces camera, poses will maintain this.
     vrm.scene.rotation.set(0, Math.PI, 0);
+    
+    console.log('[AvatarManager] VRM loaded at 180° Y rotation');
+    
     scene.add(vrm.scene);
     animationManager.initialize(vrm);
     sceneManager.frameObject(vrm.scene);
@@ -360,7 +364,7 @@ class AvatarManager {
     if (!rotationLocked) {
       this.vrm.scene.rotation.set(
         THREE.MathUtils.degToRad(def.sceneRotation?.x ?? 0), 
-        THREE.MathUtils.degToRad(def.sceneRotation?.y ?? 0), 
+        THREE.MathUtils.degToRad(def.sceneRotation?.y ?? 180), // Default to 180 if not specified
         THREE.MathUtils.degToRad(def.sceneRotation?.z ?? 0)
       );
     }

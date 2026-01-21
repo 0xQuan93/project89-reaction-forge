@@ -145,7 +145,8 @@ class MultiAvatarManager {
 
     // Position the avatar
     vrm.scene.position.copy(positionOffset);
-    // Rotate 180° on Y so the avatar faces the camera (VRMs export facing +Z, camera looks at -Z)
+    // Most VRMs are exported facing +Z but poses were authored with avatar at 180°.
+    // Start at 180° rotation so avatar faces camera.
     vrm.scene.rotation.set(0, Math.PI, 0);
 
     // Add to scene
