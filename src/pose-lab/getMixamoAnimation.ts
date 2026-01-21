@@ -7,9 +7,12 @@ const _parentRestWorldRotation = new THREE.Quaternion();
 const _quatA = new THREE.Quaternion();
 const _tempVec = new THREE.Vector3();
 
-const usesVrm0CoordinateSystem = (vrm: VRM): boolean => {
+const shouldFlipMixamoAxes = (vrm: VRM): boolean => {
   const metaVersion = `${vrm.meta?.metaVersion ?? ''}`.trim();
-  return metaVersion.startsWith('0');
+  if (!metaVersion) {
+    return true;
+  }
+  return metaVersion.startsWith('0') || metaVersion.startsWith('1');
 };
 
 export function getMixamoAnimation(
@@ -31,7 +34,7 @@ export function getMixamoAnimation(
   }
 
   const tracks: THREE.KeyframeTrack[] = [];
-  const shouldFlipAxes = usesVrm0CoordinateSystem(vrm);
+  const shouldFlipAxes = shouldFlipMixamoAxes(vrm);
 
   const hipsNode = findMixamoNode(mixamoRoot, 'mixamorigHips') ?? findMixamoNode(mixamoRoot, 'mixamorig:Hips');
   const motionHipsHeight = Math.abs(hipsNode?.position?.y ?? 1);
