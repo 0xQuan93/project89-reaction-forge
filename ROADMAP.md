@@ -94,12 +94,13 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 
 ---
 
-## 🎨 Rendering & Visual Quality (v1.4 - Planned)
+## ✅ Shipped - Rendering & Visual Quality (v1.4)
 **Goal:** Professional rendering quality and style options.
-- [ ] **Advanced Lighting:** 3-point lighting controls (Key, Fill, Rim) with presets.
-- [ ] **HDRI Support:** Upload `.hdr`/`.exr` environment maps with curated presets.
-- [ ] **Post-Processing:** Bloom, Color Grading, Vignette, Film Grain with cinematic presets.
-- [ ] **Toon Shader Settings:** Customize outlines, rim lighting, and emissive glow (MToon VRMs only).
+- [x] **Advanced Lighting:** 3-point lighting controls (Key, Fill, Rim) with presets.
+- [x] **HDRI Support:** Upload `.hdr`/`.exr` environment maps with curated presets.
+- [x] **Post-Processing:** Bloom, Color Grading, Vignette, Film Grain with cinematic presets.
+- [x] **Toon Shader Settings:** Customize outlines, rim lighting, and emissive glow (MToon VRMs only).
+- [x] **3D GLB Environments:** Load 3D environments in GLB format with position, rotation, and scale controls.
 
 ### 👥 Multi-Avatar Composition
 **Goal:** Create interactions between multiple characters.
@@ -137,14 +138,18 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 | **Project Save/Load** | ✅ Done (v1.2) | High |
 | **Command Palette** | ✅ Done (v1.2) | High |
 | **Video Export Hardening** | ✅ Done (v1.2) | High |
+| **Live2D Support** | ✅ Done (v1.3) | High |
+| **Advanced Lighting** | ✅ Done (v1.4) | Medium |
+| **HDRI Environments** | ✅ Done (v1.4) | Medium |
+| **Post-Processing** | ✅ Done (v1.4) | Medium |
+| **Toon Shader Customization** | ✅ Done (v1.4) | Medium |
+| **3D GLB Environments** | ✅ Done (v1.5) | Medium |
+| **Multiplayer Co-op** | ✅ Done (v1.5) | High |
+| **Voice Chat** | ✅ Done (v1.5) | High |
 | **Live Streaming & Virtual Camera** | 🚧 Planned | **Critical** |
 | **Evergreen Utility (Batch Export/Templates)** | 🚧 Planned | **High** |
 | **State Recovery & Validation** | 🚧 Planned | **High** |
 | **Monetization / Gating** | 🚧 Planned | Medium |
 | **Creator Marketplace** | 🚧 Planned | Medium |
-| **Advanced Lighting** | 🚧 Planned | Medium |
-| **HDRI Environments** | 🚧 Planned | Medium |
-| **Post-Processing** | 🚧 Planned | Medium |
-| **Toon Shader Customization** | 🚧 Planned | Medium |
 | **Full Body IK** | 🚧 Planned | Medium |
 | **Multi-Avatar** | 🚧 Planned | Medium |

@@ -25,6 +25,7 @@
 - **Smart Presets**: Pre-made reactions with scene/lighting pairings.
 - **Expression Control**: Fine-tune emotions with blendshape sliders.
 - **Dynamic Backgrounds**: Theme gallery + **Green Screen** + **GIF/Video uploads** for animated scenes.
+- **3D Environments**: Upload GLB files to create immersive 3D scenes around your avatar.
 - **Auto-Looping**: Seamless animation loops for overlays and shorts.
 
 ### 🛠️ **Pose Lab**
@@ -45,6 +46,9 @@
 - **Design System**: Unified UI with consistent tokens and dark mode.
 - **Performance Mode**: Auto-tunes quality for smooth framerates.
 - **Transparent PNGs**: Export clean cutouts for Photoshop or OBS.
+- **HDRI Environments**: Professional lighting with 360° environment maps.
+- **3-Point Lighting**: Studio, Dramatic, Neon, and more lighting presets.
+- **Post-Processing**: Bloom, Color Grading, Vignette, and Film Grain effects.
 - **Privacy First**: [Read our Privacy Policy](PRIVACY.md). All processing happens locally.
 - **Multiplayer Sessions**: Host or join a co-op room with scene syncing.
 

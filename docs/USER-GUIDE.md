@@ -122,6 +122,16 @@ Choose from built-in backgrounds or upload your own:
 - **Animated backgrounds** (GIF, MP4, WebM)
 - **Background Lock** - Prevent poses/animations from changing your background
 
+### 🧊 3D Environments
+Load 3D GLB models as immersive environments:
+- **Upload GLB**: Click to load 3D environment files
+- **Scale**: Adjust environment size relative to avatar
+- **Position**: Move environment on X, Y, Z axes
+- **Rotation**: Rotate environment around the Y axis
+- **Visibility**: Toggle environment on/off
+- **Shadows**: Enable shadow receiving for realism
+- **Multiple Environments**: Load and manage multiple GLB files
+
 ### 🎞️ FX Overlays
 CSS-based visual effects:
 - **Scanlines** - Retro CRT lines
@@ -640,7 +650,13 @@ PoseLab works on mobile devices with some considerations:
 
 ## 📝 Version History
 
-### v1.5 (Current)
+### v1.6 (Current)
+- ✅ **3D GLB Environments** - Load immersive 3D scenes
+- ✅ Environment controls (position, rotation, scale)
+- ✅ Multiple environment support
+- ✅ Shadow configuration per environment
+
+### v1.5
 - ✅ **Multiplayer co-op sessions** (peer-to-peer)
 - ✅ **Voice chat** between users
 - ✅ **Voice lip sync** (microphone-driven mouth animation)
@@ -672,4 +688,4 @@ PoseLab works on mobile devices with some considerations:
 
 *Built with ❤️ by Project89*
 
-*Version 1.5 | January 2026*
+*Version 1.6 | January 2026*

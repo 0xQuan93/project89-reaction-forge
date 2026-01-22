@@ -39,8 +39,13 @@ import {
   FrameCorners,
   Play,
   Sun,
-  MagnifyingGlass
+  MagnifyingGlass,
+  Cube,
+  Eye,
+  EyeSlash,
+  Trash,
 } from '@phosphor-icons/react';
+import { environment3DManager, type LoadedEnvironment } from '../../three/environment3DManager';
 
 type AspectRatio = '16:9' | '1:1' | '9:16';
 
@@ -250,6 +255,11 @@ export function SceneTab() {
   const live2dInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const hdriInputRef = useRef<HTMLInputElement>(null);
+  const glbInputRef = useRef<HTMLInputElement>(null);
+  
+  // 3D Environment state
+  const [loaded3DEnvironments, setLoaded3DEnvironments] = useState<LoadedEnvironment[]>([]);
+  const [isLoading3DEnv, setIsLoading3DEnv] = useState(false);
   const [live2dExpression, setLive2dExpression] = useState('');
   const [live2dExpressionWeight, setLive2dExpressionWeight] = useState(0.8);
   const [live2dPhysicsEnabled, setLive2dPhysicsEnabled] = useState(true);
@@ -284,6 +294,16 @@ export function SceneTab() {
       setPersona(ONBOARDING_PERSONAS[0].id);
     }
   }, [selectedPersonaId, setPersona]);
+
+  // Subscribe to 3D environment changes
+  useEffect(() => {
+    const unsubscribe = environment3DManager.onChange(() => {
+      setLoaded3DEnvironments(environment3DManager.getAll());
+    });
+    // Initialize with current state
+    setLoaded3DEnvironments(environment3DManager.getAll());
+    return unsubscribe;
+  }, []);
 
   const handleVRMUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -379,6 +399,50 @@ export function SceneTab() {
       addToast('Failed to load HDRI file', 'error');
     } finally {
       setIsLoadingHdri(false);
+    }
+  };
+
+  const handleGLBUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    event.target.value = ''; // Reset input
+
+    if (!file.name.toLowerCase().endsWith('.glb')) {
+      addToast('Please select a GLB file', 'warning');
+      return;
+    }
+
+    setIsLoading3DEnv(true);
+    try {
+      const env = await environment3DManager.loadFromFile(file);
+      addToast(`3D Environment "${env.name}" loaded`, 'success');
+    } catch (error) {
+      console.error('Failed to load 3D environment:', error);
+      addToast('Failed to load 3D environment', 'error');
+    } finally {
+      setIsLoading3DEnv(false);
+    }
+  };
+
+  const handle3DEnvScaleChange = (id: string, scale: number) => {
+    environment3DManager.updateSettings(id, { scale });
+  };
+
+  const handle3DEnvPositionChange = (id: string, axis: 'x' | 'y' | 'z', value: number) => {
+    const env = environment3DManager.get(id);
+    if (env) {
+      environment3DManager.updateSettings(id, {
+        position: { ...env.settings.position, [axis]: value }
+      });
+    }
+  };
+
+  const handle3DEnvRotationChange = (id: string, axis: 'x' | 'y' | 'z', value: number) => {
+    const env = environment3DManager.get(id);
+    if (env) {
+      environment3DManager.updateSettings(id, {
+        rotation: { ...env.settings.rotation, [axis]: value }
+      });
     }
   };
 
@@ -908,6 +972,203 @@ export function SceneTab() {
               onChange={(rotation) => sceneSettings.setEnvironment({ rotation })}
             />
           </div>
+        )}
+      </Section>
+
+      {/* 3D Environments Section */}
+      <Section title="3D Environments" icon={<Cube size={18} weight="duotone" />} defaultOpen={false}>
+        <p className="muted small" style={{ marginBottom: '0.75rem' }}>
+          Load 3D GLB environments to create immersive scenes
+        </p>
+        
+        <button
+          className="primary full-width"
+          onClick={() => glbInputRef.current?.click()}
+          disabled={isLoading3DEnv}
+        >
+          {isLoading3DEnv ? (
+            <>Loading...</>
+          ) : (
+            <><UploadSimple size={16} weight="duotone" /> Upload GLB Environment</>
+          )}
+        </button>
+        <input
+          ref={glbInputRef}
+          type="file"
+          accept=".glb"
+          onChange={handleGLBUpload}
+          style={{ display: 'none' }}
+        />
+        
+        {loaded3DEnvironments.length > 0 && (
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ 
+              fontSize: '0.8rem', 
+              color: 'var(--text-secondary)', 
+              marginBottom: '0.5rem',
+              fontWeight: 600
+            }}>
+              Loaded Environments ({loaded3DEnvironments.length})
+            </div>
+            
+            {loaded3DEnvironments.map((env) => (
+              <div 
+                key={env.id}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {/* Header */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  marginBottom: '0.5rem'
+                }}>
+                  <span style={{ 
+                    fontSize: '0.85rem', 
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <Cube size={14} weight="duotone" style={{ color: 'var(--accent)' }} />
+                    {env.name}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <button
+                      className="secondary small"
+                      onClick={() => environment3DManager.toggleVisible(env.id)}
+                      title={env.settings.visible ? 'Hide' : 'Show'}
+                      style={{ padding: '0.25rem 0.5rem' }}
+                    >
+                      {env.settings.visible ? <Eye size={14} /> : <EyeSlash size={14} />}
+                    </button>
+                    <button
+                      className="secondary small"
+                      onClick={() => environment3DManager.remove(env.id)}
+                      title="Remove"
+                      style={{ padding: '0.25rem 0.5rem', color: '#ff6b6b' }}
+                    >
+                      <Trash size={14} />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Controls */}
+                <Slider
+                  label="Scale"
+                  value={env.settings.scale}
+                  min={0.01}
+                  max={10}
+                  step={0.01}
+                  onChange={(value) => handle3DEnvScaleChange(env.id, value)}
+                />
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(3, 1fr)', 
+                  gap: '0.5rem',
+                  marginTop: '0.5rem'
+                }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Pos X</label>
+                    <input
+                      type="number"
+                      value={env.settings.position.x.toFixed(2)}
+                      onChange={(e) => handle3DEnvPositionChange(env.id, 'x', parseFloat(e.target.value) || 0)}
+                      step="0.1"
+                      style={{
+                        width: '100%',
+                        padding: '0.3rem',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-default)',
+                        background: 'var(--color-surface)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Pos Y</label>
+                    <input
+                      type="number"
+                      value={env.settings.position.y.toFixed(2)}
+                      onChange={(e) => handle3DEnvPositionChange(env.id, 'y', parseFloat(e.target.value) || 0)}
+                      step="0.1"
+                      style={{
+                        width: '100%',
+                        padding: '0.3rem',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-default)',
+                        background: 'var(--color-surface)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Pos Z</label>
+                    <input
+                      type="number"
+                      value={env.settings.position.z.toFixed(2)}
+                      onChange={(e) => handle3DEnvPositionChange(env.id, 'z', parseFloat(e.target.value) || 0)}
+                      step="0.1"
+                      style={{
+                        width: '100%',
+                        padding: '0.3rem',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-default)',
+                        background: 'var(--color-surface)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem'
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                <Slider
+                  label="Rotation Y"
+                  value={env.settings.rotation.y}
+                  min={0}
+                  max={360}
+                  step={1}
+                  onChange={(value) => handle3DEnvRotationChange(env.id, 'y', value)}
+                />
+                
+                <Toggle
+                  label="Receive Shadows"
+                  checked={env.settings.receiveShadow}
+                  onChange={(checked) => environment3DManager.updateSettings(env.id, { receiveShadow: checked })}
+                />
+              </div>
+            ))}
+            
+            {loaded3DEnvironments.length > 1 && (
+              <button
+                className="secondary full-width"
+                onClick={() => environment3DManager.removeAll()}
+                style={{ 
+                  marginTop: '0.5rem',
+                  color: '#ff6b6b',
+                  borderColor: 'rgba(255, 107, 107, 0.3)'
+                }}
+              >
+                <Trash size={14} /> Remove All Environments
+              </button>
+            )}
+          </div>
+        )}
+        
+        {loaded3DEnvironments.length === 0 && (
+          <p className="muted small" style={{ marginTop: '0.75rem', textAlign: 'center', opacity: 0.6 }}>
+            No 3D environments loaded. Upload a GLB file to get started.
+          </p>
         )}
       </Section>
 

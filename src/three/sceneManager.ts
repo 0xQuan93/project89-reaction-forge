@@ -8,6 +8,7 @@ import { useUIStore } from '../state/useUIStore';
 import { lightingManager } from './lightingManager';
 import { postProcessingManager } from './postProcessingManager';
 import { environmentManager } from './environmentManager';
+import { environment3DManager } from './environment3DManager';
 import { live2dManager } from '../live2d/live2dManager';
 
 type TickHandler = (delta: number) => void;
@@ -994,6 +995,7 @@ class SceneManager {
     lightingManager.dispose();
     postProcessingManager.dispose();
     environmentManager.destroy();
+    environment3DManager.dispose();
     
     this.controls?.dispose();
     this.renderer?.dispose();
