@@ -1,4 +1,4 @@
-# Cursor Rules for Project89 Reaction Forge (PoseLab)
+q# Cursor Rules for Project89 Reaction Forge (PoseLab)
 
 ## Project Overview
 PoseLab is a browser-based tool for creating, posing, animating, and capturing VRM avatars. It uses React for the UI and vanilla Three.js (via Manager classes) for the 3D scene.
