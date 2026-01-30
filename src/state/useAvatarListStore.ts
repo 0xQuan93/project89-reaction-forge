@@ -7,6 +7,7 @@ export type AvatarEntry = {
   model_file_url: string;
   format: string;
   thumbnail_url: string;
+  collection?: string; // Track which collection an avatar belongs to
   metadata?: {
     number?: string;
     series?: string;
@@ -31,7 +32,8 @@ type ProjectEntry = {
 };
 
 type AvatarListState = {
-  avatars: AvatarEntry[];
+  avatars: AvatarEntry[];           // All avatars for library browsing
+  randomPool: AvatarEntry[];        // Only 100Avatars for randomization
   isLoading: boolean;
   error: string | null;
   fetchAvatars: () => Promise<void>;
@@ -42,12 +44,29 @@ type AvatarListState = {
 const PROJECTS_LIST_URL = 'https://raw.githubusercontent.com/ToxSam/open-source-avatars/main/data/projects.json';
 const AVATAR_DATA_BASE_URL = 'https://raw.githubusercontent.com/ToxSam/open-source-avatars/main/data/';
 
-// Only allow child-friendly, open-source collections for public randomization
-// VIPE and Grifter collections are hidden as they may contain mature content
-const ALLOWED_COLLECTIONS = ['opensource-avatars'];
+// Collections used for random avatar cycling (100Avatars only)
+const RANDOM_COLLECTIONS = [
+  '100avatars-r1',
+  '100avatars-r2', 
+  '100avatars-r3',
+];
+
+// All collections available in the avatar library browser
+const LIBRARY_COLLECTIONS = [
+  '100avatars-r1',
+  '100avatars-r2', 
+  '100avatars-r3',
+  'halloween-rising',
+  'xmas-chibis',
+  'NeonGlitch86-collection',
+  'toxsam',
+  'vipe-heroes-genesis',
+  'grifters-squaddies',
+];
 
 export const useAvatarListStore = create<AvatarListState>((set, get) => ({
   avatars: [],
+  randomPool: [],
   isLoading: false,
   error: null,
   fetchAvatars: async () => {
@@ -61,41 +80,59 @@ export const useAvatarListStore = create<AvatarListState>((set, get) => ({
       if (!projectsResponse.ok) throw new Error('Failed to fetch projects list');
       const projects: ProjectEntry[] = await projectsResponse.json();
 
-      // Filter to only include allowed collections (excludes VIPE, Grifter, etc.)
-      const allowedProjects = projects.filter((project) => 
-        ALLOWED_COLLECTIONS.includes(project.id)
+      // Filter to only include library collections (excludes VIPE, Grifter, etc.)
+      const libraryProjects = projects.filter((project) => 
+        LIBRARY_COLLECTIONS.includes(project.id)
       );
 
       const allAvatars: AvatarEntry[] = [];
+      const randomAvatars: AvatarEntry[] = [];
 
-      // 2. For each allowed project, fetch its corresponding avatar_data_file
-      const fetchPromises = allowedProjects.map(async (project) => {
+      // 2. For each library project, fetch its corresponding avatar_data_file
+      const fetchPromises = libraryProjects.map(async (project) => {
         const avatarDataUrl = `${AVATAR_DATA_BASE_URL}${project.avatar_data_file}`;
+        const isRandomCollection = RANDOM_COLLECTIONS.includes(project.id);
         
         try {
           const avatarDataResponse = await fetch(avatarDataUrl);
           if (!avatarDataResponse.ok) {
             console.warn(`Failed to fetch avatar data for project ${project.name} from ${avatarDataUrl}`);
-            return [];
+            return { avatars: [], isRandom: isRandomCollection };
           }
           const projectAvatars: AvatarEntry[] = await avatarDataResponse.json();
           
-          // Filter for VRM avatars only
-          return Array.isArray(projectAvatars) 
-            ? projectAvatars.filter((a: any) => a.format === 'VRM' && a.model_file_url)
+          // Filter for VRM avatars only and add collection tag
+          const vrmAvatars = Array.isArray(projectAvatars) 
+            ? projectAvatars
+                .filter((a: any) => a.format === 'VRM' && a.model_file_url)
+                .map((a) => ({ ...a, collection: project.id }))
             : [];
+            
+          return { avatars: vrmAvatars, isRandom: isRandomCollection };
         } catch (innerError) {
           console.error(`Error fetching avatar data for project ${project.name}:`, innerError);
-          return [];
+          return { avatars: [], isRandom: isRandomCollection };
         }
       });
 
       // 3. Wait for all fetches to complete in parallel
-      const avatarArrays = await Promise.all(fetchPromises);
-      avatarArrays.forEach((avatars) => allAvatars.push(...avatars));
+      const results = await Promise.all(fetchPromises);
       
-      // 4. Update the store with all combined VRM avatars
-      set({ avatars: allAvatars, isLoading: false });
+      results.forEach(({ avatars, isRandom }) => {
+        allAvatars.push(...avatars);
+        if (isRandom) {
+          randomAvatars.push(...avatars);
+        }
+      });
+      
+      // 4. Update the store with all avatars and random pool
+      set({ 
+        avatars: allAvatars, 
+        randomPool: randomAvatars,
+        isLoading: false 
+      });
+      
+      console.log(`[AvatarStore] Loaded ${allAvatars.length} avatars (${randomAvatars.length} in random pool)`);
 
     } catch (err) {
       console.error('Error fetching avatars:', err);
@@ -103,9 +140,10 @@ export const useAvatarListStore = create<AvatarListState>((set, get) => ({
     }
   },
   getRandomAvatar: () => {
-    const { avatars } = get();
-    if (avatars.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * avatars.length);
-    return avatars[randomIndex];
+    // Only pick from 100Avatars collection for randomization
+    const { randomPool } = get();
+    if (randomPool.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * randomPool.length);
+    return randomPool[randomIndex];
   }
 }));
