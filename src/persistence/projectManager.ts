@@ -91,6 +91,7 @@ export class ProjectManager {
    */
   async loadProject(project: ProjectState): Promise<{ success: boolean; avatarWarning?: string }> {
     console.log('[ProjectManager] Loading project:', project.metadata.name);
+    
 
     if (project.version > PROJECT_VERSION) {
       console.warn('[ProjectManager] Project version is newer than supported. Some features may break.');
@@ -258,33 +259,12 @@ export class ProjectManager {
     }
 
     // Restore Avatar Transform & Pose (if avatar is present or when it loads)
-    // Since we can't easily wait for the avatar to load here if it's async via store,
-    // we'll check if the avatar is already there (unlikely if we just set url) 
-    // or if we should register a one-time callback.
-    // Ideally, we apply this data.
-    
-    // For now, apply if VRM exists (e.g. if avatar didn't change)
-    const vrm = avatarManager.getVRM();
-    if (vrm) {
-       if (project.avatar.transform) {
-           vrm.scene.position.set(project.avatar.transform.position.x, project.avatar.transform.position.y, project.avatar.transform.position.z);
-           vrm.scene.rotation.set(
-               THREE.MathUtils.degToRad(project.avatar.transform.rotation.x), 
-               THREE.MathUtils.degToRad(project.avatar.transform.rotation.y), 
-               THREE.MathUtils.degToRad(project.avatar.transform.rotation.z)
-           );
-       }
-       if (project.avatar.pose) {
-           // Apply raw pose directly
-           // Using a slight delay to ensure it overrides any T-pose reset
-           setTimeout(() => {
-                avatarManager.applyRawPose({ 
-                  vrmPose: project.avatar.pose,
-                  expressions: project.avatar.expressions
-                }, 'static', false);
-           }, 100);
-       }
-    }
+    // We register it as pending in AvatarManager so it applies as soon as the load finishes
+    avatarManager.setPendingProjectState(
+        project.avatar.pose,
+        project.avatar.expressions,
+        project.avatar.transform
+    );
 
     console.log('[ProjectManager] Project loaded successfully:', project.metadata.name);
     return { success: true, avatarWarning };

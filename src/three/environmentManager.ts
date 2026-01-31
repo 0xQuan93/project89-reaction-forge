@@ -209,16 +209,18 @@ class EnvironmentManager {
   async loadHDRIFromFile(file: File): Promise<void> {
     const url = URL.createObjectURL(file);
     
-    // Store for persistence
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      // Extract base64
-      const base64 = result.split(',')[1];
-      this.customEnvironmentData = base64;
-      this.customEnvironmentType = file.name.endsWith('.exr') ? 'image/x-exr' : 'application/x-hdr';
-    };
-    reader.readAsDataURL(file);
+    // Store for persistence (awaiting to ensure it's ready for immediate save)
+    const base64Data = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    this.customEnvironmentData = base64Data;
+    this.customEnvironmentType = file.name.endsWith('.exr') ? 'image/x-exr' : 'application/x-hdr';
 
     try {
       await this.loadHDRI(url);

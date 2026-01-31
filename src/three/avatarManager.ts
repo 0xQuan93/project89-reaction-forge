@@ -89,6 +89,11 @@ class AvatarManager {
   private isManualPosing = false;
   private defaultHipsPosition: THREE.Vector3 = new THREE.Vector3(0, 1.0, 0);
   
+  // Pending state for project restore
+  private pendingProjectPose: VRMPose | null = null;
+  private pendingProjectExpressions: Record<string, number> | null = null;
+  private pendingProjectTransform: { position: { x: number, y: number, z: number }, rotation: { x: number, y: number, z: number } } | null = null;
+  
   // Locked Hips rotation - enforced every frame when rotation is locked
   private lockedHipsRotation: THREE.Quaternion | null = null;
   
@@ -365,7 +370,56 @@ class AvatarManager {
     // The user can re-lock rotation after using the gizmo
     getSceneSettingsStore()?.getState().setRotationLocked(false);
 
+    // Apply pending project state if present
+    this.applyPendingProjectState();
+
     return vrm;
+  }
+
+  setPendingProjectState(
+    pose: VRMPose | undefined, 
+    expressions: Record<string, number> | undefined, 
+    transform: { position: { x: number, y: number, z: number }, rotation: { x: number, y: number, z: number } } | undefined
+  ) {
+    this.pendingProjectPose = pose || null;
+    this.pendingProjectExpressions = expressions || null;
+    this.pendingProjectTransform = transform || null;
+    
+    // If VRM already loaded, apply immediately
+    if (this.vrm) {
+        this.applyPendingProjectState();
+    }
+  }
+
+  private applyPendingProjectState() {
+    if (!this.vrm) return;
+
+    if (this.pendingProjectTransform) {
+      const { position, rotation } = this.pendingProjectTransform;
+      this.vrm.scene.position.set(position.x, position.y, position.z);
+      this.vrm.scene.rotation.set(
+        THREE.MathUtils.degToRad(rotation.x),
+        THREE.MathUtils.degToRad(rotation.y),
+        THREE.MathUtils.degToRad(rotation.z)
+      );
+      this.pendingProjectTransform = null;
+    }
+
+    if (this.pendingProjectPose || this.pendingProjectExpressions) {
+      // Small delay to ensure any T-pose initialization finishes
+      const pose = this.pendingProjectPose;
+      const expressions = this.pendingProjectExpressions;
+      
+      setTimeout(() => {
+        this.applyRawPose({
+          vrmPose: pose || undefined,
+          expressions: expressions || undefined
+        }, 'static', false);
+      }, 100);
+      
+      this.pendingProjectPose = null;
+      this.pendingProjectExpressions = null;
+    }
   }
 
   async applyRawPose(poseData: RawPoseData, animationMode: AnimationMode = 'static', smoothTransition = true) {
