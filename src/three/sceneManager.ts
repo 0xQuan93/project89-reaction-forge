@@ -84,6 +84,8 @@ class SceneManager {
   private selfieFollowInitialized = false;
   private currentAspectRatio: AspectRatio = '16:9';
   private overlayMesh?: THREE.Mesh;
+  private currentOverlayUrl: string | null = null;
+  private currentOverlayOpacity: number = 1.0;
   private animatedBackground?: AnimatedBackground;
   private lastBackgroundId?: string;
 
@@ -339,6 +341,9 @@ class SceneManager {
   async setOverlay(url: string | null, opacity = 1.0) {
     if (!this.camera || !this.scene) return;
 
+    this.currentOverlayUrl = url;
+    this.currentOverlayOpacity = opacity;
+
     // Remove existing
     if (this.overlayMesh) {
       this.camera.remove(this.overlayMesh);
@@ -485,6 +490,13 @@ class SceneManager {
                 this.tickHandlers.delete(priority);
             }
         }
+    };
+  }
+
+  getOverlayInfo() {
+    return {
+      url: this.currentOverlayUrl,
+      opacity: this.currentOverlayOpacity
     };
   }
 

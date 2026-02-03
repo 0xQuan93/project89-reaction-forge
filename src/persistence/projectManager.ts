@@ -4,6 +4,9 @@ import { useTimelineStore } from '../state/useTimelineStore';
 import { useAvatarSource } from '../state/useAvatarSource';
 import { useAvatarListStore } from '../state/useAvatarListStore';
 import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
+import { useUIStore } from '../state/useUIStore';
+import { useDirectorStore } from '../state/useDirectorStore';
+import type { ReactionTab, PoseLabTab } from '../state/useUIStore';
 import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { environmentManager } from '../three/environmentManager';
@@ -19,6 +22,8 @@ export class ProjectManager {
     const timelineState = useTimelineStore.getState();
     const avatarSource = useAvatarSource.getState();
     const sceneSettings = useSceneSettingsStore.getState();
+    const uiState = useUIStore.getState();
+    const directorState = useDirectorStore.getState();
     
     const camera = sceneManager.getCamera();
     const controls = sceneManager.getControls();
@@ -35,6 +40,9 @@ export class ProjectManager {
     
     // Get 3D environments
     const environments3d = environment3DManager.getSerializeableData();
+    
+    // Get overlay info
+    const overlay = sceneManager.getOverlayInfo();
 
     // Get current avatar pose and transform
     const currentPose = avatarManager.captureCurrentPose();
@@ -45,22 +53,49 @@ export class ProjectManager {
         rotation: { x: THREE.MathUtils.radToDeg(vrm.scene.rotation.x), y: THREE.MathUtils.radToDeg(vrm.scene.rotation.y), z: THREE.MathUtils.radToDeg(vrm.scene.rotation.z) }
     } : undefined;
 
+    // Handle Live2D assets if active
+    let live2dData = undefined;
+    if (avatarSource.avatarType === 'live2d' && avatarSource.live2dSource) {
+      live2dData = {
+        manifestPath: avatarSource.live2dSource.manifestPath,
+        assets: avatarSource.live2dSource.assets.map(asset => ({
+          name: asset.name,
+          mimeType: asset.mimeType,
+          data: window.btoa(
+            new Uint8Array(asset.buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+          )
+        }))
+      };
+    }
+
     return {
       version: PROJECT_VERSION,
       date: Date.now(),
       metadata: {
         name,
       },
+      ui: {
+        activeCssOverlay: uiState.activeCssOverlay,
+        focusModeActive: uiState.focusModeActive,
+        activeTab: uiState.mode === 'reactions' ? uiState.reactionTab : uiState.poseLabTab
+      },
+      director: {
+        currentScript: directorState.currentScript,
+      },
       scene: {
         backgroundId,
         customBackgroundData: sceneSettings.customBackgroundData,
         customBackgroundType: sceneSettings.customBackgroundType,
+        overlay: overlay.url ? { url: overlay.url, opacity: overlay.opacity } : undefined,
         customEnvironmentData: customEnv.data,
         customEnvironmentType: customEnv.type,
         environments3d,
         camera: {
           position: camera ? { x: camera.position.x, y: camera.position.y, z: camera.position.z } : { x: 0, y: 1.4, z: 1.6 },
           target: controls ? { x: controls.target.x, y: controls.target.y, z: controls.target.z } : { x: 0, y: 1.4, z: 0 },
+          fov: camera?.fov,
+          near: camera?.near,
+          far: camera?.far
         },
         lighting: sceneSettings.lighting,
         postProcessing: sceneSettings.postProcessing,
@@ -76,11 +111,13 @@ export class ProjectManager {
         activePresetId: reactionState.activePreset.id,
       },
       avatar: {
+        type: avatarSource.avatarType,
         name: avatarSource.sourceLabel || 'Current Avatar',
         url: isRemoteUrl ? currentUrl : undefined,
         pose: currentPose,
         expressions: currentExpressions,
-        transform: avatarTransform
+        transform: avatarTransform,
+        live2d: live2dData
       }
     };
   }
@@ -95,6 +132,29 @@ export class ProjectManager {
 
     if (project.version > PROJECT_VERSION) {
       console.warn('[ProjectManager] Project version is newer than supported. Some features may break.');
+    }
+
+    // 0. Restore UI & Director State
+    if (project.ui) {
+      const uiStore = useUIStore.getState();
+      if (project.ui.activeCssOverlay !== undefined) {
+        uiStore.setActiveCssOverlay(project.ui.activeCssOverlay);
+      }
+      if (project.ui.focusModeActive !== undefined) {
+        uiStore.setFocusModeActive(project.ui.focusModeActive);
+      }
+      if (project.ui.activeTab) {
+        if (uiStore.mode === 'reactions') {
+          uiStore.setReactionTab(project.ui.activeTab as ReactionTab);
+        } else {
+          uiStore.setPoseLabTab(project.ui.activeTab as PoseLabTab);
+        }
+      }
+    }
+
+    if (project.director) {
+      const directorStore = useDirectorStore.getState();
+      directorStore.setScript(project.director.currentScript || null);
     }
 
     // 1. Restore Scene
@@ -180,20 +240,38 @@ export class ProjectManager {
         sceneSettings.setMaterial(project.scene.material);
     }
     
+    // Restore overlay
+    if (project.scene.overlay) {
+      sceneManager.setOverlay(project.scene.overlay.url || null, project.scene.overlay.opacity);
+    }
     // Set Camera
     const camera = sceneManager.getCamera();
     const controls = sceneManager.getControls();
     if (camera && controls) {
-      camera.position.set(
-        project.scene.camera.position.x,
-        project.scene.camera.position.y,
-        project.scene.camera.position.z
-      );
-      controls.target.set(
-        project.scene.camera.target.x,
-        project.scene.camera.target.y,
-        project.scene.camera.target.z
-      );
+      if (project.scene.camera?.position) {
+        camera.position.set(
+          project.scene.camera.position.x,
+          project.scene.camera.position.y,
+          project.scene.camera.position.z
+        );
+      }
+      if (project.scene.camera?.target) {
+        controls.target.set(
+          project.scene.camera.target.x,
+          project.scene.camera.target.y,
+          project.scene.camera.target.z
+        );
+      }
+      if (project.scene.camera?.fov !== undefined) {
+        camera.fov = project.scene.camera.fov;
+      }
+      if (project.scene.camera?.near !== undefined) {
+        camera.near = project.scene.camera.near;
+      }
+      if (project.scene.camera?.far !== undefined) {
+        camera.far = project.scene.camera.far;
+      }
+      camera.updateProjectionMatrix();
       controls.update();
     }
 
@@ -256,6 +334,22 @@ export class ProjectManager {
            console.warn('[ProjectManager] Error searching avatar library:', e);
            avatarWarning = `Avatar "${project.avatar.name}" could not be restored.`;
       }
+    }
+
+    // Restore Live2D avatar if present
+    if (project.avatar?.type === 'live2d' && project.avatar.live2d) {
+      console.log('[ProjectManager] Restoring Live2D avatar');
+      const avatarSource = useAvatarSource.getState();
+      const live2dAssets = project.avatar.live2d.assets.map(asset => {
+        const binaryString = window.atob(asset.data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new File([bytes], asset.name, { type: asset.mimeType });
+      });
+      avatarSource.setLive2dSource(live2dAssets, project.avatar.live2d.manifestPath);
     }
 
     // Restore Avatar Transform & Pose (if avatar is present or when it loads)

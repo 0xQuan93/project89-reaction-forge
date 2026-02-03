@@ -5,10 +5,10 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 const ffmpeg = new FFmpeg();
 
 export async function convertWebMToMp4(webmBlob: Blob, onProgress?: (progress: number) => void): Promise<Blob> {
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
   
   if (!ffmpeg.loaded) {
-    console.log('[FFmpeg] Loading core...');
+    console.log('[FFmpeg] Loading core (Single-Threaded)...');
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -41,10 +41,10 @@ export async function createVideoFromFrames(
   fps: number, 
   onProgress?: (progress: number) => void
 ): Promise<Blob> {
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
   
   if (!ffmpeg.loaded) {
-    console.log('[FFmpeg] Loading core...');
+    console.log('[FFmpeg] Loading core (Single-Threaded)...');
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -57,10 +57,14 @@ export async function createVideoFromFrames(
 
   console.log(`[FFmpeg] Writing ${frames.length} frames...`);
   
-  // Write frames to FS
+  // Write frames to FS one by one and delete immediately to save memory
   for (let i = 0; i < frames.length; i++) {
     const filename = `frame_${i.toString().padStart(3, '0')}.png`;
     await ffmpeg.writeFile(filename, await fetchFile(frames[i]));
+    frames[i] = null as any; // Release memory for the Blob immediately
+    if (i % 50 === 0) { // Periodically yield to prevent UI freeze
+      await new Promise(r => setTimeout(r, 0));
+    }
   }
 
   console.log('[FFmpeg] Stitching frames...');

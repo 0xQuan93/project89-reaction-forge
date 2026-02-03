@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { directorManager } from '../../three/DirectorManager';
 import { useDirectorStore } from '../../state/useDirectorStore';
 import { useToastStore } from '../../state/useToastStore';
+import { exportOfflineWebM } from '../../export/exportVideo';
 import { 
   Play, 
   Stop, 
@@ -15,7 +16,8 @@ import {
   PencilSimple,
   X,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Spinner
 } from '@phosphor-icons/react';
 import type { PoseId, ExpressionId, BackgroundId } from '../../types/reactions';
 import type { CameraPreset } from '../../types/director';
@@ -34,6 +36,8 @@ export function DirectorTab() {
   } = useDirectorStore();
   
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState('');
 
@@ -50,6 +54,42 @@ export function DirectorTab() {
   const handleStopScript = () => {
     directorManager.stop();
     setIsPlaying(false);
+  };
+
+  const handleExportScript = async () => {
+    if (!currentScript || currentScript.shots.length === 0) {
+      addToast('Add at least one shot to export!', 'warning');
+      return;
+    }
+
+    if (isExporting) return;
+
+    try {
+      setIsExporting(true);
+      setExportProgress(0);
+      addToast('Starting high-quality render...', 'info');
+
+      // Start the script in director manager so it's ready to be stepped
+      await directorManager.playScript(currentScript);
+
+      await exportOfflineWebM({
+        duration: currentScript.totalDuration,
+        fps: 60, // High quality export
+        includeLogo: true,
+        width: 1920, // 1080p target
+        height: 1080,
+        onProgress: (p) => setExportProgress(p)
+      });
+
+      addToast('Export completed successfully!', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      addToast('Export failed. Check console for details.', 'error');
+    } finally {
+      directorManager.stop();
+      setIsExporting(false);
+      setExportProgress(0);
+    }
   };
 
   const handleAddDefaultShot = () => {
@@ -406,9 +446,19 @@ export function DirectorTab() {
               </button>
             )}
             
-            <button className="secondary full-width large" onClick={() => addToast('Render feature coming soon!', 'info')}>
-              <VideoCamera size={22} weight="duotone" /> Export WebM
-            </button>
+            {isExporting ? (
+              <button className="secondary full-width large" disabled style={{ cursor: 'wait' }}>
+                <Spinner size={22} className="spin" /> 
+                {exportProgress > 0.5 
+                  ? `Stitching... ${Math.round((exportProgress - 0.5) * 200)}%` 
+                  : `Rendering... ${Math.round(exportProgress * 200)}%`
+                }
+              </button>
+            ) : (
+              <button className="secondary full-width large" onClick={handleExportScript}>
+                <VideoCamera size={22} weight="duotone" /> Export WebM
+              </button>
+            )}
           </div>
         </div>
       )}

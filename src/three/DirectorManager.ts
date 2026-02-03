@@ -15,7 +15,7 @@ class DirectorManager {
   private startCameraTarget = new THREE.Vector3();
   private targetCameraPos = new THREE.Vector3();
   private targetCameraTarget = new THREE.Vector3();
-  private shotStartTime = 0;
+  private shotElapsedTime = 0;
 
   /**
    * Play a director script
@@ -40,8 +40,8 @@ class DirectorManager {
     await this.setupShot(0);
 
     // Register tick for camera movement
-    this.tickDispose = sceneManager.registerTick(() => {
-      this.update();
+    this.tickDispose = sceneManager.registerTick((delta) => {
+      this.update(delta);
     });
   }
 
@@ -69,7 +69,7 @@ class DirectorManager {
 
     const shot = this.currentScript.shots[index];
     this.currentShotIndex = index;
-    this.shotStartTime = performance.now() / 1000;
+    this.shotElapsedTime = 0;
 
     console.log(`[Director] Shot ${index + 1}: ${shot.name} (${shot.duration}s)`);
 
@@ -181,14 +181,13 @@ class DirectorManager {
     this.targetCameraTarget.copy(lookAtPos);
   }
 
-  private update() {
+  private update(delta: number) {
     if (!this.isPlaying || !this.currentScript) return;
 
-    const now = performance.now() / 1000;
-    const shotElapsed = now - this.shotStartTime;
+    this.shotElapsedTime += delta;
     const shot = this.currentScript.shots[this.currentShotIndex];
 
-    if (shotElapsed >= shot.duration) {
+    if (this.shotElapsedTime >= shot.duration) {
       // Move to next shot
       this.setupShot(this.currentShotIndex + 1);
       return;
@@ -199,10 +198,10 @@ class DirectorManager {
     const controls = sceneManager.getControls();
     if (!camera || !controls) return;
 
-    const t = shotElapsed / shot.duration;
+    const t = this.shotElapsedTime / shot.duration;
     const transitionTime = 1.5; // 1.5 second smooth transition between shots
-    const isTransitioning = shotElapsed < transitionTime;
-    const transitionT = isTransitioning ? shotElapsed / transitionTime : 1.0;
+    const isTransitioning = this.shotElapsedTime < transitionTime;
+    const transitionT = isTransitioning ? this.shotElapsedTime / transitionTime : 1.0;
     
     // Smooth easing for transition
     const easedT = transitionT < 0.5 ? 2 * transitionT * transitionT : -1 + (4 - 2 * transitionT) * transitionT;
