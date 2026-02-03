@@ -27,7 +27,8 @@ export interface ProjectState {
     environments3d?: Array<{
       id: string;
       name: string;
-      data: string; // Base64 of GLB
+      data?: string; // Base64 of GLB (optional if url provided)
+      url?: string; // URL for remote assets
       settings: {
         position: { x: number; y: number; z: number };
         rotation: { x: number; y: number; z: number };

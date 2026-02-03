@@ -8,6 +8,7 @@ import { geminiService } from "../services/gemini";
 import { geminiProxy } from "../services/geminiProxy";
 import { avatarController, type GestureType, type EmotionState } from "./AvatarController";
 import type { ExpressionId, PoseId } from "../types/reactions";
+import type { DirectorScript } from "../types/director";
 
 // Check if we should use the server proxy (no API key needed)
 const USE_PROXY = !import.meta.env.VITE_GEMINI_API_KEY;
@@ -188,6 +189,76 @@ class AIManager {
       console.error("Failed to load AI:", e);
       store.setLoading(false, 0);
       throw e;
+    }
+  }
+
+  /**
+   * Generate a Director Script from a natural language prompt
+   */
+  async generateDirectorScript(userPrompt: string): Promise<DirectorScript | null> {
+    if (!this.isInitialized) await this.init();
+
+    const directorSystemPrompt = `
+      You are an expert 3D Cinematographer and Director. Your task is to turn a user request into a high-quality "Director Script" for a 3D avatar animation.
+      
+      ## AVAILABLE ASSETS
+      - Poses: dawn-runner, sunset-call, cipher-whisper, nebula-drift, agent-taunt, agent-dance, agent-clapping, silly-agent, simple-wave, point, locomotion-walk, locomotion-run, locomotion-jog, idle-neutral, sit-chair, action-swim.
+      - Expressions: calm, joy, surprise.
+      - Backgrounds: synthwave-grid, neural-circuit, neon-waves, quantum-particles, signal-glitch, cyber-hexagons, protocol-gradient, void-minimal, green-screen, lush-forest, volcano, deep-sea, hacker-room.
+      - Camera Presets: headshot, portrait, medium, full-body, wide, low-angle, high-angle, over-shoulder, orbit-slow, orbit-fast, dolly-in, dolly-out.
+
+      ## OUTPUT FORMAT
+      You must output ONLY a valid JSON object matching this structure:
+      {
+        "title": "Script Title",
+        "description": "Short description",
+        "shots": [
+          {
+            "id": "shot-1",
+            "name": "Shot Name",
+            "poseId": "pose-id",
+            "expressionId": "expression-id",
+            "backgroundId": "background-id",
+            "cameraPreset": "camera-preset",
+            "duration": 5,
+            "transition": "smooth",
+            "animated": true
+          }
+        ],
+        "totalDuration": 15
+      }
+
+      ## CINEMATOGRAPHY TIPS
+      - Start with an establishing shot (wide or full-body).
+      - Use transitions between angles (e.g., Wide -> Medium -> Close-up).
+      - Keep shots between 3-6 seconds for good pacing.
+      - Match the camera angle to the action (e.g., "headshot" for "talking", "full-body" for "dancing").
+    `;
+
+    try {
+      const prompt = `${directorSystemPrompt}\n\nUser Request: "${userPrompt}"\n\nGenerate a cinematic Director Script in JSON format.`;
+      
+      let jsonText: string;
+      if (this.useProxy) {
+        const response = await geminiProxy.chat(prompt);
+        jsonText = response.text;
+      } else {
+        const result = await this.model.generateContent([directorSystemPrompt, prompt]);
+        jsonText = result.response.text();
+      }
+
+      const cleanedJson = jsonText.replace(/```json\n?|\n?```/g, '').trim();
+      const script = JSON.parse(cleanedJson) as DirectorScript;
+      
+      script.id = `script-${Date.now()}`;
+      script.shots.forEach((shot, i) => {
+        if (!shot.id) shot.id = `shot-${i + 1}`;
+      });
+
+      return script;
+    } catch (e) {
+      console.error("[AIManager] Failed to generate director script:", e);
+      return null;
     }
   }
 

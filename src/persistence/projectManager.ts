@@ -128,7 +128,7 @@ export class ProjectManager {
         
         for (const envData of project.scene.environments3d) {
           try {
-            await environment3DManager.loadFromData(envData.data, envData.name, envData.settings);
+            await environment3DManager.loadFromData(envData.data, envData.name, envData.settings, envData.url);
           } catch (e) {
             console.error('[ProjectManager] Failed to restore 3D environment:', envData.name, e);
           }
@@ -145,11 +145,11 @@ export class ProjectManager {
         );
         // Note: setCustomBackground already sets currentBackground to 'custom' and updates store
         const dataUrl = `data:${project.scene.customBackgroundType};base64,${project.scene.customBackgroundData}`;
-        await sceneManager.setBackground(dataUrl);
+        await sceneManager.setBackground(dataUrl, true);
       } else if (project.scene.backgroundId) {
         console.log('[ProjectManager] Restoring background:', project.scene.backgroundId);
         // Restore standard background
-        await sceneManager.setBackground(project.scene.backgroundId);
+        await sceneManager.setBackground(project.scene.backgroundId, true);
         sceneSettings.setCurrentBackground(project.scene.backgroundId);
       }
     } catch (e) {

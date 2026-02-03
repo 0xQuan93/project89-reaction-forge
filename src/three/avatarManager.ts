@@ -9,6 +9,7 @@ import { getPoseDefinition, getPoseDefinitionWithAnimation, type PoseDefinition 
 import { poseToAnimationClip } from '../poses/poseToAnimation';
 import { getAnimatedPose } from '../poses/animatedPoses';
 import { materialManager } from './materialManager';
+import { collisionManager } from './collisionManager';
 
 // Import type only to avoid circular dependency at runtime
 // The actual store access happens after all modules are initialized
@@ -85,9 +86,13 @@ class AvatarManager {
   private currentUrl?: string;
   private tickDispose?: () => void;
   private isAnimated = false;
+  private isRootMotionEnabled = false;
   private isInteracting = false; 
   private isManualPosing = false;
   private defaultHipsPosition: THREE.Vector3 = new THREE.Vector3(0, 1.0, 0);
+  private hipsLocalPosStart = new THREE.Vector3();
+  private hipsWorldPos = new THREE.Vector3();
+  private lastHipsWorldPos = new THREE.Vector3();
   
   // Pending state for project restore
   private pendingProjectPose: VRMPose | null = null;
@@ -281,26 +286,85 @@ class AvatarManager {
         // Update blink state first
         this.updateBlink(delta);
         
+        // 1. Root Motion Pre-Update: Capture Hips position
+        if (this.isAnimated && this.isRootMotionEnabled && !this.isInteracting) {
+          const hips = this.vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
+          if (hips) this.hipsLocalPosStart.copy(hips.position);
+        }
+
         // Update VRM (this applies expression updates if we called update() in updateBlink)
-        // Note: VRM.update() also updates the expression manager internally if using the standard one.
-        // However, if we manually set values, we need to ensure they persist.
         this.vrm.update(delta);
         
         // ALWAYS update the animation mixer if an animation is playing
-        // The isInteracting flag should only pause, not block entirely
         if (this.isAnimated) {
           if (!this.isInteracting) {
             animationManager.update(delta);
           }
-          // If interacting but animated, we still want the mixer to be ready
-          // just not updating (paused state)
+        }
+
+        // 2. Root Motion Post-Update: Extract delta and handle Collisions
+        if (this.isAnimated && this.isRootMotionEnabled && !this.isInteracting) {
+          this.updateRootMotion(delta);
+        } else if (this.vrm && !this.isInteracting) {
+          // Even without root motion, handle basic grounding if an environment is present
+          this.updateGrounding(delta);
         }
         
         // CRITICAL: Enforce locked Hips rotation AFTER all other updates
-        // This ensures manual rotation adjustments are preserved through animations and poses
         this.enforceLockedHipsRotation();
       }
     });
+  }
+
+  private updateGrounding(_delta: number) {
+    if (!this.vrm) return;
+    const hips = this.vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
+    if (!hips) return;
+
+    hips.getWorldPosition(this.hipsWorldPos);
+    const groundY = collisionManager.getGroundHeight(this.hipsWorldPos);
+    if (groundY !== null) {
+      this.vrm.scene.position.y = THREE.MathUtils.lerp(this.vrm.scene.position.y, groundY, 0.1);
+    }
+  }
+
+  private updateRootMotion(_delta: number) {
+    if (!this.vrm) return;
+    const humanoid = this.vrm.humanoid;
+    if (!humanoid) return;
+
+    const hips = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Hips);
+    if (!hips) return;
+
+    // --- ROOT MOTION EXTRACTION ---
+    // 1. Calculate the local movement delta of the hips
+    const deltaX = hips.position.x - this.hipsLocalPosStart.x;
+    const deltaZ = hips.position.z - this.hipsLocalPosStart.z;
+
+    // 2. Apply that delta to the scene root (vrm.scene) instead of the bone
+    // We rotate the delta by the avatar's current rotation so it moves in the right direction
+    const worldDelta = new THREE.Vector3(deltaX, 0, deltaZ).applyQuaternion(this.vrm.scene.quaternion);
+    
+    // 3. Wall Collision: Check if movement is blocked
+    hips.getWorldPosition(this.hipsWorldPos);
+    const moveDist = worldDelta.length();
+    if (moveDist > 0.0001) {
+      const moveDir = worldDelta.clone().normalize();
+      // Raycast from the hips world position in the movement direction
+      const wallDist = collisionManager.checkWallCollision(this.hipsWorldPos, moveDir, moveDist + 0.1);
+      
+      if (wallDist === null || wallDist > moveDist) {
+        this.vrm.scene.position.add(worldDelta);
+      }
+    }
+
+    // 4. Reset hips local X/Z to stay centered on the root
+    // We keep Y as-is for vertical animation (crouching/jumping)
+    hips.position.x = this.hipsLocalPosStart.x;
+    hips.position.z = this.hipsLocalPosStart.z;
+
+    // 5. Handle grounding after movement
+    this.updateGrounding(_delta);
   }
 
   rebindToScene() {
@@ -505,7 +569,7 @@ class AvatarManager {
     }
   }
 
-  async applyPose(pose: PoseId, animated = false, animationMode: AnimationMode = 'static') {
+  async applyPose(pose: PoseId, animated = false, animationMode: AnimationMode = 'static', rootMotion = false) {
     if (!this.vrm) {
       console.warn('[AvatarManager] applyPose called but no VRM loaded');
       return;
@@ -526,8 +590,11 @@ class AvatarManager {
     const shouldAnimate = animated || effectiveAnimationMode !== 'static';
     const shouldLoop = effectiveAnimationMode === 'loop';
     
-    console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}`);
+    console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}, rootMotion=${rootMotion}`);
     
+    this.isRootMotionEnabled = rootMotion;
+    this.lastHipsWorldPos.set(0, 0, 0); // Reset for new animation motion tracking
+
     // Pass VRM to getPoseDefinitionWithAnimation so it can retarget the animation tracks
     const def = shouldAnimate ? await getPoseDefinitionWithAnimation(pose, this.vrm) : getPoseDefinition(pose);
     if (!def) {
@@ -567,7 +634,7 @@ class AvatarManager {
       );
 
       const playableClip = needsRetargeting
-        ? retargetAnimationClip(def.animationClip, this.vrm, { stripHipsPosition: true })
+        ? retargetAnimationClip(def.animationClip, this.vrm, { stripHipsPosition: !rootMotion })
         : def.animationClip;
 
       this.playAnimationClip(playableClip, shouldLoop);

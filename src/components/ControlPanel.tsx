@@ -5,6 +5,7 @@ import { SceneTab } from './tabs/SceneTab';
 import { ExportTab } from './tabs/ExportTab';
 import { PosesTab } from './tabs/PosesTab';
 import { MocapTab } from './tabs/MocapTab';
+import { DirectorTab } from './tabs/DirectorTab';
 import { AnimationsTab } from './tabs/AnimationsTab';
 import { 
   Sliders, 
@@ -14,7 +15,8 @@ import {
   Play,
   UserFocus,
   VideoCamera,
-  FloppyDisk
+  FloppyDisk,
+  FilmStrip
 } from '@phosphor-icons/react';
 
 interface ControlPanelProps {
@@ -94,6 +96,13 @@ export function ControlPanel({ mode }: ControlPanelProps) {
           <span>Mocap</span>
         </button>
         <button
+          className={poseLabTab === 'director' ? 'active' : ''}
+          onClick={() => setPoseLabTab('director')}
+        >
+          <FilmStrip size={16} weight="duotone" />
+          <span>Director</span>
+        </button>
+        <button
           className={poseLabTab === 'export' ? 'active' : ''}
           onClick={() => setPoseLabTab('export')}
         >
@@ -106,6 +115,7 @@ export function ControlPanel({ mode }: ControlPanelProps) {
         {poseLabTab === 'animations' && <AnimationsTab />}
         {poseLabTab === 'poses' && <PosesTab />}
         {poseLabTab === 'mocap' && <MocapTab />}
+        {poseLabTab === 'director' && <DirectorTab />}
         {poseLabTab === 'export' && <ExportTab mode="poselab" />}
       </div>
     </aside>

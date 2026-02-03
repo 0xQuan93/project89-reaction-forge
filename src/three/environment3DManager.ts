@@ -2,6 +2,14 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { sceneManager } from './sceneManager';
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+
+// Add BVH support to THREE
+// @ts-ignore
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+// @ts-ignore
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 // ======================
 // Types & Configuration
@@ -23,6 +31,7 @@ export interface LoadedEnvironment {
   data?: string; // Base64 for persistence
   group: THREE.Group;
   settings: Environment3DSettings;
+  colliders: THREE.Mesh[];
 }
 
 export const DEFAULT_ENV_3D_SETTINGS: Environment3DSettings = {
@@ -94,16 +103,25 @@ class Environment3DManager {
           // Add the loaded scene to our group
           group.add(gltf.scene);
 
-          // Center the model based on its bounding box
+          // Ground the model based on its bounding box
           const box = new THREE.Box3().setFromObject(gltf.scene);
           const center = box.getCenter(new THREE.Vector3());
-          gltf.scene.position.sub(center);
-          
-          // Calculate scale to fit reasonably in scene (target ~5 units max dimension)
           const size = box.getSize(new THREE.Vector3());
+          
+          // Center on X and Z, but place bottom at Y=0
+          gltf.scene.position.x -= center.x;
+          gltf.scene.position.z -= center.z;
+          gltf.scene.position.y -= box.min.y;
+          
+          // Calculate scale to fit reasonably in scene (target ~15 units max dimension for environments)
           const maxDim = Math.max(size.x, size.y, size.z);
-          const targetSize = 5;
-          const autoScale = maxDim > 0 ? targetSize / maxDim : 1;
+          const targetSize = 15;
+          let autoScale = maxDim > 0 ? targetSize / maxDim : 1;
+          
+          // If the model is already "human scale" (between 2m and 40m), keep it at 1:1
+          if (maxDim > 2 && maxDim < 40) {
+            autoScale = 1.0;
+          }
           
           // Apply default settings
           const settings: Environment3DSettings = {
@@ -113,11 +131,20 @@ class Environment3DManager {
 
           this.applySettings(group, settings);
 
-          // Setup shadows for all meshes
+          const colliders: THREE.Mesh[] = [];
+
+          // Setup shadows and colliders for all meshes
           group.traverse((child) => {
             if (child instanceof THREE.Mesh) {
               child.castShadow = settings.castShadow;
               child.receiveShadow = settings.receiveShadow;
+              
+              // Generate BVH collider for each mesh
+              if (child.geometry) {
+                // @ts-ignore
+                child.geometry.computeBoundsTree();
+                colliders.push(child);
+              }
             }
           });
 
@@ -131,6 +158,7 @@ class Environment3DManager {
             data: base64Data,
             group,
             settings,
+            colliders,
           };
 
           this.environments.set(id, environment);
@@ -181,19 +209,28 @@ class Environment3DManager {
   /**
    * Load environment from base64 data (for project restore)
    */
-  async loadFromData(base64: string, name: string, settings?: Environment3DSettings): Promise<LoadedEnvironment> {
-    // Convert base64 to blob
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+  async loadFromData(base64: string | undefined, name: string, settings?: Environment3DSettings, url?: string): Promise<LoadedEnvironment> {
+    let loadUrl: string;
+    
+    if (base64) {
+        // Convert base64 to blob
+        const binaryString = window.atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'model/gltf-binary' });
+        loadUrl = URL.createObjectURL(blob);
+    } else if (url) {
+        loadUrl = url;
+    } else {
+        throw new Error('No data or URL provided for environment');
     }
-    const blob = new Blob([bytes], { type: 'model/gltf-binary' });
-    const url = URL.createObjectURL(blob);
     
     try {
-      const env = await this.loadFromUrl(url, name, base64);
+      // Pass base64 if we have it, so it persists again if re-saved
+      const env = await this.loadFromUrl(loadUrl, name, base64);
       
       // Restore settings if provided
       if (settings) {
@@ -202,7 +239,7 @@ class Environment3DManager {
       
       return env;
     } catch (error) {
-      URL.revokeObjectURL(url);
+      if (base64) URL.revokeObjectURL(loadUrl);
       throw error;
     }
   }
@@ -318,11 +355,12 @@ class Environment3DManager {
    */
   getSerializeableData() {
     return Array.from(this.environments.values())
-      .filter(env => env.data) // Only return those with data (uploaded ones)
+      .filter(env => env.data || !env.url.startsWith('blob:')) // Return if has data OR if it's a persistent URL (not blob)
       .map(env => ({
         id: env.id,
         name: env.name,
-        data: env.data!,
+        data: env.data, // might be undefined
+        url: !env.data ? env.url : undefined, // save URL if data is missing
         settings: env.settings
       }));
   }
@@ -339,6 +377,19 @@ class Environment3DManager {
    */
   hasEnvironments(): boolean {
     return this.environments.size > 0;
+  }
+
+  /**
+   * Get all active colliders from all visible environments
+   */
+  getAllColliders(): THREE.Mesh[] {
+    const colliders: THREE.Mesh[] = [];
+    this.environments.forEach(env => {
+      if (env.settings.visible) {
+        colliders.push(...env.colliders);
+      }
+    });
+    return colliders;
   }
 
   /**

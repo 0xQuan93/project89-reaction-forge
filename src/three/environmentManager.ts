@@ -102,6 +102,8 @@ export const HDRI_PRESETS: Record<string, { name: string; url: string | null; pr
 class EnvironmentManager {
   private loader = new RGBELoader();
   private currentTexture?: THREE.Texture;
+  private currentUrl?: string | null;
+  private currentPresetId?: string | null;
   private currentSettings: EnvironmentSettings = DEFAULT_ENV_SETTINGS;
   private pmremGenerator?: THREE.PMREMGenerator;
   private envMap?: THREE.Texture;
@@ -135,7 +137,7 @@ class EnvironmentManager {
   /**
    * Load and apply an HDRI environment map
    */
-  async loadHDRI(url: string): Promise<void> {
+  async loadHDRI(url: string, presetId?: string): Promise<void> {
     const scene = sceneManager.getScene();
     const renderer = sceneManager.getRenderer();
     
@@ -145,6 +147,18 @@ class EnvironmentManager {
 
     if (!this.pmremGenerator) {
       this.init();
+    }
+
+    // SKIP if already loaded - prevents "catching" during animation/export
+    if ((this.currentUrl === url || (presetId && this.currentPresetId === presetId)) && this.envMap) {
+      console.log('[EnvironmentManager] Skipping HDRI load (already active):', url || presetId);
+      
+      // Still ensure it's applied to the scene in case something else changed it
+      if (scene.environment !== this.envMap) scene.environment = this.envMap;
+      if (this.currentSettings.enabled && scene.background !== this.envMap) {
+        scene.background = this.envMap;
+      }
+      return;
     }
 
     console.log('[EnvironmentManager] Loading HDRI:', url);
@@ -160,6 +174,10 @@ class EnvironmentManager {
 
           // Dispose previous textures
           this.dispose();
+
+          // Update tracking
+          this.currentUrl = url;
+          if (presetId) this.currentPresetId = presetId;
 
           // Generate environment map
           this.currentTexture = texture;
@@ -262,7 +280,7 @@ class EnvironmentManager {
       return;
     }
 
-    await this.loadHDRI(preset.url);
+    await this.loadHDRI(preset.url, presetId);
   }
 
   /**
@@ -413,6 +431,8 @@ class EnvironmentManager {
     this.currentSettings = { ...DEFAULT_ENV_SETTINGS };
     this.customEnvironmentData = null;
     this.customEnvironmentType = null;
+    this.currentPresetId = null;
+    this.currentUrl = null;
     console.log('[EnvironmentManager] Environment cleared');
   }
 
@@ -420,6 +440,8 @@ class EnvironmentManager {
    * Dispose textures
    */
   dispose() {
+    this.currentUrl = null;
+    this.currentPresetId = null;
     if (this.currentTexture) {
       this.currentTexture.dispose();
       this.currentTexture = undefined;

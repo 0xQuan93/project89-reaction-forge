@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export type AppMode = 'reactions' | 'poselab';
 export type ReactionTab = 'presets' | 'pose' | 'scene' | 'export';
-export type PoseLabTab = 'animations' | 'poses' | 'mocap' | 'timeline' | 'export';
+export type PoseLabTab = 'animations' | 'poses' | 'mocap' | 'director' | 'timeline' | 'export';
 
 interface UIState {
   mode: AppMode;

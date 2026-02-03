@@ -175,6 +175,9 @@ export const useSceneSettingsStore = create<SceneSettingsState>()(
       },
       
       setEnvironmentPreset: async (preset) => {
+        if (get().environmentPreset === preset && environmentManager.hasEnvironment()) {
+          return;
+        }
         set({ environmentPreset: preset });
         try {
           await environmentManager.applyPreset(preset);
