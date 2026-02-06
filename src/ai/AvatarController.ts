@@ -23,6 +23,7 @@ import {
   type EmotionState, 
   type GestureType
 } from '../data/gestures';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 /**
  * Helper to safely get a bone node from VRM humanoid
@@ -300,7 +301,8 @@ class AvatarController {
    */
   async applyPose(poseId: PoseId, animated = true): Promise<void> {
     try {
-      await avatarManager.applyPose(poseId, animated, animated ? 'loop' : 'static');
+      const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+      await avatarManager.applyPose(poseId, rotationLocked, animated, animated ? 'loop' : 'static');
     } catch (e) {
       console.error(`[AvatarController] Failed to apply pose: ${poseId}`, e);
     }
@@ -330,7 +332,8 @@ class AvatarController {
     });
 
     // Apply with smooth transition
-    await avatarManager.applyRawPose({ vrmPose: pose }, 'static');
+    const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+    await avatarManager.applyRawPose({ vrmPose: pose }, rotationLocked, 'static');
   }
 
   // -------------------------------------------------------------------------

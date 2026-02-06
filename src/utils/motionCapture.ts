@@ -9,6 +9,7 @@ import { OneEuroFilter, OneEuroFilterQuat, OneEuroFilterVec3 } from './OneEuroFi
 import { live2dManager } from '../live2d/live2dManager';
 import { vmcFrameBuffer } from './vmcInput';
 import { voiceLipSync } from './voiceLipSync';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 // ======================
 // Configuration Constants
@@ -755,10 +756,11 @@ export class MotionCaptureManager {
               console.log('[MotionCaptureManager] AI Interpretation applied');
               // Apply smoothly over 0.5s to avoid a "pop"
               const { avatarManager } = await import('../three/avatarManager');
+              const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
               await avatarManager.applyRawPose({
                   vrmPose: result.vrmPose,
                   expressions: result.expressions
-              }, 'static', true);
+              }, rotationLocked, 'static', true);
           }
       } catch (error) {
           console.error('[MotionCaptureManager] AI Interpretation failed:', error);

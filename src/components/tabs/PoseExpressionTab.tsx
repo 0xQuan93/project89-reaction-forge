@@ -13,6 +13,7 @@ import { CheckCircle, File } from '@phosphor-icons/react';
 export function PoseExpressionTab() {
   const { isAvatarReady, animationMode, setAnimationMode } = useReactionStore();
   const { addToast } = useToastStore();
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
   const [customPose, setCustomPose] = useState<any>(null);
   const [customPoseName, setCustomPoseName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -185,7 +186,7 @@ export function PoseExpressionTab() {
       setCustomPoseName(cleanName);
       
       // Auto-apply the custom pose
-      await avatarManager.applyRawPose(poseData, animationMode);
+      await avatarManager.applyRawPose(poseData, rotationLocked, animationMode);
       addToast('Pose applied successfully', 'success');
     } catch (error) {
       console.error('Failed to load pose:', error);

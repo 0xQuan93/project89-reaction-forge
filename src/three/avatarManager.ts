@@ -9,7 +9,6 @@ import { getPoseDefinition, getPoseDefinitionWithAnimation, type PoseDefinition 
 import { poseToAnimationClip } from '../poses/poseToAnimation';
 import { getAnimatedPose } from '../poses/animatedPoses';
 import { materialManager } from './materialManager';
-import { collisionManager } from './collisionManager';
 import { BlinkManager } from './blinkManager';
 import { RootMotionManager } from './rootMotionManager';
 
@@ -331,7 +330,7 @@ class AvatarManager {
         this.applyRawPose({
           vrmPose: pose || undefined,
           expressions: expressions || undefined
-        }, 'static', false);
+        }, false, 'static', false); // rotationLocked: false, animationMode: 'static', smoothTransition: false
       }, 100);
       
       this.pendingProjectPose = null;
@@ -395,7 +394,7 @@ class AvatarManager {
       
       // Use smooth transition for preset-style changes, immediate for mocap/real-time
       if (smoothTransition) {
-        this.transitionToPose(poseToApply, 0.4, () => {
+        this.transitionToPose(poseToApply, rotationLocked, 0.4, () => {
           console.log('[AvatarManager] ✅ Raw pose transition complete');
         });
       } else {
@@ -444,7 +443,6 @@ class AvatarManager {
     console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}, rootMotion=${rootMotion}`);
     
     this.isRootMotionEnabled = rootMotion;
-    this.lastHipsWorldPos.set(0, 0, 0); // Reset for new animation motion tracking
 
     // Pass VRM to getPoseDefinitionWithAnimation so it can retarget the animation tracks
     const def = shouldAnimate ? await getPoseDefinitionWithAnimation(pose, this.vrm) : getPoseDefinition(pose);
@@ -497,7 +495,7 @@ class AvatarManager {
       const vrmPose = buildVRMPose(def);
       
       // Use smooth transition instead of immediate snap
-      this.transitionToPose(vrmPose, 0.4, () => {
+      this.transitionToPose(vrmPose, rotationLocked, 0.4, () => {
         console.log(`[AvatarManager] ✅ Static pose transition complete: ${pose}`);
       });
     }

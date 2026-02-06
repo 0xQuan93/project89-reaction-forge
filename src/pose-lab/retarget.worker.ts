@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { VRMRigMapMixamo } from './VRMRigMapMixamo';
+import { VRMLoaderPlugin } from '@pixiv/three-vrm';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { getMixamoAnimation } from './getMixamoAnimation';
 
 async function retargetAnimation(vrmBuffer: ArrayBuffer, animationBuffer: ArrayBuffer, animationFileName: string) {
   const loader = new GLTFLoader();
@@ -20,9 +20,12 @@ async function retargetAnimation(vrmBuffer: ArrayBuffer, animationBuffer: ArrayB
     clip = animGltf.animations[0];
   }
 
-  const rigMap = VRMRigMapMixamo(vrm.humanoid);
-  const { retargetedClip } = VRMUtils.retargetAnimationClip(vrm.humanoid, clip, rigMap);
+  const retargetedClip = getMixamoAnimation([clip], new THREE.Object3D(), vrm);
   
+  if (!retargetedClip) {
+    throw new Error('Failed to retarget animation in worker.');
+  }
+
   return retargetedClip;
 }
 
@@ -32,6 +35,6 @@ self.onmessage = async (event) => {
     const retargetedClip = await retargetAnimation(vrmBuffer, animationBuffer, animationFileName);
     self.postMessage({ success: true, animationClip: retargetedClip.toJSON() });
   } catch (error) {
-    self.postMessage({ success: false, error: error.message });
+    self.postMessage({ success: false, error: (error as Error).message });
   }
 };

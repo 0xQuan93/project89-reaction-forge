@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { useReactionStore } from '../../state/useReactionStore';
 import { Play, Pause, Stop, Plus, FloppyDisk, ArrowsClockwise } from '@phosphor-icons/react';
 import { getPoseLabTimestamp } from '../../utils/exportNaming';
+import { useSceneSettingsStore } from '../../state/useSceneSettingsStore';
 
 export function TimelineTab() {
   const { 
@@ -23,6 +24,7 @@ export function TimelineTab() {
   } = useTimelineStore();
 
   const { isAvatarReady } = useReactionStore();
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setClip] = useState<THREE.AnimationClip | null>(null);
 
@@ -60,7 +62,7 @@ export function TimelineTab() {
       // If we have a clip, update the avatar manager
       if (newClip) {
         // Play with 0 fade for instant update
-        avatarManager.playAnimationClip(newClip, false, 0);
+        avatarManager.playAnimationClip(newClip, rotationLocked, false, 0);
         // Pause the internal mixer progression so TimelineTab controls time 100%
         avatarManager.setAnimationSpeed(0);
         // Force seek to current time immediately to prevent jump to 0

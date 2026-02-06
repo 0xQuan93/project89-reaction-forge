@@ -14,6 +14,7 @@ import {
 } from '../data/gestures';
 import { getPoseDefinitionWithAnimation, getPoseDefinition } from '../poses';
 import { buildVRMPose } from './avatarManager';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 /** Position offset for multiple avatars (arranged in a line) */
 const AVATAR_SPACING = 1.2; // meters between avatars
@@ -542,7 +543,8 @@ class MultiAvatarManager {
 
     // For local avatar, delegate to avatarManager
     if (instance.isLocal) {
-      avatarManager.applyPose(poseId as any, animated, animated ? 'once' : 'static');
+      const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+      avatarManager.applyPose(poseId as any, rotationLocked, animated, animated ? 'once' : 'static');
       return;
     }
 

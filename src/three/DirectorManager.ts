@@ -3,6 +3,7 @@ import { sceneManager } from './sceneManager';
 import { avatarManager } from './avatarManager';
 import type { DirectorScript, CameraPreset } from '../types/director';
 import { useToastStore } from '../state/useToastStore';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 class DirectorManager {
   private isPlaying = false;
@@ -74,7 +75,8 @@ class DirectorManager {
     console.log(`[Director] Shot ${index + 1}: ${shot.name} (${shot.duration}s)`);
 
     // 1. Apply Pose & Expression
-    await avatarManager.applyPose(shot.poseId, shot.animated ?? true, 'loop', shot.rootMotion ?? false);
+    const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+    await avatarManager.applyPose(shot.poseId, rotationLocked, shot.animated ?? true, 'loop', shot.rootMotion ?? false);
     avatarManager.applyExpression(shot.expressionId);
 
     // 2. Apply Background

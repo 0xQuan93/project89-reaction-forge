@@ -13,6 +13,7 @@ import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { useIntroStore } from '../state/useIntroStore';
 import type { PoseId, ExpressionId } from '../types/reactions';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 /** Camera keyframe for animation */
 interface CameraKeyframe {
@@ -687,7 +688,8 @@ class IntroSequenceManager {
    */
   async applyDefaultPose() {
     try {
-      await avatarManager.applyPose('sunset-call', true, 'loop');
+      const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+      await avatarManager.applyPose('sunset-call', rotationLocked, true, 'loop');
       avatarManager.applyExpression('calm');
       console.log('[IntroSequence] Applied default pose: sunset-call');
     } catch (e) {
@@ -820,7 +822,8 @@ class IntroSequenceManager {
 
   private async applyPoseKeyframe(poseKf: PoseKeyframe) {
     try {
-      await avatarManager.applyPose(poseKf.pose, poseKf.animated ?? true, 'loop');
+      const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+      await avatarManager.applyPose(poseKf.pose, rotationLocked, poseKf.animated ?? true, 'loop');
       if (poseKf.expression) {
         avatarManager.applyExpression(poseKf.expression);
       }

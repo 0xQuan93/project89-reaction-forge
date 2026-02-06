@@ -1,0 +1,21 @@
+.panel {
+  background-color: var(--color-surface);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.panel__header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.panel__body {
+  padding: 1rem;
+}

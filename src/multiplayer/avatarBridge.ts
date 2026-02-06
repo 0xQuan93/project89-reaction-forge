@@ -12,6 +12,7 @@ import { avatarManager } from '../three/avatarManager';
 import { multiAvatarManager } from '../three/multiAvatarManager';
 import { syncManager } from './syncManager';
 import { useMultiplayerStore } from '../state/useMultiplayerStore';
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 /**
  * Check if we're in a multiplayer session
@@ -74,8 +75,9 @@ export function initAvatarBridge() {
  * Load a VRM avatar - handles both single-player and multiplayer modes
  */
 export async function loadAvatar(url: string) {
+  const setRotationLocked = useSceneSettingsStore.getState().setRotationLocked;
   // Always load via the original avatarManager for single-player compatibility
-  const vrm = await avatarManager.load(url);
+  const vrm = await avatarManager.load(url, setRotationLocked);
 
   // If in multiplayer, also load into multiAvatarManager
   if (isInMultiplayerSession()) {

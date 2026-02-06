@@ -429,10 +429,11 @@ class AIManager {
                 if (result) {
                     // Apply generated pose
                     if (result.vrmPose) {
+                        const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
                         await avatarManager.applyRawPose({
                             vrmPose: result.vrmPose,
                             sceneRotation: result.sceneRotation
-                        }, 'static');
+                        }, rotationLocked, 'static');
                     }
                     
                     // Apply generated background if provided
@@ -598,10 +599,11 @@ class AIManager {
   private async applyPresetPose(poseId: PoseId): Promise<boolean> {
     try {
       console.log(`[AIManager] Applying preset pose: ${poseId}`);
+      const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
       // CRITICAL FIX: Use 'loop' mode instead of just 'animated=true'
       // When animated=true but animationMode='static', it plays once and freezes.
       // We want looping animations for the AI avatar.
-      await avatarManager.applyPose(poseId, true, 'loop');
+      await avatarManager.applyPose(poseId, rotationLocked, true, 'loop');
       console.log(`[AIManager] ✅ Pose applied (looping): ${poseId}`);
       return true;
     } catch (e) {

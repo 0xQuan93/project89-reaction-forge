@@ -3,6 +3,8 @@ import { useAIStore } from '../state/useAIStore';
 import { aiManager } from '../ai/AIManager';
 import { apiKeyStorage } from '../utils/secureStorage';
 import './AIAgentWidget.css';
+import { Button } from '../design-system/Button';
+import { Input } from '../design-system/Input';
 import { 
   Brain, 
   CaretLeft, 
@@ -149,16 +151,16 @@ export function AIAgentWidget() {
           <div className="ai-key-input">
             <p>Enter Google Gemini API Key:</p>
             <div className="ai-key-row">
-              <input 
+              <Input 
                 type="password" 
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="AIzaSy..."
               />
-              <button onClick={handleSaveKey}>Save</button>
+              <Button onClick={handleSaveKey}>Save</Button>
             </div>
             <label className="ai-remember-key">
-              <input 
+              <Input 
                 type="checkbox" 
                 checked={rememberKey}
                 onChange={(e) => setRememberKey(e.target.checked)}
@@ -194,16 +196,16 @@ export function AIAgentWidget() {
             </div>
 
             <form className="ai-input-form" onSubmit={handleSend}>
-              <input 
+              <Input 
                 type="text" 
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={isAIActive ? "Ask me anything..." : "Activate AI to chat"}
                 disabled={!isAIActive || isLoading}
               />
-              <button type="submit" disabled={!isAIActive || isLoading || !inputText.trim()}>
+              <Button type="submit" disabled={!isAIActive || isLoading || !inputText.trim()}>
                 <PaperPlaneTilt size={16} weight="fill" />
-              </button>
+              </Button>
             </form>
           </>
         )}

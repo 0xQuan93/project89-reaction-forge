@@ -8,11 +8,11 @@ import { convertAnimationToScenePaths } from '../../pose-lab/convertAnimationToS
 import { useReactionStore } from '../../state/useReactionStore';
 import { useToastStore } from '../../state/useToastStore';
 import { useAnimationStore } from '../../state/useAnimationStore';
+import { useSceneSettingsStore } from '../../state/useSceneSettingsStore';
 import { ANIMATION_POOL } from '../../poses/animation-pool';
-import { 
-  FilmSlate, 
-  Play, 
-  Pause, 
+import {
+  FilmSlate,
+  Play,  Pause, 
   Stop, 
   Warning
 } from '@phosphor-icons/react';
@@ -27,6 +27,7 @@ export function AnimationsTab() {
   const [statusMessage, setStatusMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isAvatarReady = useReactionStore((state) => state.isAvatarReady);
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
 
   const loadMixamoFromBuffer = async (arrayBuffer: ArrayBuffer, fileName: string) => {
     const ext = fileName.toLowerCase().split('.').pop();
@@ -143,7 +144,7 @@ export function AnimationsTab() {
     try {
       // In PoseLab, avatarManager.applyPose handles loading the JSON and retargeting
       // We set animated=true and loop/once based on state
-      await avatarManager.applyPose(poseId as any, true, isLooping ? 'loop' : 'once');
+      await avatarManager.applyPose(poseId as any, rotationLocked, true, isLooping ? 'loop' : 'once');
       
       // Update UI state
       const vrm = avatarManager.getVRM();

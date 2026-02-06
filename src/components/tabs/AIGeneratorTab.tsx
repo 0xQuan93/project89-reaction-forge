@@ -5,6 +5,7 @@ import { useToastStore } from '../../state/useToastStore';
 import { avatarManager } from '../../three/avatarManager';
 import { apiKeyStorage } from '../../utils/secureStorage';
 import type { VRMPose } from '@pixiv/three-vrm';
+import { useSceneSettingsStore } from '../../state/useSceneSettingsStore';
 import { 
   Robot, 
   Sparkle, 
@@ -33,6 +34,7 @@ export function AIGeneratorTab() {
   const [isLoop, setIsLoop] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   const [rawResponse, setRawResponse] = useState('');
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
   
   // Use environment variable for API Key (highest priority)
   const envApiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -122,10 +124,10 @@ export function AIGeneratorTab() {
       if (result && (result.vrmPose || (result as any).tracks)) {
         if ((result as any).tracks) {
            setGeneratedAnimation({ data: result, loop: isLoop });
-           await avatarManager.applyRawPose(result, isLoop ? 'loop' : 'once'); // Play animation
+           await avatarManager.applyRawPose(result, rotationLocked, isLoop ? 'loop' : 'once'); // Play animation
         } else if (result.vrmPose) {
            setGeneratedPose(result.vrmPose);
-           await avatarManager.applyRawPose({ vrmPose: result.vrmPose, expressions: result.expressions, sceneRotation: result.sceneRotation }, 'static');
+           await avatarManager.applyRawPose({ vrmPose: result.vrmPose, expressions: result.expressions, sceneRotation: result.sceneRotation }, rotationLocked, 'static');
         }
 
         // Apply background if returned
@@ -165,7 +167,7 @@ export function AIGeneratorTab() {
   };
 
   const handleApplySaved = (poseData: { vrmPose: VRMPose }) => {
-    avatarManager.applyRawPose(poseData, 'static');
+    avatarManager.applyRawPose(poseData, rotationLocked, 'static');
   };
 
   const handleExportPose = (pose: any) => {
@@ -416,7 +418,7 @@ export function AIGeneratorTab() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="small" style={{ color: 'var(--accent)' }}>Preview Active</span>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="secondary small" onClick={() => avatarManager.applyRawPose({ vrmPose: generatedPose }, 'static')}>
+              <button className="secondary small" onClick={() => avatarManager.applyRawPose({ vrmPose: generatedPose }, rotationLocked, 'static')}>
                 Re-Apply
               </button>
               <button className="primary small" onClick={handleSave}>
@@ -434,7 +436,7 @@ export function AIGeneratorTab() {
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 className="secondary small"
-                onClick={() => avatarManager.applyRawPose(generatedAnimation.data, generatedAnimation.loop ? 'loop' : 'once')}
+                onClick={() => avatarManager.applyRawPose(generatedAnimation.data, rotationLocked, generatedAnimation.loop ? 'loop' : 'once')}
               >
                 Replay
               </button>

@@ -352,12 +352,21 @@ export class ProjectManager {
       avatarSource.setLive2dSource(live2dAssets, project.avatar.live2d.manifestPath);
     }
 
-    // Restore Avatar Transform & Pose (if avatar is present or when it loads)
     // We register it as pending in AvatarManager so it applies as soon as the load finishes
+    // We intentionally do not restore the Y position, so the avatar snaps to the ground of the loaded environment
+    const transformWithoutY = project.avatar.transform ? {
+      ...project.avatar.transform,
+      position: {
+        x: project.avatar.transform.position.x,
+        y: project.avatar.transform.position.y, // We let the grounding logic handle the Y position
+        z: project.avatar.transform.position.z,
+      }
+    } : undefined;
+
     avatarManager.setPendingProjectState(
         project.avatar.pose,
         project.avatar.expressions,
-        project.avatar.transform
+        transformWithoutY
     );
 
     console.log('[ProjectManager] Project loaded successfully:', project.metadata.name);

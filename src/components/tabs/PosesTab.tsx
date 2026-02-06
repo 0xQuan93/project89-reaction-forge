@@ -4,16 +4,16 @@ import { animationManager } from '../../three/animationManager';
 import { serializeAnimationClip } from '../../poses/animationClipSerializer';
 import type { VRMPose } from '@pixiv/three-vrm';
 import { useToastStore } from '../../state/useToastStore';
+import { useSceneSettingsStore } from '../../state/useSceneSettingsStore';
 import { getPoseLabTimestamp } from '../../utils/exportNaming';
-import { 
-  Camera, 
-  Check, 
-  FloppyDisk, 
-  Trash, 
+import {
+  Camera,
+  Check,
+  FloppyDisk,
+  Trash,
   Export,
   FilmStrip
 } from '@phosphor-icons/react';
-
 interface SavedPose {
   id: string;
   name: string;
@@ -31,6 +31,7 @@ export function PosesTab() {
   const { addToast } = useToastStore();
   const [savedPoses, setSavedPoses] = useState<SavedPose[]>([]);
   const [poseName, setPoseName] = useState('');
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
 
   const handleCapturePose = async () => {
     const vrm = avatarManager.getVRM();
@@ -113,9 +114,9 @@ export function PosesTab() {
         poseData.tracks = pose.animationClip.tracks;
         poseData.duration = pose.animationClip.duration;
         poseData.name = pose.animationClip.name;
-        await avatarManager.applyRawPose(poseData, 'loop');
+        await avatarManager.applyRawPose(poseData, rotationLocked, 'loop');
       } else {
-        await avatarManager.applyRawPose(poseData, 'static');
+        await avatarManager.applyRawPose(poseData, rotationLocked, 'static');
       }
 
       addToast(`✅ Applied pose: ${pose.name}`, 'success');

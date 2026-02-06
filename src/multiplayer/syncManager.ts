@@ -10,6 +10,7 @@ import type {
   VRMChunkMessage,
   VRMCompleteMessage,
   VRMRequestMessage,
+  VRMChunkRequestMessage,
   BackgroundChunkMessage,
   BackgroundCompleteMessage,
 } from '../types/multiplayer';
@@ -198,7 +199,7 @@ class SyncManager {
     }
 
     // Get the VRM file data from the avatar source store
-    const { vrmArrayBuffer, sourceLabel } = useAvatarSource.getState();
+    const { vrmArrayBuffer } = useAvatarSource.getState();
     if (!vrmArrayBuffer) {
       console.warn('[SyncManager] No VRM ArrayBuffer available for transfer');
       return;
@@ -213,7 +214,7 @@ class SyncManager {
     const chunkSize = DEFAULT_MULTIPLAYER_CONFIG.vrmChunkSize;
     
     const fileSizeKB = Math.round(vrmArrayBuffer.byteLength / 1024);
-    console.log(`[SyncManager] Sending VRM to peer ${peerId}: ${sourceLabel} (${fileSizeKB} KB)`);
+    console.log(`[SyncManager] Sending VRM to peer ${peerId}: (${fileSizeKB} KB)`);
 
     // Convert ArrayBuffer to base64 in chunks
     const uint8Array = new Uint8Array(vrmArrayBuffer);
@@ -314,7 +315,7 @@ class SyncManager {
       peerId: store.localPeerId!,
       targetPeerId: peerId,
       timestamp: Date.now(),
-      fileName: sourceLabel,
+      fileName: 'avatar.vrm',
       totalSize: vrmArrayBuffer.byteLength,
     };
 
@@ -605,7 +606,7 @@ class SyncManager {
     const { peerId: requesterPeerId, chunkIndex } = message;
     console.log(`[SyncManager] Received request for missing chunk ${chunkIndex} from ${requesterPeerId}`);
 
-    const { vrmArrayBuffer, sourceLabel } = useAvatarSource.getState();
+    const { vrmArrayBuffer } = useAvatarSource.getState();
     if (!vrmArrayBuffer) {
       console.warn(`[SyncManager] Cannot resend chunk, no VRM buffer available.`);
       return;

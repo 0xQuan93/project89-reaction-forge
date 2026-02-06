@@ -59,8 +59,9 @@ export function CanvasStage() {
   const { addToast } = useToastStore();
   const { currentUrl, avatarType, live2dSource } = useAvatarSource();
   const activeCssOverlay = useUIStore((state) => state.activeCssOverlay);
-  const setRotationLockedCallback = useSceneSettingsStore((state) => state.setRotationLocked);
   const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
+  const setRotationLocked = useSceneSettingsStore((state) => state.setRotationLocked);
+  const setRotationLockedCallback = useCallback(setRotationLocked, [setRotationLocked]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -290,25 +291,9 @@ export function CanvasStage() {
     return () => window.removeEventListener('keydown', handleCaptureKeyDown);
   }, [addToast, avatarReady]);
 
-  // Random auto-snapshot timer
-  const randomSnapshotInterval = useIntroStore((s) => s.randomSnapshotInterval);
-  
-  useEffect(() => {
-    if (!avatarReady || randomSnapshotInterval === 0) return;
-    
-    console.log(`[CanvasStage] Random snapshot timer: every ${randomSnapshotInterval}s`);
-    
-    const timer = setInterval(() => {
-      // Only capture if not in intro sequence
-      if (!introSequence.getIsPlaying()) {
-        introSequence.triggerRandomSnapshot();
-      }
-    }, randomSnapshotInterval * 1000);
-    
-    return () => clearInterval(timer);
-  }, [avatarReady, randomSnapshotInterval]);
 
-  const applyPreset = (currentPreset: ReactionPreset) => {
+  
+  const applyPreset = useCallback((currentPreset: ReactionPreset) => {
     // Use preset's animation settings or fall back to global animation mode
     const animated = currentPreset.animated ?? (animationMode !== 'static');
     const mode = currentPreset.animationMode ?? animationMode;
@@ -322,9 +307,79 @@ export function CanvasStage() {
     // Only change background if not locked
     const { backgroundLocked } = useSceneSettingsStore.getState();
     if (!backgroundLocked) {
-    sceneManager.setBackground(currentPreset.background);
+      sceneManager.setBackground(currentPreset.background);
     }
-  };
+  }, [animationMode, avatarType, rotationLocked]);
+
+  useEffect(() => {
+    if (!avatarReady) return;
+    // Don't re-apply preset if we are in manual posing mode
+    // This prevents the avatar from snapping back to default pose when switching animation modes for gizmos
+    if (avatarManager.isManualPosingEnabled()) return;
+
+    const preset = findPresetById(presetId);
+    if (!preset) return;
+
+    console.log('[CanvasStage] Preset or animation mode changed, applying:', preset.id, animationMode);
+    applyPreset(preset);
+  }, [presetId, avatarReady, animationMode, applyPreset]);
+
+  useEffect(() => {
+    if (!avatarReady || !liveControlsEnabled) return;
+
+    const hotkeyMap: Record<string, string> = {
+      ArrowUp: 'sunset-call',
+      ArrowDown: 'signal-reverie',
+      ArrowLeft: 'simple-wave',
+      ArrowRight: 'point',
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isEditableTarget(event.target)) return;
+
+      const presetId = hotkeyMap[event.key];
+      if (!presetId) return;
+      event.preventDefault();
+      setPresetById(presetId);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [avatarReady, liveControlsEnabled, setPresetById]);
+
+  useEffect(() => {
+    const handleCaptureKeyDown = async (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.code !== 'Space') return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isEditableTarget(event.target)) return;
+      if (isInteractiveTarget(event.target)) return;
+
+      event.preventDefault();
+
+      if (!avatarReady) {
+        addToast('Load an avatar before capturing.', 'warning');
+        return;
+      }
+
+      const dataUrl = await sceneManager.captureSnapshot();
+      if (!dataUrl) {
+        addToast('Failed to capture snapshot.', 'error');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `PoseLab_${getPoseLabTimestamp()}_capture.png`;
+      link.click();
+      addToast('📸 Snapshot saved.', 'success');
+    };
+
+    window.addEventListener('keydown', handleCaptureKeyDown);
+    return () => window.removeEventListener('keydown', handleCaptureKeyDown);
+  }, [addToast, avatarReady]);
 
   return (
     <div
