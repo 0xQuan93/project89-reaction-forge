@@ -6,6 +6,7 @@ import { useUIStore } from '../state/useUIStore';
 import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 import { useIntroStore } from '../state/useIntroStore';
 import type { ReactionPreset } from '../types/reactions';
+import { findPresetById } from '../data/reactions';
 import { useAvatarSource } from '../state/useAvatarSource';
 import { live2dManager } from '../live2d/live2dManager';
 import { OnboardingOverlay } from './OnboardingOverlay';
@@ -51,19 +52,15 @@ import { interactionManager } from '../three/interactionManager';
 export function CanvasStage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const preset = useReactionStore((state) => state.activePreset);
+  const presetId = useReactionStore((state) => state.activePreset.id);
   const animationMode = useReactionStore((state) => state.animationMode);
   const liveControlsEnabled = useReactionStore((state) => state.liveControlsEnabled);
   const setPresetById = useReactionStore((state) => state.setPresetById);
   const { addToast } = useToastStore();
   const { currentUrl, avatarType, live2dSource } = useAvatarSource();
   const activeCssOverlay = useUIStore((state) => state.activeCssOverlay);
-  const { rotationLocked } = useSceneSettingsStore((state) => ({
-    rotationLocked: state.rotationLocked,
-  }));
-  const setRotationLocked = useSceneSettingsStore((state) => state.setRotationLocked);
-
-  const setRotationLockedCallback = useCallback(setRotationLocked, [setRotationLocked]);
+  const setRotationLockedCallback = useSceneSettingsStore((state) => state.setRotationLocked);
+  const rotationLocked = useSceneSettingsStore((state) => state.rotationLocked);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -229,9 +226,12 @@ export function CanvasStage() {
     // This prevents the avatar from snapping back to default pose when switching animation modes for gizmos
     if (avatarManager.isManualPosingEnabled()) return;
 
+    const preset = findPresetById(presetId);
+    if (!preset) return;
+
     console.log('[CanvasStage] Preset or animation mode changed, applying:', preset.id, animationMode);
     applyPreset(preset);
-  }, [preset, avatarReady, animationMode]);
+  }, [presetId, avatarReady, animationMode]);
 
   useEffect(() => {
     if (!avatarReady || !liveControlsEnabled) return;
