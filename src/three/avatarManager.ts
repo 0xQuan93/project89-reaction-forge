@@ -420,22 +420,6 @@ class AvatarManager {
   }
 
   async applyPose(pose: PoseId, rotationLocked: boolean, animated = false, animationMode: AnimationMode = 'static', rootMotion = false) {
-    if (!this.vrm) {
-      console.warn('[AvatarManager] applyPose called but no VRM loaded');
-      return;
-    }
-    
-    // BLOCK pose application entirely when manual posing is active
-    // This preserves all manual bone adjustments made with the gizmo
-    if (this.isManualPosing) {
-      console.log('[AvatarManager] applyPose BLOCKED - manual posing is active');
-      return;
-    }
-    
-    this.isInteracting = false;
-    
-    // Determine if we should animate
-    // If animated=true but animationMode='static', default to 'loop' to prevent freezing
     const effectiveAnimationMode = animated && animationMode === 'static' ? 'loop' : animationMode;
     const shouldAnimate = animated || effectiveAnimationMode !== 'static';
     const shouldLoop = effectiveAnimationMode === 'loop';
@@ -444,10 +428,14 @@ class AvatarManager {
     
     this.isRootMotionEnabled = rootMotion;
 
+    // Set camera to follow for root motion
+    if (rootMotion && this.vrm) {
+      sceneManager.setFollowTarget(this.vrm.scene, 'third-person');
+    }
+
     // Pass VRM to getPoseDefinitionWithAnimation so it can retarget the animation tracks
     const def = shouldAnimate ? await getPoseDefinitionWithAnimation(pose, this.vrm) : getPoseDefinition(pose);
     if (!def) {
-      console.warn(`[AvatarManager] Pose definition not found for: ${pose}`);
       return;
     }
 
@@ -455,7 +443,7 @@ class AvatarManager {
     // Manual posing mode should always preserve the current rotation
     const shouldPreserveRotation = rotationLocked || this.isManualPosing;
     
-    if (!shouldPreserveRotation) {
+    if (!shouldPreserveRotation && this.vrm) {
       this.vrm.scene.rotation.set(
         THREE.MathUtils.degToRad(def.sceneRotation?.x ?? 0), 
         THREE.MathUtils.degToRad(def.sceneRotation?.y ?? 180), // Default to 180 if not specified
@@ -480,23 +468,33 @@ class AvatarManager {
         !t.name.includes('/') || t.name.startsWith('VRMHumanoidRig/') || t.name.startsWith('mixamorig')
       );
 
+      if (!this.vrm) return;
+
       const playableClip = needsRetargeting
         ? retargetAnimationClip(def.animationClip, this.vrm, { stripHipsPosition: !rootMotion })
         : def.animationClip;
 
-      this.playAnimationClip(playableClip, shouldLoop);
+      this.playAnimationClip(playableClip, rotationLocked, shouldLoop);
     } else if (shouldAnimate) {
       console.log(`[AvatarManager] Generating animation from pose: ${pose}`);
+      if (!this.vrm) return;
       const vrmPose = buildVRMPose(def);
       const clip = getAnimatedPose(pose, vrmPose, this.vrm) || poseToAnimationClip(vrmPose, this.vrm, 0.5, pose);
-      this.playAnimationClip(clip, shouldLoop);
+      this.playAnimationClip(clip, rotationLocked, shouldLoop);
     } else {
       console.log(`[AvatarManager] Applying static pose with transition: ${pose}`);
+      // Clear follow target when applying a static pose
+      sceneManager.setFollowTarget(null, null);
+      
       const vrmPose = buildVRMPose(def);
       
       // Use smooth transition instead of immediate snap
       this.transitionToPose(vrmPose, rotationLocked, 0.4, () => {
         console.log(`[AvatarManager] ✅ Static pose transition complete: ${pose}`);
+        // Re-frame the object after the transition to center it
+        if (this.vrm) {
+            sceneManager.frameObject(this.vrm.scene);
+        }
       });
     }
   }

@@ -21,6 +21,10 @@ import {
 } from '@phosphor-icons/react';
 import type { PoseId, ExpressionId, BackgroundId } from '../../types/reactions';
 import type { CameraPreset } from '../../types/director';
+import { Panel } from '../../design-system/Panel';
+import { Button } from '../../design-system/Button';
+import { Input } from '../../design-system/Input';
+import './DirectorTab.css';
 
 export function DirectorTab() {
   const { addToast } = useToastStore();
@@ -148,185 +152,135 @@ export function DirectorTab() {
     Classic: ['dawn-runner', 'sunset-call', 'cipher-whisper', 'nebula-drift', 'signal-reverie', 'agent-taunt', 'agent-dance', 'agent-clapping', 'silly-agent', 'simple-wave', 'point', 'defeat', 'focus', 'rope-climb', 'climb-top', 'thumbs-up', 'offensive-idle', 'waking', 'treading-water', 'cheering']
   };
 
-  // Stylized Select Input
-  const selectStyle = {
-    padding: '0.6rem 0.8rem',
-    borderRadius: '8px',
-    background: 'var(--surface-raised, #1a1a1a)',
-    border: '1px solid var(--border-subtle, #333)',
-    color: 'var(--text-bright, #fff)',
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-    width: '100%',
-    appearance: 'none' as const,
-    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 0.8rem center',
-    backgroundSize: '1em',
-  };
-
   return (
     <div className="tab-content">
-      {/* --- SCRIPT HEADER --- */}
-      <div className="tab-section" style={{ background: 'var(--surface-overlay)', borderRadius: '12px', padding: '16px', marginBottom: '20px', border: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+      <Panel className="director-header">
+        <div className="director-header__content">
+          <div className="director-header__info">
             {isEditingTitle ? (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input 
+              <div className="director-header__title-edit">
+                <Input 
                   type="text" 
-                  className="text-input small" 
+                  className="small" 
                   value={tempTitle}
                   onChange={(e) => setTempTitle(e.target.value)}
                   autoFocus
                   onBlur={handleSaveTitle}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
-                  style={{ fontSize: '1.1rem', fontWeight: 'bold', width: '100%' }}
                 />
-                <button className="icon-button small primary" onClick={handleSaveTitle}>
+                <Button variant="ghost" size="small" onClick={handleSaveTitle} aria-label="Save Title">
                   <CheckCircle size={18} weight="fill" />
-                </button>
+                </Button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-bright)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentScript?.title || 'Director Script'}</h2>
-                <button className="icon-button tiny muted" onClick={handleStartEditTitle}>
+              <div className="director-header__title-display">
+                <h2 className="director-header__title">{currentScript?.title || 'Director Script'}</h2>
+                <Button variant="ghost" size="small" onClick={handleStartEditTitle} aria-label="Edit Title">
                   <PencilSimple size={14} />
-                </button>
+                </Button>
               </div>
             )}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-              <span className="muted tiny uppercase bold" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="director-header__stats">
+              <span className="muted tiny uppercase bold director-header__stat-item">
                 <Layout size={12} /> {currentScript?.shots.length || 0} shots
               </span>
-              <span className="muted tiny uppercase bold" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="muted tiny uppercase bold director-header__stat-item">
                 <Clock size={12} /> {currentScript?.totalDuration.toFixed(1) || 0}s
               </span>
             </div>
           </div>
           
-          <div style={{ display: 'flex', gap: '8px', marginLeft: '12px', flexShrink: 0 }}>
-            <button className="button-primary small" onClick={handleAddDefaultShot} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}>
-              <Plus size={16} weight="bold" /> Add Shot
-            </button>
-            <button className="icon-button secondary muted" onClick={handleClearScript} title="Clear Script">
+          <div className="director-header__actions">
+            <Button variant="primary" size="small" onClick={handleAddDefaultShot} leftIcon={<Plus size={16} weight="bold" />}>
+              Add Shot
+            </Button>
+            <Button variant="ghost" onClick={handleClearScript} title="Clear Script" aria-label="Clear Script">
               <Trash size={18} weight="duotone" />
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Panel>
 
-      {/* --- SHOT LIST --- */}
       <div className="tab-section">
         {currentScript && currentScript.shots.length > 0 ? (
-          <div className="shot-list" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '16px', 
-            maxHeight: '520px', 
-            overflowY: 'auto', 
-            paddingRight: '12px', // Increased padding for scrollbar room
-            paddingBottom: '20px',
-            marginRight: '-4px' // Compensation
-          }}>
+          <div className="shot-list-container">
             {currentScript.shots.map((shot, index) => (
-              <div key={shot.id} className="shot-item-card" style={{ 
-                padding: '16px', 
-                background: 'var(--surface-raised)', 
-                borderRadius: '12px', 
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                position: 'relative',
-                width: '100%' // Ensure full width within container
-              }}>
-                {/* Shot Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                    <span className="tiny bold muted" style={{ color: 'var(--primary-color)', flexShrink: 0 }}>#{index + 1}</span>
-                    <input 
+              <Panel key={shot.id} className="shot-item-card">
+                <div className="shot-item__header">
+                  <div className="shot-item__name-group">
+                    <span className="tiny bold muted shot-item__index">#{index + 1}</span>
+                    <Input 
                       type="text" 
-                      className="shot-name-input" 
+                      className="shot-item__name-input" 
                       value={shot.name}
                       placeholder="Shot Name..."
                       onChange={(e) => updateShot(shot.id, { name: e.target.value })}
-                      style={{ 
-                        background: 'transparent', 
-                        border: 'none', 
-                        color: 'var(--text-bright)', 
-                        fontSize: '1rem', 
-                        fontWeight: 'bold',
-                        width: '100%',
-                        outline: 'none',
-                        borderBottom: '1px solid transparent',
-                        textOverflow: 'ellipsis'
-                      }}
                     />
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                    <button className="icon-button tiny muted" onClick={() => index > 0 && reorderShots(index, index - 1)} disabled={index === 0}>
+                  <div className="shot-item__actions">
+                    <Button variant="ghost" size="small" onClick={() => index > 0 && reorderShots(index, index - 1)} disabled={index === 0} aria-label="Move Up">
                       <CaretUp size={14} />
-                    </button>
-                    <button className="icon-button tiny muted" onClick={() => index < currentScript.shots.length - 1 && reorderShots(index, index + 1)} disabled={index === currentScript.shots.length - 1}>
+                    </Button>
+                    <Button variant="ghost" size="small" onClick={() => index < currentScript.shots.length - 1 && reorderShots(index, index + 1)} disabled={index === currentScript.shots.length - 1} aria-label="Move Down">
                       <CaretDown size={14} />
-                    </button>
-                    <button className="icon-button tiny muted" onClick={() => duplicateShot(shot.id)} title="Duplicate">
+                    </Button>
+                    <Button variant="ghost" size="small" onClick={() => duplicateShot(shot.id)} title="Duplicate" aria-label="Duplicate">
                       <Copy size={14} />
-                    </button>
-                    <button className="icon-button tiny danger-hover muted" onClick={() => removeShot(shot.id)}>
+                    </Button>
+                    <Button variant="ghost" size="small" className="danger-hover" onClick={() => removeShot(shot.id)} aria-label="Remove Shot">
                       <X size={14} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                {/* Shot Grid Controls */}
-                <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Animation</label>
+                <div className="shot-item__controls">
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Animation</label>
                     <select 
-                      style={selectStyle}
+                      className="shot-item__select"
                       value={shot.poseId}
                       onChange={(e) => updateShot(shot.id, { poseId: e.target.value as PoseId })}
                     >
                       {Object.entries(poseGroups).map(([group, poses]) => (
-                        <optgroup key={group} label={group} style={{ background: '#1a1a1a' }}>
+                        <optgroup key={group} label={group}>
                           {poses.map(pose => (
-                            <option key={pose} value={pose} style={{ background: '#1a1a1a' }}>{pose.replace(/-/g, ' ')}</option>
+                            <option key={pose} value={pose}>{pose.replace(/-/g, ' ')}</option>
                           ))}
                         </optgroup>
                       ))}
                     </select>
                   </div>
 
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Camera View</label>
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Camera View</label>
                     <select 
-                      style={selectStyle}
+                      className="shot-item__select"
                       value={shot.cameraPreset}
                       onChange={(e) => updateShot(shot.id, { cameraPreset: e.target.value as CameraPreset })}
                     >
                       {cameraPresets.map(preset => (
-                        <option key={preset} value={preset} style={{ background: '#1a1a1a' }}>{preset.replace(/-/g, ' ')}</option>
+                        <option key={preset} value={preset}>{preset.replace(/-/g, ' ')}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Background</label>
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Background</label>
                     <select 
-                      style={selectStyle}
+                      className="shot-item__select"
                       value={shot.backgroundId}
                       onChange={(e) => updateShot(shot.id, { backgroundId: e.target.value as BackgroundId })}
                     >
                       {backgrounds.map(bg => (
-                        <option key={bg} value={bg} style={{ background: '#1a1a1a' }}>{bg.replace(/-/g, ' ')}</option>
+                        <option key={bg} value={bg}>{bg.replace(/-/g, ' ')}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Duration</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Duration</label>
+                    <div className="shot-item__duration-group">
                       <input 
                         type="range"
                         min="0.5"
@@ -334,130 +288,104 @@ export function DirectorTab() {
                         step="0.5"
                         value={shot.duration}
                         onChange={(e) => updateShot(shot.id, { duration: parseFloat(e.target.value) })}
-                        style={{ flex: 1, accentColor: 'var(--primary-color)' }}
+                        className="shot-item__duration-range"
                       />
-                      <span className="small mono bold" style={{ width: '35px', color: 'var(--primary-color)', flexShrink: 0 }}>{shot.duration}s</span>
+                      <span className="small mono bold shot-item__duration-label">{shot.duration}s</span>
                     </div>
                   </div>
 
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Expression</label>
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Expression</label>
                     <select 
-                      style={selectStyle}
+                      className="shot-item__select"
                       value={shot.expressionId}
                       onChange={(e) => updateShot(shot.id, { expressionId: e.target.value as ExpressionId })}
                     >
                       {expressions.map(exp => (
-                        <option key={exp} value={exp} style={{ background: '#1a1a1a' }}>{exp}</option>
+                        <option key={exp} value={exp}>{exp}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="field">
-                    <label className="tiny muted uppercase bold" style={{ display: 'block', marginBottom: '6px', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Transition</label>
+                  <div className="shot-item__field">
+                    <label className="tiny muted uppercase bold shot-item__field-label">Transition</label>
                     <select 
-                      style={selectStyle}
+                      className="shot-item__select"
                       value={shot.transition}
                       onChange={(e) => updateShot(shot.id, { transition: e.target.value as any })}
                     >
-                      <option value="smooth" style={{ background: '#1a1a1a' }}>Smooth Flow</option>
-                      <option value="cut" style={{ background: '#1a1a1a' }}>Hard Cut</option>
-                      <option value="fade" style={{ background: '#1a1a1a' }}>Cross Fade</option>
+                      <option value="smooth">Smooth Flow</option>
+                      <option value="cut">Hard Cut</option>
+                      <option value="fade">Cross Fade</option>
                     </select>
                   </div>
 
-                  <div className="field" style={{ gridColumn: 'span 2', marginTop: '4px', display: 'flex', gap: '20px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <div className="shot-item__checkbox-fields">
+                    <label className="shot-item__checkbox-label">
                       <input 
                         type="checkbox" 
                         checked={shot.animated !== false}
                         onChange={(e) => updateShot(shot.id, { animated: e.target.checked })}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                        className="shot-item__checkbox"
                       />
-                      <span className="tiny muted uppercase bold" style={{ letterSpacing: '0.05em' }}>Enable Bone Animation</span>
+                      <span className="tiny muted uppercase bold">Enable Bone Animation</span>
                     </label>
 
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <label className="shot-item__checkbox-label">
                       <input 
                         type="checkbox" 
                         checked={shot.rootMotion === true}
                         onChange={(e) => updateShot(shot.id, { rootMotion: e.target.checked })}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                        className="shot-item__checkbox"
                       />
-                      <span className="tiny muted uppercase bold" style={{ letterSpacing: '0.05em' }}>Root Motion (Walk in Shot)</span>
+                      <span className="tiny muted uppercase bold">Root Motion (Walk in Shot)</span>
                     </label>
                   </div>
                 </div>
-              </div>
+              </Panel>
             ))}
           </div>
         ) : (
-          <div className="empty-state" style={{ 
-            textAlign: 'center', 
-            padding: '60px 20px',
-            border: '2px dashed var(--border-subtle)',
-            borderRadius: '16px',
-            background: 'rgba(255,255,255,0.02)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            <div style={{ 
-              width: '64px', height: '64px', 
-              borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: '20px'
-            }}>
-              <Layout size={32} weight="thin" style={{ opacity: 0.5 }} />
+          <div className="empty-state">
+            <div className="empty-state__icon-container">
+              <Layout size={32} weight="thin" className="empty-state__icon" />
             </div>
-            <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-bright)' }}>No Script Active</h3>
-            <p className="muted small" style={{ maxWidth: '240px', margin: '0 0 24px 0' }}>
+            <h3 className="empty-state__title">No Script Active</h3>
+            <p className="muted small empty-state__text">
               Create a cinematic sequence by adding your first shot manually.
             </p>
-            <button className="primary" onClick={handleAddDefaultShot} style={{ padding: '10px 24px', borderRadius: '30px' }}>
-              <Plus size={18} weight="bold" /> Start New Script
-            </button>
+            <Button variant="primary" onClick={handleAddDefaultShot} leftIcon={<Plus size={18} weight="bold" />}>
+              Start New Script
+            </Button>
           </div>
         )}
       </div>
 
-      {/* --- FLOATING ACTIONS --- */}
       {currentScript && currentScript.shots.length > 0 && (
-        <div className="director-actions-footer" style={{ 
-          position: 'sticky',
-          bottom: '0',
-          background: 'var(--surface-overlay)',
-          borderTop: '1px solid var(--border-subtle)', 
-          padding: '20px',
-          margin: '20px -20px -20px -20px',
-          boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          zIndex: 10,
-          borderBottomLeftRadius: '12px',
-          borderBottomRightRadius: '12px'
-        }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px' }}>
+        <div className="director-actions-footer">
+          <div className="director-actions-footer__grid">
             {isPlaying ? (
-              <button className="secondary full-width large pulse" onClick={handleStopScript} style={{ background: '#ff4d4d', color: 'white', border: 'none' }}>
-                <Stop size={22} weight="fill" /> Stop Preview
-              </button>
+              <Button variant="secondary" size="large" className="full-width pulse danger" onClick={handleStopScript} leftIcon={<Stop size={22} weight="fill" />}>
+                Stop Preview
+              </Button>
             ) : (
-              <button className="primary full-width large" onClick={handlePlayScript}>
-                <Play size={22} weight="fill" /> Play Script
-              </button>
+              <Button variant="primary" size="large" className="full-width" onClick={handlePlayScript} leftIcon={<Play size={22} weight="fill" />}>
+                Play Script
+              </Button>
             )}
             
             {isExporting ? (
-              <button className="secondary full-width large" disabled style={{ cursor: 'wait' }}>
+              <Button variant="secondary" size="large" className="full-width" disabled>
                 <Spinner size={22} className="spin" /> 
                 {exportProgress > 0.5 
                   ? `Stitching... ${Math.round((exportProgress - 0.5) * 200)}%` 
                   : `Rendering... ${Math.round(exportProgress * 200)}%`
                 }
-              </button>
+              </Button>
             ) : (
-              <button className="secondary full-width large" onClick={handleExportScript}>
-                <VideoCamera size={22} weight="duotone" /> Export WebM
-              </button>
+              <Button variant="secondary" size="large" className="full-width" onClick={handleExportScript} leftIcon={<VideoCamera size={22} weight="duotone" />}>
+                Export WebM
+              </Button>
             )}
           </div>
         </div>

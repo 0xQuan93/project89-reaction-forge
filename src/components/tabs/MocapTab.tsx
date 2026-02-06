@@ -282,7 +282,7 @@ export function MocapTab() {
     // Resume normal behavior when stopping camera
     avatarManager.setInteraction(false);
     if (isSelfieMode) {
-      sceneManager.setSelfieTarget(null);
+      sceneManager.setFollowTarget(null, null);
       setIsSelfieMode(false);
     }
     mocapStartingRef.current = false;
@@ -356,10 +356,10 @@ export function MocapTab() {
         addToast("Load an avatar to enable Selfie Mode.", "warning");
         return;
       }
-      sceneManager.setSelfieTarget(head);
+      sceneManager.setFollowTarget(head, 'selfie');
       setIsSelfieMode(true);
     } else {
-      sceneManager.setSelfieTarget(null);
+      sceneManager.setFollowTarget(null, null);
       setIsSelfieMode(false);
     }
   };

@@ -76,6 +76,7 @@ class SceneManager {
   private readonly followTargetLookAt = new THREE.Vector3();
   private followTarget?: THREE.Object3D;
   private followOffset = new THREE.Vector3();
+  private followMode: 'selfie' | 'third-person' | null = null;
   /** Smoothed camera position for dampened selfie follow */
   private readonly smoothedCameraPosition = new THREE.Vector3();
   /** Smoothed look-at target for dampened selfie follow */
@@ -245,34 +246,43 @@ class SceneManager {
           this.tickHandlers.get(priority)?.forEach(handler => handler(delta));
       });
 
-      if (this.followTarget && this.camera) {
+      if (this.followTarget && this.camera && this.controls) {
         this.followTarget.getWorldPosition(this.followTargetPosition);
-        this.followTarget.getWorldQuaternion(this.followTargetQuaternion);
         
-        // Calculate world position based on local offset rotated by target
-        const worldOffset = this.followOffset.clone().applyQuaternion(this.followTargetQuaternion);
-        
-        // Target positions for camera and look-at
-        const targetCameraPos = this.followTargetPosition.clone().add(worldOffset);
-        this.followTargetLookAt.copy(this.followTargetPosition);
-        
-        // Initialize smoothed positions on first frame
-        if (!this.selfieFollowInitialized) {
-          this.smoothedCameraPosition.copy(targetCameraPos);
-          this.smoothedLookAt.copy(this.followTargetLookAt);
-          this.selfieFollowInitialized = true;
-        }
-        
-        // Lerp towards target positions for subtle, dampened follow
-        const smoothing = CAMERA_CONFIG.SELFIE_FOLLOW_SMOOTHING;
-        this.smoothedCameraPosition.lerp(targetCameraPos, smoothing);
-        this.smoothedLookAt.lerp(this.followTargetLookAt, smoothing);
-        
-        // Apply smoothed positions
-        this.camera.position.copy(this.smoothedCameraPosition);
-        this.camera.lookAt(this.smoothedLookAt);
-        if (this.controls) {
-          this.controls.target.copy(this.smoothedLookAt);
+        if (this.followMode === 'selfie') {
+            this.followTarget.getWorldQuaternion(this.followTargetQuaternion);
+            
+            // Calculate world position based on local offset rotated by target
+            const worldOffset = this.followOffset.clone().applyQuaternion(this.followTargetQuaternion);
+            
+            // Target positions for camera and look-at
+            const targetCameraPos = this.followTargetPosition.clone().add(worldOffset);
+            this.followTargetLookAt.copy(this.followTargetPosition);
+            
+            // Initialize smoothed positions on first frame
+            if (!this.selfieFollowInitialized) {
+              this.smoothedCameraPosition.copy(targetCameraPos);
+              this.smoothedLookAt.copy(this.followTargetLookAt);
+              this.selfieFollowInitialized = true;
+            }
+            
+            // Lerp towards target positions for subtle, dampened follow
+            const smoothing = CAMERA_CONFIG.SELFIE_FOLLOW_SMOOTHING;
+            this.smoothedCameraPosition.lerp(targetCameraPos, smoothing);
+            this.smoothedLookAt.lerp(this.followTargetLookAt, smoothing);
+            
+            // Apply smoothed positions
+            this.camera.position.copy(this.smoothedCameraPosition);
+            this.camera.lookAt(this.smoothedLookAt);
+            this.controls.target.copy(this.smoothedLookAt);
+
+        } else if (this.followMode === 'third-person') {
+            // Calculate desired camera position based on offset from target
+            const targetCameraPos = this.followTargetPosition.clone().add(this.followOffset);
+            
+            // Smoothly interpolate camera and target positions
+            this.camera.position.lerp(targetCameraPos, 0.05);
+            this.controls.target.lerp(this.followTargetPosition, 0.05);
         }
       }
 
@@ -520,30 +530,32 @@ class SceneManager {
     return this.controls;
   }
 
-  setSelfieTarget(target: THREE.Object3D | null) {
+  setFollowTarget(target: THREE.Object3D | null, mode: 'selfie' | 'third-person' | null) {
     if (!this.camera || !this.controls) return;
-    if (!target) {
-      this.followTarget = undefined;
+    
+    this.followMode = mode;
+    this.followTarget = target || undefined;
+    this.selfieFollowInitialized = false; 
+    
+    if (!target || !mode) {
       this.controls.enabled = true;
-      this.selfieFollowInitialized = false;
       return;
     }
 
-    this.followTarget = target;
     this.controls.enabled = false;
-    this.selfieFollowInitialized = false; // Reset so first frame initializes smoothed positions
     
-    // Capture initial state
     target.getWorldPosition(this.followTargetPosition);
-    target.getWorldQuaternion(this.followTargetQuaternion);
     
-    // Calculate offset in target's local rotation space (so camera rotates with target)
-    // 1. Get vector from target to camera in world space
+    // Calculate offset for the camera from the target
     const worldOffset = new THREE.Vector3().subVectors(this.camera.position, this.followTargetPosition);
     
-    // 2. Un-rotate this vector by the target's rotation to get local offset
-    // We clone/invert the quaternion so we don't mutate the captured one, although invert() mutates
-    this.followOffset.copy(worldOffset).applyQuaternion(this.followTargetQuaternion.clone().invert());
+    if (mode === 'selfie') {
+        target.getWorldQuaternion(this.followTargetQuaternion);
+        // Convert world offset to local offset for selfie mode
+        this.followOffset.copy(worldOffset).applyQuaternion(this.followTargetQuaternion.clone().invert());
+    } else { // third-person
+        this.followOffset.copy(worldOffset);
+    }
   }
 
   frameObject(object: THREE.Object3D, padding = 1.2) {
@@ -976,11 +988,18 @@ class SceneManager {
     // Find avatar targets
     const targets = this.getAvatarTargets();
     const { head, hips } = targets;
+    
+    // Adjust Z distance based on aspect ratio to prevent cropping
+    const aspect = this.camera.aspect;
+    let distanceModifier = 1.0;
+    if (aspect < 1) { // Portrait or square
+        distanceModifier = 1 / aspect;
+    }
 
     switch (preset) {
       case 'headshot':
         // Headshot: Target Head, Camera in front of head
-        this.camera.position.set(head.x, head.y, head.z + 0.7);
+        this.camera.position.set(head.x, head.y, head.z + 0.7 * distanceModifier);
         this.controls.target.copy(head);
         break;
         
@@ -990,9 +1009,9 @@ class SceneManager {
         const quarterTarget = hips.clone().add(new THREE.Vector3(0, 0.3, 0));
         this.controls.target.copy(quarterTarget);
         this.camera.position.set(
-            quarterTarget.x + 1.2, 
+            quarterTarget.x + 1.2 * distanceModifier, 
             quarterTarget.y + 0.2, 
-            quarterTarget.z + 1.2
+            quarterTarget.z + 1.2 * distanceModifier
         );
         break;
         
@@ -1001,7 +1020,7 @@ class SceneManager {
         const sideTarget = hips.clone().add(new THREE.Vector3(0, 0.3, 0));
         this.controls.target.copy(sideTarget);
         this.camera.position.set(
-            sideTarget.x + 2.0, 
+            sideTarget.x + 2.0 * distanceModifier, 
             sideTarget.y, 
             sideTarget.z
         );
@@ -1013,7 +1032,7 @@ class SceneManager {
         this.camera.position.set(
             hips.x, 
             hips.y, 
-            hips.z + 2.5
+            hips.z + 2.5 * distanceModifier
         );
         break;
     }
