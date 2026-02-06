@@ -10,35 +10,12 @@ import { poseToAnimationClip } from '../poses/poseToAnimation';
 import { getAnimatedPose } from '../poses/animatedPoses';
 import { materialManager } from './materialManager';
 import { collisionManager } from './collisionManager';
+import { BlinkManager } from './blinkManager';
+import { RootMotionManager } from './rootMotionManager';
 
 // Import type only to avoid circular dependency at runtime
 // The actual store access happens after all modules are initialized
-import type { useSceneSettingsStore as SceneSettingsStoreType } from '../state/useSceneSettingsStore';
-
-// Lazy getter to avoid circular dependency with useSceneSettingsStore
-// (useSceneSettingsStore -> materialManager -> avatarManager -> useSceneSettingsStore)
-let _sceneSettingsStore: typeof SceneSettingsStoreType | null = null;
-const getSceneSettingsStore = (): typeof SceneSettingsStoreType | null => {
-  if (!_sceneSettingsStore) {
-    // Dynamically import to break circular dependency - this runs after initial module load
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const module = (window as any).__sceneSettingsStoreModule;
-      if (module) {
-        _sceneSettingsStore = module.useSceneSettingsStore;
-      }
-    } catch {
-      // Store not yet available
-    }
-  }
-  return _sceneSettingsStore;
-};
-
-// Register the store module globally after it's loaded (called from useSceneSettingsStore.ts)
-export const registerSceneSettingsStore = (store: typeof SceneSettingsStoreType) => {
-  _sceneSettingsStore = store;
-  (window as any).__sceneSettingsStoreModule = { useSceneSettingsStore: store };
-};
+import { useSceneSettingsStore } from '../state/useSceneSettingsStore';
 
 type ExpressionMutator = (vrm: VRM) => void;
 
@@ -90,34 +67,30 @@ class AvatarManager {
   private isInteracting = false; 
   private isManualPosing = false;
   private defaultHipsPosition: THREE.Vector3 = new THREE.Vector3(0, 1.0, 0);
-  private hipsLocalPosStart = new THREE.Vector3();
-  private hipsWorldPos = new THREE.Vector3();
-  private lastHipsWorldPos = new THREE.Vector3();
-  private lastRaycastTime = 0;
   
   // Pending state for project restore
   private pendingProjectPose: VRMPose | null = null;
   private pendingProjectExpressions: Record<string, number> | null = null;
   private pendingProjectTransform: { position: { x: number, y: number, z: number }, rotation: { x: number, y: number, z: number } } | null = null;
+  private blinkManager: BlinkManager;
+  private rootMotionManager: RootMotionManager;
   
   // Locked Hips rotation - enforced every frame when rotation is locked
   private lockedHipsRotation: THREE.Quaternion | null = null;
   
-  // Blink state
-  private blinkState = {
-    nextBlinkTime: 0,
-    isBlinking: false,
-    blinkDuration: 0.15, // seconds
-    blinkStartTime: 0,
-    minInterval: 2.0,
-    maxInterval: 6.0,
-  };
-
-  constructor() {
-    this.loader.register((parser) => new VRMLoaderPlugin(parser));
-  }
-
-  isManualPosingEnabled(): boolean { return this.isManualPosing; }
+    constructor(){
+  
+      this.loader.register((parser) => new VRMLoaderPlugin(parser));
+  
+      this.blinkManager = new BlinkManager();
+  
+      this.rootMotionManager = new RootMotionManager();
+  
+    }
+  
+  
+  
+    isManualPosingEnabled(): boolean { return this.isManualPosing; }
   getCurrentUrl(): string | undefined { return this.currentUrl; }
   setManualPosing(enabled: boolean) { 
     this.isManualPosing = enabled;
@@ -183,15 +156,12 @@ class AvatarManager {
    * Only locks the Y-axis (yaw/facing direction), allowing X and Z to animate naturally.
    * Does NOT enforce while user is actively manipulating bones with the gizmo.
    */
-  private enforceLockedHipsRotation(): void {
+  private enforceLockedHipsRotation(rotationLocked: boolean): void {
     if (!this.lockedHipsRotation) return;
     
     // Don't enforce while user is actively dragging with gizmo
     // This allows the user to rotate freely, then we save the new rotation when they release
     if (this.isInteracting || this.isManualPosing) return;
-    
-    const store = getSceneSettingsStore();
-    const rotationLocked = store?.getState().rotationLocked ?? false;
     
     if (!rotationLocked) return;
     
@@ -212,85 +182,16 @@ class AvatarManager {
     hipsNode.quaternion.setFromEuler(currentEuler);
   }
 
-  private updateBlink(_delta: number) {
-    if (!this.vrm?.expressionManager) return;
-    
-    // Check for Blink expression or split blink expressions using case-insensitive search
-    const available = this.getAvailableExpressions();
-    const blinkKey = available.find(k => k.toLowerCase() === 'blink');
-    const blinkLeftKey = available.find(k => k.toLowerCase() === 'blinkleft');
-    const blinkRightKey = available.find(k => k.toLowerCase() === 'blinkright');
-    
-    // We can blink if we have a main 'Blink' expression OR both Left/Right blink expressions
-    const hasBlink = !!blinkKey;
-    const hasBlinkLeft = !!blinkLeftKey;
-    const hasBlinkRight = !!blinkRightKey;
-    
-    const canBlink = hasBlink || (hasBlinkLeft && hasBlinkRight);
-    
-    if (!canBlink) {
-      // console.log('[AvatarManager] No blink expressions found:', { hasBlink, hasBlinkLeft, hasBlinkRight });
-      return;
-    }
-
-    const now = performance.now() / 1000;
-
-    if (this.blinkState.isBlinking) {
-      // Currently blinking
-      const elapsed = now - this.blinkState.blinkStartTime;
-      const progress = elapsed / this.blinkState.blinkDuration;
-
-      if (progress >= 1) {
-        // Blink finished
-        this.blinkState.isBlinking = false;
-        
-        if (hasBlink && blinkKey) {
-          this.vrm.expressionManager.setValue(blinkKey, 0);
-        } else {
-          // Reset split blinks
-          if (hasBlinkLeft && blinkLeftKey) this.vrm.expressionManager.setValue(blinkLeftKey, 0);
-          if (hasBlinkRight && blinkRightKey) this.vrm.expressionManager.setValue(blinkRightKey, 0);
-        }
-        
-        // Schedule next blink
-        const interval = this.blinkState.minInterval + Math.random() * (this.blinkState.maxInterval - this.blinkState.minInterval);
-        this.blinkState.nextBlinkTime = now + interval;
-        // console.log(`[AvatarManager] Blink finished. Next blink in ${interval.toFixed(2)}s`);
-      } else {
-        // Calculate blink value (sine wave for closing and opening)
-        // 0 -> 1 -> 0
-        const value = Math.sin(progress * Math.PI);
-        
-        if (hasBlink && blinkKey) {
-          this.vrm.expressionManager.setValue(blinkKey, value);
-        } else {
-          // Apply to split blinks
-          if (hasBlinkLeft && blinkLeftKey) this.vrm.expressionManager.setValue(blinkLeftKey, value);
-          if (hasBlinkRight && blinkRightKey) this.vrm.expressionManager.setValue(blinkRightKey, value);
-        }
-      }
-      this.vrm.expressionManager.update();
-    } else {
-      // Waiting to blink
-      if (now >= this.blinkState.nextBlinkTime) {
-        this.blinkState.isBlinking = true;
-        this.blinkState.blinkStartTime = now;
-        // console.log('[AvatarManager] Starting blink');
-      }
-    }
-  }
-
   private startTickLoop() {
     this.tickDispose?.();
     this.tickDispose = sceneManager.registerTick((delta) => {
       if (this.vrm) {
         // Update blink state first
-        this.updateBlink(delta);
+        this.blinkManager.update(delta);
         
         // 1. Root Motion Pre-Update: Capture Hips position
         if (this.isAnimated && this.isRootMotionEnabled && !this.isInteracting) {
-          const hips = this.vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
-          if (hips) this.hipsLocalPosStart.copy(hips.position);
+          this.rootMotionManager.captureHipsPosition();
         }
 
         // Update VRM (this applies expression updates if we called update() in updateBlink)
@@ -305,77 +206,17 @@ class AvatarManager {
 
         // 2. Root Motion Post-Update: Extract delta and handle Collisions
         if (this.isAnimated && this.isRootMotionEnabled && !this.isInteracting) {
-          this.updateRootMotion(delta);
+          this.rootMotionManager.update(delta);
         } else if (this.vrm && !this.isInteracting) {
           // Even without root motion, handle basic grounding if an environment is present
-          this.updateGrounding(delta);
+          // this.updateGrounding(delta); // This is now handled by the root motion manager
         }
         
         // CRITICAL: Enforce locked Hips rotation AFTER all other updates
-        this.enforceLockedHipsRotation();
+        const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+        this.enforceLockedHipsRotation(rotationLocked);
       }
     });
-  }
-
-  private updateGrounding(_delta: number) {
-    if (!this.vrm) return;
-    const hips = this.vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
-    if (!hips) return;
-
-    const now = performance.now();
-    if (now - this.lastRaycastTime < 100) return;
-    this.lastRaycastTime = now;
-
-    hips.getWorldPosition(this.hipsWorldPos);
-    const groundY = collisionManager.getGroundHeight(this.hipsWorldPos);
-    if (groundY !== null) {
-      this.vrm.scene.position.y = THREE.MathUtils.lerp(this.vrm.scene.position.y, groundY, 0.1);
-    }
-  }
-
-  private updateRootMotion(_delta: number) {
-    if (!this.vrm) return;
-    const humanoid = this.vrm.humanoid;
-    if (!humanoid) return;
-
-    const hips = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Hips);
-    if (!hips) return;
-
-    // --- ROOT MOTION EXTRACTION ---
-    // 1. Calculate the local movement delta of the hips
-    const deltaX = hips.position.x - this.hipsLocalPosStart.x;
-    const deltaZ = hips.position.z - this.hipsLocalPosStart.z;
-
-    // 2. Apply that delta to the scene root (vrm.scene) instead of the bone
-    // We rotate the delta by the avatar's current rotation so it moves in the right direction
-    const worldDelta = new THREE.Vector3(deltaX, 0, deltaZ).applyQuaternion(this.vrm.scene.quaternion);
-    
-    // 3. Wall Collision: Check if movement is blocked
-    hips.getWorldPosition(this.hipsWorldPos);
-    const moveDist = worldDelta.length();
-    if (moveDist > 0.0001) {
-      const moveDir = worldDelta.clone().normalize();
-      
-      const now = performance.now();
-      let wallDist: number | null = null;
-      if (now - this.lastRaycastTime > 100) {
-        this.lastRaycastTime = now;
-        // Raycast from the hips world position in the movement direction
-        wallDist = collisionManager.checkWallCollision(this.hipsWorldPos, moveDir, moveDist + 0.1);
-      }
-      
-      if (wallDist === null || wallDist > moveDist) {
-        this.vrm.scene.position.add(worldDelta);
-      }
-    }
-
-    // 4. Reset hips local X/Z to stay centered on the root
-    // We keep Y as-is for vertical animation (crouching/jumping)
-    hips.position.x = this.hipsLocalPosStart.x;
-    hips.position.z = this.hipsLocalPosStart.z;
-
-    // 5. Handle grounding after movement
-    this.updateGrounding(_delta);
   }
 
   rebindToScene() {
@@ -387,7 +228,7 @@ class AvatarManager {
     }
   }
 
-  async load(url: string) {
+  async load(url: string, setRotationLocked: (locked: boolean) => void) {
     if (this.currentUrl === url && this.vrm) {
         // Even if already loaded, we might need to ensure the tick loop is active 
         // if this load is called after a scene reset (though rebindToScene usually handles it).
@@ -435,7 +276,8 @@ class AvatarManager {
     this.startTickLoop();
     
     // Initialize next blink time
-    this.blinkState.nextBlinkTime = (performance.now() / 1000) + 2.0;
+    this.blinkManager.setVRM(vrm);
+    this.rootMotionManager.setVRM(vrm);
     console.log('[AvatarManager] Blink initialized. First blink scheduled.');
 
     // Apply material settings to the newly loaded VRM
@@ -443,7 +285,7 @@ class AvatarManager {
     
     // Reset rotation lock when loading a new avatar so the first pose applies correctly
     // The user can re-lock rotation after using the gizmo
-    getSceneSettingsStore()?.getState().setRotationLocked(false);
+    setRotationLocked(false);
 
     // Apply pending project state if present
     this.applyPendingProjectState();
@@ -497,7 +339,7 @@ class AvatarManager {
     }
   }
 
-  async applyRawPose(poseData: RawPoseData, animationMode: AnimationMode = 'static', smoothTransition = true) {
+  async applyRawPose(poseData: RawPoseData, rotationLocked: boolean, animationMode: AnimationMode = 'static', smoothTransition = true) {
     if (!this.vrm) {
       console.warn('[AvatarManager] applyRawPose called but no VRM loaded');
       return;
@@ -514,8 +356,6 @@ class AvatarManager {
 
     // Only apply scene rotation if not locked AND not in manual posing mode
     // Manual posing mode should always preserve the current rotation
-    const store = getSceneSettingsStore();
-    const rotationLocked = store?.getState().rotationLocked ?? false;
     const shouldPreserveRotation = rotationLocked || this.isManualPosing;
     
     if (poseData.sceneRotation && !shouldPreserveRotation) {
@@ -580,7 +420,7 @@ class AvatarManager {
     }
   }
 
-  async applyPose(pose: PoseId, animated = false, animationMode: AnimationMode = 'static', rootMotion = false) {
+  async applyPose(pose: PoseId, rotationLocked: boolean, animated = false, animationMode: AnimationMode = 'static', rootMotion = false) {
     if (!this.vrm) {
       console.warn('[AvatarManager] applyPose called but no VRM loaded');
       return;
@@ -615,8 +455,6 @@ class AvatarManager {
 
     // Only apply scene rotation if not locked AND not in manual posing mode
     // Manual posing mode should always preserve the current rotation
-    const store = getSceneSettingsStore();
-    const rotationLocked = store?.getState().rotationLocked ?? false;
     const shouldPreserveRotation = rotationLocked || this.isManualPosing;
     
     if (!shouldPreserveRotation) {
@@ -665,7 +503,7 @@ class AvatarManager {
     }
   }
 
-  playAnimationClip(clip: THREE.AnimationClip, loop = true, fade = 0.3) {
+  playAnimationClip(clip: THREE.AnimationClip, rotationLocked: boolean, loop = true, fade = 0.3) {
     if (!this.vrm) {
       console.warn('[AvatarManager] playAnimationClip called but no VRM loaded');
       return;
@@ -679,9 +517,6 @@ class AvatarManager {
     
     // When rotation is locked, remove or replace the Hips rotation track
     // to preserve the user's manual Hips adjustment
-    const store = getSceneSettingsStore();
-    const rotationLocked = store?.getState().rotationLocked ?? false;
-    
     let clipToPlay = clip;
     if (rotationLocked) {
       // Find the Hips bone node name
@@ -795,7 +630,7 @@ class AvatarManager {
    * Preserves hips position to keep avatar in viewport
    * Preserves hips rotation when rotation is locked
    */
-  transitionToPose(targetPose: VRMPose, duration = 0.4, onComplete?: () => void) {
+  transitionToPose(targetPose: VRMPose, rotationLocked: boolean, duration = 0.4, onComplete?: () => void) {
     if (!this.vrm) return;
     
     // BLOCK pose transitions when manual posing is active
@@ -807,8 +642,6 @@ class AvatarManager {
 
     // Preserve Hips rotation when rotation is locked
     // This keeps the avatar facing the direction the user set it to
-    const store = getSceneSettingsStore();
-    const rotationLocked = store?.getState().rotationLocked ?? false;
     const poseToApply = rotationLocked ? this.preserveHipsRotationInPose(targetPose) : targetPose;
 
     const transitionClip = this.createTransitionClip(poseToApply, duration);

@@ -35,7 +35,7 @@ class SyncManager {
   private poseSyncInterval = 1000 / this.poseSyncRate;
   private expressionSyncInterval = 100; // Sync expressions at 10Hz for smoother mocap
   private isActive = false;
-  private vrmTransferBuffers = new Map<PeerId, { chunks: string[]; receivedCount: number; totalChunks: number; fileName: string }>();
+  private vrmTransferBuffers = new Map<PeerId, { chunks: (string | undefined)[]; receivedCount: number; totalChunks: number; fileName: string; retries: number }>();
   private backgroundTransferBuffers = new Map<PeerId, { chunks: string[]; receivedCount: number; totalChunks: number; fileName: string; fileType: string }>();
   private pendingVRMRequests = new Set<PeerId>(); // Track pending requests to avoid duplicates
   private pendingBackgroundRequests = new Set<PeerId>(); // Track pending background requests
@@ -496,6 +496,10 @@ class SyncManager {
         this.handleVRMComplete(message as VRMCompleteMessage);
         break;
 
+      case 'vrm-chunk-request':
+        this.handleVRMChunkRequest(message as any);
+        break;
+
       case 'background-request':
         this.handleBackgroundRequest(peerId);
         break;
@@ -595,6 +599,53 @@ class SyncManager {
   private handleBackgroundRequest(peerId: PeerId) {
     console.log(`[SyncManager] Background requested by peer: ${peerId}`);
     this.sendBackgroundToPeer(peerId);
+  }
+
+  private async handleVRMChunkRequest(message: { peerId: PeerId; targetPeerId: PeerId; chunkIndex: number }) {
+    const { peerId: requesterPeerId, chunkIndex } = message;
+    console.log(`[SyncManager] Received request for missing chunk ${chunkIndex} from ${requesterPeerId}`);
+
+    const { vrmArrayBuffer, sourceLabel } = useAvatarSource.getState();
+    if (!vrmArrayBuffer) {
+      console.warn(`[SyncManager] Cannot resend chunk, no VRM buffer available.`);
+      return;
+    }
+
+    const chunkSize = DEFAULT_MULTIPLAYER_CONFIG.vrmChunkSize;
+    const uint8Array = new Uint8Array(vrmArrayBuffer);
+    const totalChunks = Math.ceil(uint8Array.length / chunkSize);
+
+    if (chunkIndex >= totalChunks || chunkIndex < 0) {
+      console.warn(`[SyncManager] Invalid chunk index requested: ${chunkIndex}`);
+      return;
+    }
+
+    const start = chunkIndex * chunkSize;
+    const end = Math.min(start + chunkSize, uint8Array.length);
+    const chunk = uint8Array.slice(start, end);
+
+    let binary = '';
+    for (let j = 0; j < chunk.length; j++) {
+      binary += String.fromCharCode(chunk[j]);
+    }
+    const base64Chunk = btoa(binary);
+
+    const chunkMessage: VRMChunkMessage = {
+      type: 'vrm-chunk',
+      peerId: useMultiplayerStore.getState().localPeerId!,
+      targetPeerId: requesterPeerId,
+      timestamp: Date.now(),
+      chunkIndex,
+      totalChunks,
+      data: base64Chunk,
+    };
+
+    try {
+      peerManager.send(requesterPeerId, chunkMessage);
+      console.log(`[SyncManager] Resent chunk ${chunkIndex} to ${requesterPeerId}`);
+    } catch (error) {
+      console.error(`[SyncManager] Error resending chunk ${chunkIndex}:`, error);
+    }
   }
 
   private handleBackgroundChunk(message: BackgroundChunkMessage) {
@@ -824,10 +875,11 @@ class SyncManager {
     const existingBuffer = this.vrmTransferBuffers.get(peerId);
     if (!existingBuffer || existingBuffer.totalChunks !== totalChunks) {
       this.vrmTransferBuffers.set(peerId, {
-        chunks: new Array(totalChunks).fill(''),
+        chunks: new Array(totalChunks).fill(undefined),
         receivedCount: 0,
         totalChunks,
         fileName: '',
+        retries: 0,
       });
       
       // Notify UI of transfer start
@@ -899,6 +951,26 @@ class SyncManager {
     // Verify all chunks were received
     if (buffer.receivedCount !== buffer.totalChunks) {
       console.error(`[SyncManager] Missing chunks: expected ${buffer.totalChunks}, received ${buffer.receivedCount}`);
+      
+      if (buffer.retries < 5) {
+        buffer.retries++;
+        console.log(`[SyncManager] Requesting missing chunks (attempt ${buffer.retries})...`);
+        for (let i = 0; i < buffer.totalChunks; i++) {
+          if (!buffer.chunks[i]) {
+            const requestMessage: VRMChunkRequestMessage = {
+              type: 'vrm-chunk-request',
+              peerId: useMultiplayerStore.getState().localPeerId!,
+              targetPeerId: peerId,
+              timestamp: Date.now(),
+              chunkIndex: i,
+            };
+            peerManager.send(peerId, requestMessage);
+          }
+        }
+        // Don't delete the buffer, wait for the requested chunks
+        return;
+      }
+
       notifyTransferProgress({
         peerId,
         displayName,
@@ -916,6 +988,21 @@ class SyncManager {
     for (let i = 0; i < buffer.chunks.length; i++) {
       if (!buffer.chunks[i]) {
         console.error(`[SyncManager] Missing chunk at index ${i}`);
+        
+        if (buffer.retries < 5) {
+          buffer.retries++;
+          const requestMessage: VRMChunkRequestMessage = {
+            type: 'vrm-chunk-request',
+            peerId: useMultiplayerStore.getState().localPeerId!,
+            targetPeerId: peerId,
+            timestamp: Date.now(),
+            chunkIndex: i,
+          };
+          peerManager.send(peerId, requestMessage);
+          // Don't delete buffer, wait for retry
+          return;
+        }
+
         notifyTransferProgress({
           peerId,
           displayName,

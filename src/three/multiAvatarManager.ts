@@ -28,6 +28,7 @@ interface AvatarInstance {
   currentAction?: THREE.AnimationAction;
   isAnimated: boolean;
   lastUpdate: number;
+  isDirty: boolean;
   /** Offset position in the scene */
   positionOffset: THREE.Vector3;
 }
@@ -141,6 +142,7 @@ class MultiAvatarManager {
       isAnimated: false,
       lastUpdate: Date.now(),
       positionOffset,
+      isDirty: true,
     };
 
     // Position the avatar
@@ -246,6 +248,7 @@ class MultiAvatarManager {
       isAnimated: false,
       lastUpdate: Date.now(),
       positionOffset: new THREE.Vector3(0, 0, 0), // Keep current position
+      isDirty: true,
     };
 
     // Store instance
@@ -328,6 +331,7 @@ class MultiAvatarManager {
     instance.vrm.humanoid.setNormalizedPose(pose);
     instance.vrm.update(0);
     instance.lastUpdate = Date.now();
+    instance.isDirty = true;
   }
 
   /**
@@ -349,6 +353,7 @@ class MultiAvatarManager {
     });
     instance.vrm.expressionManager.update();
     instance.lastUpdate = Date.now();
+    instance.isDirty = true;
   }
 
   /**
@@ -370,6 +375,7 @@ class MultiAvatarManager {
       THREE.MathUtils.degToRad(rotation.y),
       THREE.MathUtils.degToRad(rotation.z)
     );
+    instance.isDirty = true;
   }
 
   /**
@@ -391,6 +397,7 @@ class MultiAvatarManager {
     
     // Update the stored offset
     instance.positionOffset.set(position.x, position.y, position.z);
+    instance.isDirty = true;
   }
 
   /**
@@ -585,6 +592,7 @@ class MultiAvatarManager {
       duration: gestureData.duration * 1000,
       initialRotations
     });
+    instance.isDirty = true;
 
     console.log(`[MultiAvatarManager] Started gesture ${gesture} for peer ${peerId}`);
   }
@@ -603,6 +611,7 @@ class MultiAvatarManager {
       instance.vrm.expressionManager!.setValue(name, value);
     });
     instance.vrm.expressionManager.update();
+    instance.isDirty = true;
   }
 
   /**
@@ -831,6 +840,13 @@ class MultiAvatarManager {
       this.avatars.forEach(instance => {
         const peerId = instance.peerId;
 
+        const gestureActive = this.gestureAnimations.has(peerId);
+
+        // Skip updates if not animating and not dirty
+        if (!instance.isAnimated && !instance.isDirty && !gestureActive) {
+          return;
+        }
+
         // Process procedural gestures
         const anim = this.gestureAnimations.get(peerId);
         if (anim) {
@@ -894,6 +910,11 @@ class MultiAvatarManager {
         // Update animation mixer if animated and not interacting
         if (instance.isAnimated && !(instance.isLocal && this.isInteracting)) {
           instance.mixer.update(delta);
+        }
+        
+        // Reset dirty flag after update
+        if (instance.isDirty) {
+            instance.isDirty = false;
         }
       });
     });

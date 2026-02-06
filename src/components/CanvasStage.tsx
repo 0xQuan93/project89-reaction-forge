@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { sceneManager } from '../three/sceneManager';
 import { avatarManager } from '../three/avatarManager';
 import { useReactionStore } from '../state/useReactionStore';
@@ -58,6 +58,12 @@ export function CanvasStage() {
   const { addToast } = useToastStore();
   const { currentUrl, avatarType, live2dSource } = useAvatarSource();
   const activeCssOverlay = useUIStore((state) => state.activeCssOverlay);
+  const { rotationLocked } = useSceneSettingsStore((state) => ({
+    rotationLocked: state.rotationLocked,
+  }));
+  const setRotationLocked = useSceneSettingsStore((state) => state.setRotationLocked);
+
+  const setRotationLockedCallback = useCallback(setRotationLocked, [setRotationLocked]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -143,7 +149,7 @@ export function CanvasStage() {
         } else if (avatarType === 'vrm' && currentUrl) {
           live2dManager.dispose();
           // Load via avatarManager (original system)
-          await avatarManager.load(currentUrl);
+          await avatarManager.load(currentUrl, setRotationLockedCallback);
         }
         
         if (cancelled) return;
@@ -215,7 +221,7 @@ export function CanvasStage() {
       cancelled = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [avatarType, currentUrl, live2dSource?.manifestUrl]);
+  }, [avatarType, currentUrl, live2dSource?.manifestUrl, setRotationLockedCallback]);
 
   useEffect(() => {
     if (!avatarReady) return;
@@ -309,7 +315,7 @@ export function CanvasStage() {
     console.log('[CanvasStage] Applying preset with animation:', { animated, mode });
     
     if (avatarType === 'vrm') {
-      avatarManager.applyPose(currentPreset.pose, animated, mode);
+      avatarManager.applyPose(currentPreset.pose, rotationLocked, animated, mode);
       avatarManager.applyExpression(currentPreset.expression);
     }
     

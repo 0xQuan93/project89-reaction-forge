@@ -328,8 +328,3 @@ export const useSceneSettingsStore = create<SceneSettingsState>()(
     }
   )
 );
-
-// Register the store globally to break circular dependency with avatarManager
-// This runs after the store is created, so avatarManager can access it lazily
-import { registerSceneSettingsStore } from '../three/avatarManager';
-registerSceneSettingsStore(useSceneSettingsStore);

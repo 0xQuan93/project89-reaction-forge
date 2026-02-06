@@ -7,6 +7,29 @@ import { poseFromClip } from './poseFromClip';
 import { convertAnimationToScenePaths } from './convertAnimationToScenePaths';
 import type { PoseId } from '../types/reactions';
 
+function retargetWithWorker(vrmBuffer: ArrayBuffer, animationBuffer: ArrayBuffer, animationFileName: string): Promise<THREE.AnimationClip> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./retarget.worker.ts', import.meta.url), { type: 'module' });
+
+    worker.onmessage = (event) => {
+      if (event.data.success) {
+        const clip = THREE.AnimationClip.parse(event.data.animationClip);
+        resolve(clip);
+      } else {
+        reject(new Error(event.data.error));
+      }
+      worker.terminate();
+    };
+
+    worker.onerror = (error) => {
+      reject(error);
+      worker.terminate();
+    };
+
+    worker.postMessage({ vrmBuffer, animationBuffer, animationFileName }, [vrmBuffer, animationBuffer]);
+  });
+}
+
 const DEFAULT_SCENE_ROTATION = { y: 180 };
 
 export const mixamoSources = {
@@ -129,11 +152,34 @@ export const loadMixamoFromBuffer = async (arrayBuffer: ArrayBuffer, fileName: s
 };
 
 export const applyMixamoBuffer = async (arrayBuffer: ArrayBuffer, fileName: string, vrm: VRM) => {
-    const { mixamoRoot, animations } = await loadMixamoFromBuffer(arrayBuffer, fileName);
+    // To use the worker, we need to serialize the VRM to a buffer
+    const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
+    const exporter = new GLTFExporter();
+    const vrmBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      exporter.parse(vrm.scene, (result) => {
+        if (result instanceof ArrayBuffer) {
+          resolve(result);
+        } else {
+          // Handle JSON case if necessary, for simplicity we assume binary
+          const output = JSON.stringify(result, null, 2);
+          resolve(new TextEncoder().encode(output).buffer);
+        }
+      }, reject, { binary: true });
+    });
 
-    const vrmClip = getMixamoAnimation(animations, mixamoRoot, vrm);
-    if (!vrmClip) {
-      throw new Error('Failed to convert Mixamo data for this VRM.');
+    let vrmClip: THREE.AnimationClip;
+    try {
+      console.log('[BatchUtils] Retargeting with Web Worker...');
+      vrmClip = await retargetWithWorker(vrmBuffer.slice(0), arrayBuffer.slice(0), fileName);
+    } catch (error) {
+      console.warn('[BatchUtils] Web Worker retargeting failed, falling back to main thread.', error);
+      // Fallback to main thread if worker fails
+      const { mixamoRoot, animations } = await loadMixamoFromBuffer(arrayBuffer, fileName);
+      const clip = getMixamoAnimation(animations, mixamoRoot, vrm);
+      if (!clip) {
+        throw new Error('Failed to convert Mixamo data for this VRM on main thread.');
+      }
+      vrmClip = clip;
     }
 
     // Convert animation to use scene node paths (critical for playback in main app)

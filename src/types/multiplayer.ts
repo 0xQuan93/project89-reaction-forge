@@ -62,6 +62,7 @@ export type MessageType =
   | 'vrm-request'       // Request VRM file from peer
   | 'vrm-chunk'         // VRM file data chunk
   | 'vrm-complete'      // VRM transfer complete
+  | 'vrm-chunk-request' // Request a missing VRM chunk
   | 'peer-join'         // Peer joined session
   | 'peer-leave'        // Peer left session
   | 'sync-request'      // Request full state sync
@@ -126,6 +127,12 @@ export interface VRMCompleteMessage extends BaseMessage {
   targetPeerId: PeerId;
   fileName: string;
   totalSize: number;
+}
+
+export interface VRMChunkRequestMessage extends BaseMessage {
+  type: 'vrm-chunk-request';
+  targetPeerId: PeerId;
+  chunkIndex: number;
 }
 
 /** New: Background file transfer messages */
@@ -248,6 +255,7 @@ export type PeerMessage =
   | VRMRequestMessage
   | VRMChunkMessage
   | VRMCompleteMessage
+  | VRMChunkRequestMessage
   | PeerJoinMessage
   | PeerLeaveMessage
   | SyncRequestMessage
