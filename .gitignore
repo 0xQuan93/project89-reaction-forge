@@ -89,3 +89,5 @@ error.log
 # INTERNAL STRATEGY DOCUMENTS
 # ============================================
 DOCTRINE.md
+TOKEN_STRATEGY_SUMMARY.md
+TOKEN_STRATEGY_HIGH_LEVEL.md
