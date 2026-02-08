@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { directorManager } from '../../three/DirectorManager';
 import { useDirectorStore } from '../../state/useDirectorStore';
 import { useToastStore } from '../../state/useToastStore';
-import { exportOfflineWebM } from '../../export/exportVideo';
 import { 
   Play, 
   Stop, 
