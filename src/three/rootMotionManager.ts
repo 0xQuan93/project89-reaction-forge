@@ -19,7 +19,7 @@ export class RootMotionManager {
     this.updateRootMotion(delta);
   }
 
-  private updateGrounding(_delta: number) {
+  public updateGrounding(_delta: number) {
     if (!this.vrm) return;
     const hips = this.vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Hips);
     if (!hips) return;

@@ -118,7 +118,13 @@ export async function exportCanvasAsGif(
     options.duration,
     webmFilename,
     options.onProgress,
-    { width: options.width, height: options.height, includeLogo: options.includeLogo }
+    { 
+      width: options.width, 
+      height: options.height, 
+      includeLogo: options.includeLogo,
+      fps: options.fps,
+      videoBitsPerSecond: 5000000 // Default 5Mbps for "GIF" usage (usually shorter/smaller)
+    }
   );
 }
 
@@ -130,16 +136,26 @@ export async function exportAsWebM(
   duration: number,
   filename: string,
   onProgress?: (progress: number) => void,
-  options?: { width?: number; height?: number; includeLogo?: boolean }
+  options?: { 
+    width?: number; 
+    height?: number; 
+    includeLogo?: boolean;
+    fps?: number;
+    videoBitsPerSecond?: number; 
+  }
 ): Promise<void> {
   const targetWidth = options?.width || canvas.width;
   const targetHeight = options?.height || canvas.height;
   const includeLogo = options?.includeLogo ?? true;
+  const fps = options?.fps || 60; // Default to 60fps for smoother motion
+  const videoBitsPerSecond = options?.videoBitsPerSecond || 8000000; // Default to 8 Mbps for high quality
   const activeCssOverlay = useUIStore.getState().activeCssOverlay;
   
   console.log('[VideoExporter] Starting WebM recording...', {
     targetWidth,
     targetHeight,
+    fps,
+    bitrate: `${(videoBitsPerSecond / 1000000).toFixed(1)} Mbps`,
     includeLogo,
     activeCssOverlay,
     canvasSize: { width: canvas.width, height: canvas.height },
@@ -178,8 +194,7 @@ export async function exportAsWebM(
   const logoX = compositeCanvas.width - logoWidth - padding;
   const logoY = compositeCanvas.height - logoHeight - padding;
 
-  // Start compositing at 30 fps
-  const fps = 30;
+  // Start compositing
   const frameInterval = 1000 / fps;
   let lastFrameTime = 0;
 
@@ -280,7 +295,7 @@ export async function exportAsWebM(
 
   const mediaRecorder = new MediaRecorder(stream, {
     mimeType,
-    videoBitsPerSecond: 2500000, // 2.5 Mbps
+    videoBitsPerSecond,
   });
 
   const chunks: Blob[] = [];

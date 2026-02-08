@@ -14,12 +14,13 @@ class CollisionManager {
     const colliders = environment3DManager.getAllColliders();
     if (colliders.length === 0) return 0; // Default to floor level if no environments
 
-    // Raycast from slightly above the position downwards
+    // Raycast from higher up to catch floors that might be above the character (e.g. uneven terrain)
     this.tempVec.copy(worldPos);
-    this.tempVec.y += 1.0; // Start 1m above
+    this.tempVec.y += 2.0; // Start 2m above hips (approx 3m above feet)
 
     this.raycaster.set(this.tempVec, this.tempDown);
-    this.raycaster.far = maxDistance + 1.0;
+    // Increase range to catch deep valleys
+    this.raycaster.far = maxDistance + 5.0;
 
     const intersects = this.raycaster.intersectObjects(colliders, true);
     if (intersects.length > 0) {

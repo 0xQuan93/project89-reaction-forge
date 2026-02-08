@@ -68,7 +68,23 @@ class DirectorManager {
 
     // 1. Apply Pose & Expression
     const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
-    await avatarManager.applyPose(shot.poseId, rotationLocked, shot.animated ?? true, 'loop', shot.rootMotion ?? false);
+    
+    // Determine transition duration
+    let transitionDuration = 0.4;
+    switch (shot.transition) {
+      case 'cut': transitionDuration = 0; break;
+      case 'smooth': transitionDuration = 0.5; break;
+      case 'fade': transitionDuration = 1.0; break;
+    }
+
+    await avatarManager.applyPose(
+      shot.poseId, 
+      rotationLocked, 
+      shot.animated ?? true, 
+      'loop', 
+      shot.rootMotion ?? false,
+      transitionDuration
+    );
     avatarManager.applyExpression(shot.expressionId);
 
     // 2. Apply Background
@@ -77,7 +93,7 @@ class DirectorManager {
     // 3. Set Camera
     // Use sceneManager's presets for consistent framing
     // sceneManager now handles all presets including animations
-    sceneManager.setCameraPreset(shot.cameraPreset);
+    sceneManager.setCameraPreset(shot.cameraPreset, false, transitionDuration);
     
     // 4. Schedule next shot
     this.shotTimeout = setTimeout(() => {

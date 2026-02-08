@@ -19,7 +19,7 @@ import {
   Spinner
 } from '@phosphor-icons/react';
 import type { PoseId, ExpressionId, BackgroundId } from '../../types/reactions';
-import type { CameraPreset } from '../../types/director';
+import type { CameraPreset, Shot } from '../../types/director';
 import { Panel } from '../../design-system/Panel';
 import { Button } from '../../design-system/Button';
 import { Input } from '../../design-system/Input';
@@ -70,19 +70,34 @@ export function DirectorTab() {
     try {
       setIsExporting(true);
       setExportProgress(0);
-      addToast('Starting high-quality render...', 'info');
+      addToast('Starting recording...', 'info');
 
-      // Start the script in director manager so it's ready to be stepped
+      // 1. Get Canvas
+      const canvas = document.querySelector('canvas');
+      if (!canvas) throw new Error('Canvas not found');
+
+      // 2. Start the script
       await directorManager.playScript(currentScript);
-
-      await exportOfflineWebM({
-        duration: currentScript.totalDuration,
-        fps: 60, // High quality export
-        includeLogo: true,
-        width: 1920, // 1080p target
-        height: 1080,
-        onProgress: (p) => setExportProgress(p)
-      });
+      
+      // 3. Start Real-time Recording
+      // We use exportAsWebM directly instead of exportOfflineWebM
+      // primarily because DirectorManager relies on setTimeout/wall-clock time
+      // which gets broken by the offline renderer's manual time stepping.
+      const { exportAsWebM } = await import('../../export/exportVideo');
+      
+      await exportAsWebM(
+        canvas,
+        currentScript.totalDuration + 0.5, // Add slight buffer
+        `Director_Sequence_${Date.now()}.webm`,
+        (p) => setExportProgress(p * 100),
+        { 
+            width: 1920, // 1080p target
+            height: 1080,
+            includeLogo: true,
+            fps: 60,
+            videoBitsPerSecond: 12000000 // 12 Mbps for high quality
+        }
+      );
 
       addToast('Export completed successfully!', 'success');
     } catch (error) {
@@ -311,7 +326,7 @@ export function DirectorTab() {
                     <select 
                       className="shot-item__select"
                       value={shot.transition}
-                      onChange={(e) => updateShot(shot.id, { transition: e.target.value as any })}
+                      onChange={(e) => updateShot(shot.id, { transition: e.target.value as Shot['transition'] })}
                     >
                       <option value="smooth">Smooth Flow</option>
                       <option value="cut">Hard Cut</option>
@@ -336,8 +351,9 @@ export function DirectorTab() {
                         checked={shot.rootMotion === true}
                         onChange={(e) => updateShot(shot.id, { rootMotion: e.target.checked })}
                         className="shot-item__checkbox"
+                        disabled={!shot.animated}
                       />
-                      <span className="tiny muted uppercase bold">Root Motion (Walk in Shot)</span>
+                      <span className={`tiny uppercase bold ${!shot.animated ? 'muted-dark' : 'muted'}`}>Root Motion (Walk in Shot)</span>
                     </label>
                   </div>
                 </div>

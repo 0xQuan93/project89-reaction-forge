@@ -171,9 +171,20 @@ export function PoseExpressionTab() {
       const text = await file.text();
       const poseData = JSON.parse(text);
       
+      // BACKWARD COMPATIBILITY: Check for legacy 'pose' key if 'vrmPose' is missing
+      if (!poseData.vrmPose && poseData.pose) {
+        poseData.vrmPose = poseData.pose;
+      }
+
       if (!poseData.vrmPose && !poseData.tracks) {
         addToast('Invalid file (missing vrmPose or tracks)', 'error');
         return;
+      }
+      
+      // AUTO-SWITCH MODE: If it's an animation (has tracks), switch mode to 'once'
+      if (poseData.tracks && poseData.tracks.length > 0) {
+         setAnimationMode('once');
+         addToast('Animation detected: Switching to "Play Once" mode', 'info');
       }
       
       setCustomPose(poseData);

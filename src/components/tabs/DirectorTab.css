@@ -59,11 +59,11 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 520px; 
-  overflow-y: auto;
-  padding-right: 12px;
+  /* Removed fixed max-height to allow full scrolling within tab */
+  /* max-height: 520px; */ 
+  overflow-y: visible; /* Let the parent tab-content handle scrolling if needed */
+  padding-right: 0;
   padding-bottom: 20px;
-  margin-right: -4px;
 }
 
 .shot-item-card {
@@ -227,11 +227,14 @@
   position: sticky;
   bottom: 0;
   background: var(--surface-overlay);
+  /* Ensure backdrop filter for glass effect if supported */
+  backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-subtle); 
   padding: 20px;
+  /* Adjust margins to align with tab padding */
   margin: 20px -20px -20px -20px;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-  z-index: 10;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+  z-index: 100; /* Ensure it stays above other content */
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
 }

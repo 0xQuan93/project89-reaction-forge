@@ -297,11 +297,24 @@ export function ExportTab({ mode = 'reactions' }: ExportTabProps) {
       } else {
         // Export Static Pose
         const pose = avatarManager.captureCurrentPose();
+        const vrm = avatarManager.getVRM();
+        
         data = {
            type: 'VRMPose',
            version: '1.0',
            timestamp,
-           pose
+           vrmPose: pose,
+           // Capture scene transform if available
+           sceneRotation: vrm ? {
+             x: THREE.MathUtils.radToDeg(vrm.scene.rotation.x),
+             y: THREE.MathUtils.radToDeg(vrm.scene.rotation.y),
+             z: THREE.MathUtils.radToDeg(vrm.scene.rotation.z)
+           } : undefined,
+           scenePosition: vrm ? {
+             x: vrm.scene.position.x,
+             y: vrm.scene.position.y,
+             z: vrm.scene.position.z
+           } : undefined
         };
         filename += `_pose`;
       }

@@ -1012,21 +1012,12 @@ class SceneManager {
   }
 
   /**
-   * Set camera to a preset view
-   * Hotkeys: 1=headshot, 3=quarter, 5=side, 7=full body
+   * Helper to calculate the target camera position and look-at point for a static preset.
+   * Returns null if not a static preset.
    */
-  setCameraPreset(preset: 'headshot' | 'quarter' | 'side' | 'fullbody' | 'full-body' | 'portrait' | 'medium' | 'wide' | 'low-angle' | 'high-angle' | 'over-shoulder' | 'orbit-slow' | 'orbit-fast' | 'dolly-in' | 'dolly-out', force = false) {
-    if (!this.controls || !this.camera) return;
-    
-    // Disable any active follow/selfie mode to prevent fighting
-    // Exception: if we are in selfie mode and NOT forced, we keep it active (for sprint mode compatibility)
-    if (force || this.followMode !== 'selfie') {
-      this.setFollowTarget(null, null);
-    }
+  private calculatePresetState(preset: string): { position: THREE.Vector3, target: THREE.Vector3 } | null {
+    if (!this.camera || !this.controls) return null;
 
-    // Stop any active camera animations
-    this.stopCameraAnimation();
-    
     // Find avatar targets
     const targets = this.getAvatarTargets();
     const { head, hips, forward, right } = targets;
@@ -1038,108 +1029,153 @@ class SceneManager {
         distanceModifier = 1 / aspect;
     }
 
-    // Common vector helpers
-    // const up = new THREE.Vector3(0, 1, 0);
+    let destPos = new THREE.Vector3();
+    let destTarget = new THREE.Vector3();
 
     switch (preset) {
       case 'headshot':
-        // Headshot: Target Head, Camera in front of head
-        const headshotPos = head.clone().add(forward.clone().multiplyScalar(0.7 * distanceModifier));
-        this.camera.position.copy(headshotPos);
-        this.controls.target.copy(head);
+        // Headshot: Target Face (slightly above head bone), Camera in front
+        destTarget.copy(head).add(new THREE.Vector3(0, 0.08, 0)); 
+        // Increase distance from 0.7 to 1.0 to prevent clipping and frame better
+        destPos.copy(destTarget).add(forward.clone().multiplyScalar(1.0 * distanceModifier));
         break;
 
       case 'portrait':
-        // Portrait: Bust shot, slightly wider than headshot
-        const portraitTarget = head.clone().lerp(hips, 0.3); // Upper chest
-        const portraitPos = portraitTarget.clone().add(forward.clone().multiplyScalar(1.2 * distanceModifier));
-        this.camera.position.copy(portraitPos);
-        this.controls.target.copy(portraitTarget);
+        // Portrait: Bust shot, targeted at Neck/Chin
+        destTarget.copy(head).lerp(hips, 0.15);
+        destPos.copy(destTarget).add(forward.clone().multiplyScalar(1.4 * distanceModifier));
         break;
         
       case 'medium':
-        // Medium Shot: Waist up
-        const mediumTarget = hips.clone().lerp(head, 0.4); // Chest/Stomach
-        const mediumPos = mediumTarget.clone().add(forward.clone().multiplyScalar(2.0 * distanceModifier));
-        this.camera.position.copy(mediumPos);
-        this.controls.target.copy(mediumTarget);
+        // Medium Shot: Waist up, targeted at Chest/Sternum
+        destTarget.copy(hips).lerp(head, 0.65);
+        destPos.copy(destTarget).add(forward.clone().multiplyScalar(2.2 * distanceModifier));
         break;
 
       case 'wide':
         // Wide Shot: Full body but further back
-        const wideTarget = hips.clone();
-        const widePos = wideTarget.clone().add(forward.clone().multiplyScalar(4.5 * distanceModifier));
-        this.camera.position.copy(widePos);
-        this.controls.target.copy(wideTarget);
+        destTarget.copy(hips);
+        destPos.copy(destTarget).add(forward.clone().multiplyScalar(4.5 * distanceModifier));
         break;
 
       case 'low-angle':
         // Low Angle: Looking up from below
-        const lowTarget = hips.clone().lerp(head, 0.5); // Center of mass
-        const lowPos = lowTarget.clone()
-          .add(forward.clone().multiplyScalar(2.0 * distanceModifier))
-          .add(new THREE.Vector3(0, -1.0, 0)); // Move down
-        this.camera.position.copy(lowPos);
-        this.controls.target.copy(lowTarget);
+        destTarget.copy(hips).lerp(head, 0.4);
+        destPos.copy(destTarget)
+          .add(forward.clone().multiplyScalar(2.2 * distanceModifier))
+          .add(new THREE.Vector3(0, -0.8, 0));
         break;
 
       case 'high-angle':
         // High Angle: Looking down from above
-        const highTarget = hips.clone().lerp(head, 0.5);
-        const highPos = highTarget.clone()
-          .add(forward.clone().multiplyScalar(2.0 * distanceModifier))
-          .add(new THREE.Vector3(0, 1.5, 0)); // Move up
-        this.camera.position.copy(highPos);
-        this.controls.target.copy(highTarget);
+        destTarget.copy(hips).lerp(head, 0.4);
+        destPos.copy(destTarget)
+          .add(forward.clone().multiplyScalar(2.2 * distanceModifier))
+          .add(new THREE.Vector3(0, 1.5, 0));
         break;
 
       case 'over-shoulder':
         // Over Shoulder: Behind and to the side
-        const shoulderTarget = head.clone().add(forward.clone().multiplyScalar(2.0)); // Look at something in front
-        const shoulderPos = head.clone()
-          .sub(forward.clone().multiplyScalar(0.5)) // Behind head
-          .add(right.clone().multiplyScalar(0.4))   // Offset right
-          .add(new THREE.Vector3(0, 0.1, 0));       // Slightly up
+        destTarget.copy(head).add(forward.clone().multiplyScalar(2.0)); 
         
-        this.camera.position.copy(shoulderPos);
-        this.controls.target.copy(shoulderTarget);
+        // Position behind head, slightly offset
+        destPos.copy(head)
+          .sub(forward.clone().multiplyScalar(0.6)) // Behind head
+          .add(right.clone().multiplyScalar(0.4))   // Offset right
+          .add(new THREE.Vector3(0, 0.05, 0));      // Slightly up
         break;
         
       case 'quarter':
-        // 3/4 View: Target Hips/Chest (averaged), Camera at 45 degrees
-        // Target slightly above hips for better center of mass view
-        const quarterTarget = hips.clone().add(new THREE.Vector3(0, 0.3, 0));
-        this.controls.target.copy(quarterTarget);
+        // 3/4 View: Target Chest (hips lerp head 0.4), Camera at 45 degrees
+        destTarget.copy(hips).lerp(head, 0.4);
+        
         // Position at 45 degrees: forward + right
-        const quarterOffset = forward.clone().add(right).normalize().multiplyScalar(1.5 * distanceModifier);
-        this.camera.position.copy(quarterTarget).add(quarterOffset).add(new THREE.Vector3(0, 0.2, 0));
+        const quarterOffset = forward.clone().add(right).normalize().multiplyScalar(1.8 * distanceModifier);
+        destPos.copy(destTarget).add(quarterOffset).add(new THREE.Vector3(0, 0.1, 0));
         break;
         
       case 'side':
-        // Side View: Target Hips/Chest, Camera at 90 degrees (right vector)
-        const sideTarget = hips.clone().add(new THREE.Vector3(0, 0.3, 0));
-        this.controls.target.copy(sideTarget);
-        const sidePos = sideTarget.clone().add(right.clone().multiplyScalar(1.8 * distanceModifier));
-        this.camera.position.copy(sidePos);
+        // Side View: Target Chest (hips lerp head 0.4), Camera at 90 degrees
+        destTarget.copy(hips).lerp(head, 0.4);
+        
+        // Distance 2.0 for full side profile
+        destPos.copy(destTarget).add(right.clone().multiplyScalar(2.0 * distanceModifier));
         break;
         
       case 'fullbody':
       case 'full-body':
       default:
         // Full Body: Target Hips, Camera Front
-        this.controls.target.copy(hips);
-        const fullBodyPos = hips.clone().add(forward.clone().multiplyScalar(2.5 * distanceModifier));
-        this.camera.position.copy(fullBodyPos);
+        destTarget.copy(hips);
+        destPos.copy(hips).add(forward.clone().multiplyScalar(2.8 * distanceModifier));
         break;
     }
-
-    // Handle Animation Presets
-    if (['orbit-slow', 'orbit-fast', 'dolly-in', 'dolly-out'].includes(preset)) {
-      this.startCameraAnimation(preset as any);
-    }
     
-    this.controls.update();
-    console.log(`[SceneManager] Camera set to ${preset} centered at`, this.controls.target);
+    return { position: destPos, target: destTarget };
+  }
+
+  /**
+   * Set camera to a preset view
+   * Hotkeys: 1=headshot, 3=quarter, 5=side, 7=full body
+   */
+  setCameraPreset(preset: 'headshot' | 'quarter' | 'side' | 'fullbody' | 'full-body' | 'portrait' | 'medium' | 'wide' | 'low-angle' | 'high-angle' | 'over-shoulder' | 'orbit-slow' | 'orbit-fast' | 'dolly-in' | 'dolly-out', force = false, transitionDuration = 0) {
+    if (!this.controls || !this.camera) return;
+    
+    // Disable any active follow/selfie mode to prevent fighting
+    if (force || this.followMode !== 'selfie') {
+      this.setFollowTarget(null, null);
+    }
+
+    // Stop any active camera animations
+    this.stopCameraAnimation();
+    
+    // For continuous animations, we handle them differently
+    if (['orbit-slow', 'orbit-fast', 'dolly-in', 'dolly-out'].includes(preset)) {
+      this.startCameraAnimation(preset as any, transitionDuration);
+      return;
+    }
+
+    const state = this.calculatePresetState(preset);
+    if (!state) return; // Should not happen for static presets
+
+    this.transitionCameraTo(state.position, state.target, transitionDuration);
+    console.log(`[SceneManager] Camera set to ${preset} centered at`, state.target);
+  }
+
+  transitionCameraTo(targetPos: THREE.Vector3, targetLookAt: THREE.Vector3, duration: number) {
+    if (!this.camera || !this.controls) return;
+
+    // Stop any existing transition/animation
+    this.stopCameraAnimation();
+
+    if (duration <= 0) {
+        this.camera.position.copy(targetPos);
+        this.controls.target.copy(targetLookAt);
+        this.controls.update();
+        return;
+    }
+
+    const startPos = this.camera.position.clone();
+    const startTarget = this.controls.target.clone();
+    let elapsed = 0;
+
+    this.cameraAnimationDispose = this.registerTick((delta) => {
+        if (!this.camera || !this.controls) return;
+
+        elapsed += delta;
+        const t = Math.min(elapsed / duration, 1.0);
+        
+        // Ease in-out cubic
+        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        
+        this.camera.position.lerpVectors(startPos, targetPos, ease);
+        this.controls.target.lerpVectors(startTarget, targetLookAt, ease);
+        this.controls.update();
+
+        if (t >= 1.0) {
+            this.stopCameraAnimation();
+        }
+    });
   }
 
   private cameraAnimationDispose?: () => void;
@@ -1149,29 +1185,82 @@ class SceneManager {
     this.cameraAnimationDispose = undefined;
   }
 
-  private startCameraAnimation(type: 'orbit-slow' | 'orbit-fast' | 'dolly-in' | 'dolly-out') {
+  private startCameraAnimation(type: 'orbit-slow' | 'orbit-fast' | 'dolly-in' | 'dolly-out', transitionDuration = 0) {
     if (!this.camera || !this.controls) return;
 
-    // Set initial position for animations
-    // Most start from a standard medium/full shot
+    let startPos = new THREE.Vector3();
+    let startTarget = new THREE.Vector3();
+    
+    // Determine start state based on animation type
     if (type.startsWith('orbit')) {
-        this.setCameraPreset('medium', true); // Reset to medium as base
+        // Use portrait (upper chest/neck) instead of medium (stomach) to ensure head stays in frame
+        const state = this.calculatePresetState('portrait');
+        if (state) {
+            startPos.copy(state.position);
+            startTarget.copy(state.target);
+        }
     } else if (type === 'dolly-in') {
-        this.setCameraPreset('fullbody', true); // Start wide
+        // CUSTOM SETUP for Dolly-In to ensure we target the HEAD
+        const targets = this.getAvatarTargets();
+        const { head, forward } = targets;
+
+        const aspect = this.camera.aspect;
+        let distanceModifier = 1.0;
+        if (aspect < 1) {
+            distanceModifier = 1 / aspect;
+        }
+
+        startTarget.copy(head);
+        // Start wide (2.5m)
+        startPos.copy(head).add(forward.clone().multiplyScalar(2.5 * distanceModifier));
+        console.log('[SceneManager] Dolly-In targeted at HEAD');
+
     } else if (type === 'dolly-out') {
-        this.setCameraPreset('headshot', true); // Start close
+        const state = this.calculatePresetState('headshot'); // Start close
+        if (state) {
+            startPos.copy(state.position);
+            startTarget.copy(state.target);
+        }
     }
 
+    // Capture initial state for transition
+    const initialPos = this.camera.position.clone();
+    const initialTarget = this.controls.target.clone();
+
     const speed = type === 'orbit-fast' ? 0.5 : 0.1;
-    const dollySpeed = 0.01;
+    // 0.015 provides ~2.7m travel over 3s (60fps), good for full range
+    const dollySpeed = 0.015; 
+    
+    let elapsed = 0;
 
     // Register tick handler
     this.cameraAnimationDispose = this.registerTick((delta) => {
         if (!this.camera || !this.controls) return;
+        
+        elapsed += delta;
 
+        // Phase 1: Transition to start state (if duration > 0)
+        if (transitionDuration > 0 && elapsed < transitionDuration) {
+            const t = elapsed / transitionDuration;
+            // Ease in-out cubic
+            const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            
+            this.camera.position.lerpVectors(initialPos, startPos, ease);
+            this.controls.target.lerpVectors(initialTarget, startTarget, ease);
+            this.controls.update();
+            return; // Don't run animation logic during transition
+        } 
+        
+        // Ensure we hit the exact start state at the end of transition
+        // Only do this once right after transition ends
+        // We can detect this if elapsed is just barely > duration
+        // Ideally we just continue from current state which should be close enough.
+        
+        // Phase 2: Run Animation Logic
+        // For orbit, we rotate from CURRENT position around CURRENT target
+        // For dolly, we move from CURRENT position
+        
         if (type === 'orbit-slow' || type === 'orbit-fast') {
-            // Orbit around target
-            // We can just rotate the camera position around the target
             const target = this.controls.target;
             const pos = this.camera.position;
             
@@ -1182,23 +1271,23 @@ class SceneManager {
             
             this.camera.lookAt(target);
         } else if (type === 'dolly-in') {
-            // Move closer to target
             const target = this.controls.target;
             const pos = this.camera.position;
             const dist = pos.distanceTo(target);
             
-            if (dist > 0.5) { // Min distance
+            if (dist > 0.8) { // Min distance
                 const dir = target.clone().sub(pos).normalize();
                 pos.add(dir.multiplyScalar(dollySpeed));
             }
         } else if (type === 'dolly-out') {
-            // Move away from target
             const target = this.controls.target;
             const pos = this.camera.position;
             
             const dir = pos.clone().sub(target).normalize();
             pos.add(dir.multiplyScalar(dollySpeed));
         }
+        
+        this.controls.update();
     });
   }
 

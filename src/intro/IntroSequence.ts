@@ -80,9 +80,9 @@ const SEQUENCES: Record<string, IntroSequenceDefinition> = {
         duration: 2.5,
         easing: 'easeInOut'
       },
-      // Dolly in for portrait (not too close)
+      // Dolly in for portrait (safer distance)
       { 
-        position: new THREE.Vector3(0.3, 1.4, 1.3), 
+        position: new THREE.Vector3(0.3, 1.4, 1.5), 
         target: new THREE.Vector3(0, 1.35, 0), 
         duration: 1.5,
         easing: 'easeInOut'
@@ -412,9 +412,9 @@ const SEQUENCES: Record<string, IntroSequenceDefinition> = {
     name: 'Emotional Journey',
     duration: 12,
     cameraKeyframes: [
-      // Start on face (sad) - not too close
+      // Start on face (sad) - safer distance
       { 
-        position: new THREE.Vector3(0.3, 1.4, 1.3), 
+        position: new THREE.Vector3(0.3, 1.4, 1.5), 
         target: new THREE.Vector3(0, 1.35, 0), 
         duration: 2.5,
         easing: 'easeOut'

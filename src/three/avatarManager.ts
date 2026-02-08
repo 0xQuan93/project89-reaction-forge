@@ -40,6 +40,7 @@ interface RawPoseData {
   vrmPose?: VRMPose;
   tracks?: THREE.KeyframeTrack[];
   sceneRotation?: { x: number; y: number; z: number };
+  scenePosition?: { x: number; y: number; z: number };
   expressions?: Record<string, number>;
   name?: string;
   duration?: number;
@@ -208,7 +209,7 @@ class AvatarManager {
           this.rootMotionManager.update(delta);
         } else if (this.vrm && !this.isInteracting) {
           // Even without root motion, handle basic grounding if an environment is present
-          // this.updateGrounding(delta); // This is now handled by the root motion manager
+          this.rootMotionManager.updateGrounding(delta);
         }
         
         // CRITICAL: Enforce locked Hips rotation AFTER all other updates
@@ -370,6 +371,14 @@ class AvatarManager {
       console.log('[AvatarManager] Scene rotation preserved (locked or manual posing active)');
     }
 
+    if (poseData.scenePosition && !shouldPreserveRotation) {
+      this.vrm.scene.position.set(
+        poseData.scenePosition.x ?? 0,
+        poseData.scenePosition.y ?? 0,
+        poseData.scenePosition.z ?? 0
+      );
+    }
+
     if (animationMode !== 'static' && poseData.tracks) {
       const { deserializeAnimationClip } = await import('../poses/animationClipSerializer');
       // Cast through unknown to handle the structural mismatch between RawPoseData and SerializedAnimationClip
@@ -420,12 +429,12 @@ class AvatarManager {
     }
   }
 
-  async applyPose(pose: PoseId, rotationLocked: boolean, animated = false, animationMode: AnimationMode = 'static', rootMotion = false) {
+  async applyPose(pose: PoseId, rotationLocked: boolean, animated = false, animationMode: AnimationMode = 'static', rootMotion = false, transitionDuration = 0.4) {
     const effectiveAnimationMode = animated && animationMode === 'static' ? 'loop' : animationMode;
     const shouldAnimate = animated || effectiveAnimationMode !== 'static';
     const shouldLoop = effectiveAnimationMode === 'loop';
     
-    console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}, rootMotion=${rootMotion}`);
+    console.log(`[AvatarManager] applyPose: ${pose}, animated=${animated}, mode=${effectiveAnimationMode}, loop=${shouldLoop}, rootMotion=${rootMotion}, transition=${transitionDuration}s`);
     
     this.isRootMotionEnabled = rootMotion;
 
@@ -475,13 +484,13 @@ class AvatarManager {
         ? retargetAnimationClip(def.animationClip, this.vrm, { stripHipsPosition: !rootMotion })
         : def.animationClip;
 
-      this.playAnimationClip(playableClip, rotationLocked, shouldLoop);
+      this.playAnimationClip(playableClip, rotationLocked, shouldLoop, transitionDuration);
     } else if (shouldAnimate) {
       console.log(`[AvatarManager] Generating animation from pose: ${pose}`);
       if (!this.vrm) return;
       const vrmPose = buildVRMPose(def);
       const clip = getAnimatedPose(pose, vrmPose, this.vrm) || poseToAnimationClip(vrmPose, this.vrm, 0.5, pose);
-      this.playAnimationClip(clip, rotationLocked, shouldLoop);
+      this.playAnimationClip(clip, rotationLocked, shouldLoop, transitionDuration);
     } else {
       console.log(`[AvatarManager] Applying static pose with transition: ${pose}`);
       // Clear follow target when applying a static pose
@@ -490,7 +499,7 @@ class AvatarManager {
       const vrmPose = buildVRMPose(def);
       
       // Use smooth transition instead of immediate snap
-      this.transitionToPose(vrmPose, rotationLocked, 0.4);
+      this.transitionToPose(vrmPose, rotationLocked, transitionDuration);
     }
   }
 
