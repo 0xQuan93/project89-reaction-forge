@@ -7,7 +7,7 @@ PoseLab accepts **VMC input** through a local OSC → WebSocket bridge because b
 
 ## 🚀 How it works
 
-1.  **VMC Sender:** A tool like *XR Animator*, *Warudo*, or *VSeeFace* sends OSC data over UDP (usually port `39539`).
+1.  **VMC Sender:** For a solid VTubing experience, we recommend using [XR Animator](https://github.com/cezarykluczynski/XRAnimator) (open-source) or other tools like *Warudo*, or *VSeeFace* to send OSC data over UDP (usually port `39539`).
 2.  **The Bridge:** Since browsers cannot listen to UDP, a "bridge" (WebSocket server) receives the OSC data and forwards it as JSON to PoseLab.
 3.  **PoseLab:** Receives the WebSocket messages and applies the motion to your avatar.
 
