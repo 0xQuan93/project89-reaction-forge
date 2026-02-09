@@ -30,10 +30,28 @@ export default defineConfig(({ mode }) => {
           console.log('[vmc-bridge] Starting WebSocket server on port 39540...')
           const wss = new WebSocketServer({ port: 39540, host: '127.0.0.1' })
           
+          wss.on('error', (e: any) => {
+            if (e.code === 'EADDRINUSE') {
+              console.log('[vmc-bridge] Port 39540 in use, VMC bridge (WebSocket) will be disabled for this instance.');
+            } else {
+              console.error('[vmc-bridge] WebSocket error:', e);
+            }
+          });
+
           console.log('[vmc-bridge] Starting UDP listener on port 39539...')
           const oscServer = new OscServer(39539, '127.0.0.1', () => {
              console.log('[vmc-bridge] UDP listener active on 39539')
           })
+
+          // @ts-ignore - node-osc types might not fully reflect EventEmitter inheritance in some versions
+          oscServer.on('error', (e: any) => {
+            if (e.code === 'EADDRINUSE') {
+              console.log('[vmc-bridge] Port 39539 in use, VMC bridge (UDP) will be disabled for this instance.');
+              try { oscServer.close(); } catch {}
+            } else {
+              console.error('[vmc-bridge] OSC error:', e);
+            }
+          });
 
           const handleOscMessage = (msg: any) => {
               // msg is [address, arg1, arg2...]

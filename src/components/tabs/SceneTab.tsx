@@ -46,6 +46,7 @@ import {
   Trash,
 } from '@phosphor-icons/react';
 import { environment3DManager, type LoadedEnvironment } from '../../three/environment3DManager';
+import { useEnvironmentLibraryStore } from '../../state/useEnvironmentLibraryStore';
 
 type AspectRatio = '16:9' | '1:1' | '9:16';
 
@@ -265,6 +266,16 @@ export function SceneTab() {
   const [live2dPhysicsEnabled, setLive2dPhysicsEnabled] = useState(true);
   const [live2dEyeTrackingEnabled, setLive2dEyeTrackingEnabled] = useState(true);
   const { selectedPersonaId, completedSteps, setPersona, toggleStep, resetPersona } = useOnboardingStore();
+  const { 
+    projects, 
+    selectedProjectId, 
+    assets: libraryAssets, 
+    isLoadingProjects, 
+    isLoadingAssets, 
+    fetchProjects, 
+    selectProject 
+  } = useEnvironmentLibraryStore();
+
   const activePersona = getOnboardingPersona(selectedPersonaId) ?? ONBOARDING_PERSONAS[0];
   const personaCompletedSteps = completedSteps[activePersona.id] ?? [];
   const personaStepIds = new Set(activePersona.steps.map((step) => step.id));
@@ -302,8 +313,12 @@ export function SceneTab() {
     });
     // Initialize with current state
     setLoaded3DEnvironments(environment3DManager.getAll());
+    
+    // Fetch online library
+    fetchProjects();
+    
     return unsubscribe;
-  }, []);
+  }, [fetchProjects]);
 
   const handleVRMUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -447,6 +462,28 @@ export function SceneTab() {
       environment3DManager.updateSettings(id, {
         rotation: { ...env.settings.rotation, [axis]: value }
       });
+    }
+  };
+
+  const handleLibraryAssetSelect = async (asset: any) => {
+    const url = asset.file || asset.url;
+    if (!url) {
+        addToast('No download URL for this asset', 'error');
+        return;
+    }
+    
+    setIsLoading3DEnv(true);
+    addToast(`Downloading ${asset.name}...`, 'info');
+    
+    try {
+      // Use proxy if needed for CORS? Assuming direct access for now or user provided CORS-enabled URL
+      const env = await environment3DManager.loadFromUrl(url, asset.name);
+      addToast(`Loaded ${env.name}`, 'success');
+    } catch (error) {
+      console.error('Failed to load asset:', error);
+      addToast(`Failed to load ${asset.name}`, 'error');
+    } finally {
+      setIsLoading3DEnv(false);
     }
   };
 
@@ -1182,6 +1219,80 @@ export function SceneTab() {
           </p>
         )}
       </Section>
+
+      {/* Online Library Section - Temporarily Disabled */}
+      {false && (
+      <Section title="Online Library" icon={<Globe size={18} weight="duotone" />} defaultOpen={false}>
+        <p className="muted small" style={{ marginBottom: '0.75rem' }}>
+          Browse and download free 3D environments from the community
+        </p>
+
+        {isLoadingProjects ? (
+             <div style={{ textAlign: 'center', padding: '1rem', color: '#00ffd6' }}>
+                Loading library...
+             </div>
+        ) : (
+             <>
+                 <select 
+                    value={selectedProjectId || ''} 
+                    onChange={(e) => selectProject(e.target.value)}
+                    style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        marginBottom: '1rem',
+                        background: 'var(--color-surface)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-default)',
+                        borderRadius: '6px'
+                    }}
+                 >
+                    <option value="" disabled>Select a Collection</option>
+                    {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                 </select>
+
+                 {selectedProjectId && (
+                     <>
+                        {isLoadingAssets ? (
+                            <div style={{ textAlign: 'center', padding: '1rem', color: '#00ffd6' }}>
+                                Loading assets...
+                            </div>
+                        ) : libraryAssets.length > 0 ? (
+                            <div className="background-grid">
+                                {libraryAssets.map(asset => (
+                                    <button
+                                        key={asset.id || asset.name}
+                                        className="background-thumbnail"
+                                        onClick={() => handleLibraryAssetSelect(asset)}
+                                        title={asset.description || asset.name}
+                                    >
+                                        <div className="background-thumbnail__preview" style={{
+                                            backgroundImage: asset.thumbnail ? `url(${asset.thumbnail})` : 'none',
+                                            backgroundColor: '#2a2a2a',
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            {!asset.thumbnail && <Cube size={24} weight="duotone" style={{ opacity: 0.5 }} />}
+                                        </div>
+                                        <span className="background-thumbnail__name">{asset.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '1rem', opacity: 0.6 }}>
+                                No assets found in this collection.
+                            </div>
+                        )}
+                     </>
+                 )}
+             </>
+        )}
+      </Section>
+      )}
 
       {/* Backgrounds Section */}
       <Section title="Backgrounds" icon={<Image size={18} weight="duotone" />} defaultOpen={false}>
