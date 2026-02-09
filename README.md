@@ -86,8 +86,9 @@
 **Goal: Use PoseLab as a live avatar source.**
 1.  **Launch**: Run `npm run dev` locally.
 2.  **OBS**: Add a **Browser Source** pointing to `http://localhost:5173`.
-3.  **Mode**: Toggle **Streamer Mode** in the Scene tab to hide UI.
+3.  **Mode**: Activate **Stream Mode** by clicking the "Broadcast" icon in the top-right of the header, or by adding `?stream=true` to the URL. This will hide the UI and make the background transparent.
 4.  **Keying**: Use a transparent background or green screen for compositing.
+5.  **Camera**: If you have multiple cameras, you can select your desired camera for motion capture in the **Mocap** tab.
 
 ### 🎥 **For Mocap Performers**
 **Goal: Record a custom motion.**

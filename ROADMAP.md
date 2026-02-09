@@ -17,6 +17,7 @@ This document outlines the planned upgrades and feature requests for PoseLab, fo
 - [x] **Keyframe Editor:** A simple timeline interface to set poses at specific timestamps.
 - [x] **Interpolation Control:** Basic Linear interpolation between poses.
 - [x] **Sequence Export:** Export the full timeline as a `.json` animation clip or `.webm` video.
+- [x] **Documentation:** A comprehensive guide to the timeline feature is available in [TIMELINE-GUIDE.md](docs/TIMELINE-GUIDE.md).
 
 ### 🕹️ Advanced IK Controls
 **Goal:** Provide more precise control over limbs without relying solely on presets.

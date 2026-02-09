@@ -293,6 +293,12 @@ Track face + upper body:
 2. Position yourself in frame
 3. Movements translate to avatar
 
+### Camera Selection
+If you have multiple cameras connected to your computer (e.g., a webcam and a virtual camera from OBS), you can select which camera to use for motion capture.
+
+1.  Click the **"Camera"** dropdown menu.
+2.  Select the desired camera from the list.
+
 ### Recording
 1. Start capture
 2. Click **"🔴 Record"**
@@ -343,6 +349,22 @@ Drive mouth movements from your microphone:
 
 ---
 
+## 🕒 Timeline Tab
+
+The Timeline tab allows you to create and edit custom animation sequences. You can keyframe poses, expressions, and camera movements to create dynamic scenes.
+
+### Creating a Sequence
+1.  Go to the **Timeline** tab.
+2.  Click the **"+"** button to add a new keyframe.
+3.  Select a pose, expression, and camera preset for the keyframe.
+4.  Adjust the timing of the keyframe by dragging it along the timeline.
+
+### Playback and Export
+1.  Click the **"Play"** button to preview your sequence.
+2.  You can export your sequence as a video or a `.pose` file from the **Export** tab.
+
+---
+
 ## 📤 Export Tab
 
 ### Image Export
@@ -375,6 +397,17 @@ Settings:
 ## 📡 Streaming & Broadcasting
 
 PoseLab can be used as a high-quality avatar source for live streaming (OBS, Streamlabs, etc.) using its **built-in motion capture** or **external VMC tracking**.
+
+### Stream Mode
+Stream Mode provides a clean, UI-free output of your avatar, perfect for use as a browser source in streaming software like OBS. When you activate Stream Mode, all UI elements are hidden, and the background is made transparent.
+
+**To activate Stream Mode:**
+
+1.  Click the **"Broadcast"** icon in the top-right corner of the header.
+2.  A toast notification will appear confirming that Stream Mode is active.
+3.  To exit Stream Mode, press the **"Esc"** key or click the "Exit Virtual Cam Mode" button.
+
+You can also activate Stream Mode automatically by adding `?stream=true` to the URL.
 
 ### Quick Setup for OBS Studio
 1. **Launch PoseLab** locally (`npm run dev`)
