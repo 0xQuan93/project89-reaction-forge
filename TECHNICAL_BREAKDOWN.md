@@ -11,6 +11,10 @@ PoseLab (formerly Reaction Forge) is a web-based tool for creating and exporting
 *   **Reaction Forge**: The main interface for loading VRM avatars, applying poses and animations, and exporting the results as PNG images or WebM videos.
 *   **Pose Lab**: A tool for converting Mixamo FBX animations to a format compatible with Reaction Forge.
 
+## VRM Specs & PoseLab Practices
+
+For VRM specification details (humanoid bones, MToon, 0.0 vs 1.0) and recommended practices for PoseLab (avatar prep, Mixamo/FBX retargeting, mocap, expressions, export), see **[VRM Specs & PoseLab Best Practices](./docs/VRM-SPECS-AND-POSELAB-BEST-PRACTICES.md)**.
+
 ## Technology Stack
 
 *   **Frontend Framework**: React 19
