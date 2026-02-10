@@ -6,7 +6,6 @@ import {
   SkipBack, 
   SpeakerHigh, 
   SpeakerLow,
-  SpeakerNone,
   MusicNotes,
   Playlist,
   X,
