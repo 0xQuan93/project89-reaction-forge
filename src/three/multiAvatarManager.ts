@@ -50,15 +50,22 @@ class MultiAvatarManager {
   private tickDispose?: () => void;
   private isInteracting = false;
   private isManualPosing = false;
-  private gestureAnimations = new Map<PeerId, { 
-    gesture: string; 
-    startTime: number; 
+  private gestureAnimations = new Map<PeerId, {
+    gesture: string;
+    startTime: number;
     duration: number;
     initialRotations: Map<string, THREE.Quaternion>;
   }>();
+  /** Default Y rotation applied to loaded avatars (Math.PI for standard VRM, 0 for pre-rotated models). */
+  private _defaultYRotation = Math.PI;
 
   constructor() {
     this.loader.register((parser) => new VRMLoaderPlugin(parser));
+  }
+
+  /** Set the default Y rotation for newly loaded avatars. */
+  setDefaultYRotation(radians: number) {
+    this._defaultYRotation = radians;
   }
 
   // ==================
@@ -154,9 +161,10 @@ class MultiAvatarManager {
 
     // Position the avatar
     vrm.scene.position.copy(positionOffset);
-    // Most VRMs are exported facing +Z but poses were authored with avatar at 180°.
-    // Start at 180° rotation so avatar faces camera.
-    vrm.scene.rotation.set(0, Math.PI, 0);
+    // Rotate on Y so the avatar faces the camera.
+    // Standard VRMs export facing +Z (camera looks at -Z) → need Math.PI flip.
+    // Custom models may already face the camera → pass yRotation = 0.
+    vrm.scene.rotation.set(0, this._defaultYRotation, 0);
 
     // Add to scene
     scene.add(vrm.scene);
