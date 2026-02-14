@@ -3,7 +3,10 @@ import { useSettingsStore, type Locale, type QualityLevel } from '../state/useSe
 import { autosaveManager, type AutosaveEntry } from '../persistence/autosaveManager';
 import { projectManager } from '../persistence/projectManager';
 import { useToastStore } from '../state/useToastStore';
-import { Desktop, GearSix, Moon, Sun, FilmStrip, Cube, Scan, Circle } from '@phosphor-icons/react';
+import { agentManager } from '../ai/AgentManager';
+import { GeminiAgent } from '../ai/agents/GeminiAgent';
+import { RemoteAgent } from '../ai/agents/RemoteAgent';
+import { Desktop, GearSix, Moon, Sun, FilmStrip, Cube, Scan, Circle, Robot, Globe } from '@phosphor-icons/react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,6 +38,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   } = useSettingsStore();
   const addToast = useToastStore((state) => state.addToast);
   const [autosaves, setAutosaves] = useState<AutosaveEntry[]>([]);
+  const [activeAgentId, setActiveAgentId] = useState(agentManager.agent.id);
+  const [remoteEndpoint, setRemoteEndpoint] = useState('http://localhost:3000/api/chat');
+  const [remoteKey, setRemoteKey] = useState('');
+
+  const handleAgentSwitch = async (id: string) => {
+    try {
+        if (id === 'gemini-agent') {
+        await agentManager.setAgent(new GeminiAgent());
+        setActiveAgentId('gemini-agent');
+        addToast('Switched to Gemini Pro', 'success');
+        } else if (id === 'remote-agent') {
+        if (!remoteEndpoint) {
+            addToast('Please enter an endpoint URL', 'error');
+            return;
+        }
+        const agent = new RemoteAgent();
+        // Initialize with config
+        await agentManager.setAgent(agent, { endpoint: remoteEndpoint, apiKey: remoteKey });
+        setActiveAgentId('remote-agent');
+        addToast('Switched to Remote Agent', 'success');
+        }
+    } catch (e: any) {
+        addToast(`Failed to switch agent: ${e.message}`, 'error');
+    }
+  };
 
   const refreshAutosaves = () => {
     setAutosaves(autosaveManager.getAutosaves());
@@ -57,6 +85,58 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
         
         <div className="modal-body">
+          {/* AI Brain Settings - Currently Disabled
+          <div className="setting-group">
+            <label>AI Brain (Agent)</label>
+            <div className="agent-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+              <button 
+                className={`theme-btn ${activeAgentId === 'gemini-agent' ? 'active' : ''}`}
+                onClick={() => handleAgentSwitch('gemini-agent')}
+              >
+                <Robot size={18} weight={activeAgentId === 'gemini-agent' ? 'fill' : 'regular'} /> Gemini (Cloud)
+              </button>
+              <button 
+                className={`theme-btn ${activeAgentId === 'remote-agent' ? 'active' : ''}`}
+                onClick={() => handleAgentSwitch('remote-agent')} // Just select UI, don't switch yet? No, switch immediately for now or when configuring
+              >
+                <Globe size={18} weight={activeAgentId === 'remote-agent' ? 'fill' : 'regular'} /> Remote / Eliza
+              </button>
+            </div>
+            {activeAgentId === 'remote-agent' && (
+                <div className="remote-config" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Endpoint URL</label>
+                        <input 
+                            type="text" 
+                            value={remoteEndpoint} 
+                            onChange={e => setRemoteEndpoint(e.target.value)}
+                            placeholder="http://localhost:3000/message"
+                            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                        />
+                    </div>
+                    <div style={{ marginBottom: '8px' }}>
+                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>API Key (Optional)</label>
+                        <input 
+                            type="password" 
+                            value={remoteKey} 
+                            onChange={e => setRemoteKey(e.target.value)}
+                            placeholder="sk-..."
+                            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                        />
+                    </div>
+                    <button 
+                        className="secondary small" 
+                        style={{ width: '100%' }}
+                        onClick={() => handleAgentSwitch('remote-agent')}
+                    >
+                        Connect & Save
+                    </button>
+                </div>
+            )}
+            <p className="muted small">Choose who drives the avatar. Gemini is built-in. Remote allows custom ElizaOS agents.</p>
+          </div>
+          */}
+
           <div className="setting-group">
             <label>Interface Theme</label>
             <div className="theme-toggle">

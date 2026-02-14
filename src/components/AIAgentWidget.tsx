@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAIStore } from '../state/useAIStore';
-import { aiManager } from '../ai/AIManager';
+import { agentManager } from '../ai/AgentManager';
 import { apiKeyStorage } from '../utils/secureStorage';
 import './AIAgentWidget.css';
 import { Button } from '../design-system/Button';
@@ -80,7 +80,7 @@ export function AIAgentWidget() {
       }
       try {
         // Pass API key only if not using proxy
-        await aiManager.init(USE_SERVER_PROXY ? undefined : apiKey);
+        await agentManager.init(USE_SERVER_PROXY ? undefined : apiKey);
         setAIActive(true);
       } catch (error) {
         alert("Failed to connect to AI. Check your API key.");
@@ -101,7 +101,7 @@ export function AIAgentWidget() {
     
     setChatHistory(prev => [...prev, { role: 'user', text: userMessage }]);
 
-    const response = await aiManager.processInput(userMessage);
+    const response = await agentManager.processInput(userMessage);
     
     // Clean response if it contains commands, but keep the text
     const cleanResponse = response || "..."; 
