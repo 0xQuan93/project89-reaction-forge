@@ -14,47 +14,35 @@ import {
   Shuffle,
   RepeatOnce
 } from '@phosphor-icons/react';
+import { useMusicStore, PATH_PREFIX, type Track } from '../state/useMusicStore';
 import './MusicPlayer.css';
-
-const DEFAULT_TRACKS = [
-  { title: "Abyss Scrubber", file: "Abyss Scrubber.mp3", artist: "PoseLab Ambient" },
-  { title: "Aurora Mesh", file: "Aurora Mesh.mp3", artist: "PoseLab Ambient" },
-  { title: "Final Render", file: "Final Render.mp3", artist: "PoseLab Ambient" },
-  { title: "Glassmorphism", file: "Glassmorphism.mp3", artist: "PoseLab Ambient" },
-  { title: "Glitch-Tab", file: "Glitch-Tab.mp3", artist: "PoseLab Ambient" },
-  { title: "Neon Drip", file: "Neon Drip.mp3", artist: "PoseLab Ambient" },
-  { title: "Pixelate", file: "Pixelate.mp3", artist: "PoseLab Ambient" },
-  { title: "Pose Logic", file: "Pose Logic.mp3", artist: "PoseLab Ambient" },
-  { title: "Signal Green", file: "Signal Green.mp3", artist: "PoseLab Ambient" },
-  { title: "Spatial Scenery", file: "Spatial Scenery.mp3", artist: "PoseLab Ambient" },
-  { title: "Vapor Scape", file: "Vapor Scape.mp3", artist: "PoseLab Ambient" },
-];
-
-const PATH_PREFIX = '/POSELABSTUDIOPLAYLIST/';
-
-interface Track {
-  title: string;
-  file: string;
-  artist: string;
-  isLocal?: boolean;
-  url?: string;
-}
 
 export function MusicPlayer() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [volume, setVolume] = useState(0.5);
-  const [isMuted, setIsMuted] = useState(false);
-  const [tracks, setTracks] = useState<Track[]>(DEFAULT_TRACKS);
-  
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeatOne, setIsRepeatOne] = useState(false);
-  
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  
   const [isMobile, setIsMobile] = useState(false);
+  
+  const {
+    tracks,
+    currentTrackIndex,
+    isPlaying,
+    volume,
+    isMuted,
+    isShuffle,
+    isRepeatOne,
+    play,
+    pause,
+    togglePlay,
+    next,
+    prev,
+    setVolume,
+    toggleMute,
+    toggleShuffle,
+    toggleRepeatOne,
+    addTracks,
+    clearPlaylist
+  } = useMusicStore();
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,18 +88,14 @@ export function MusicPlayer() {
         if (playPromise !== undefined) {
           playPromise.catch(e => {
             console.error("Audio playback failed:", e);
-            setIsPlaying(false);
+            pause();
           });
         }
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, currentTrackIndex, tracks]);
-
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying, currentTrackIndex, tracks, pause]);
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return "0:00";
@@ -128,29 +112,6 @@ export function MusicPlayer() {
     }
   };
 
-  const nextTrack = () => {
-    if (tracks.length === 0) return;
-    
-    if (isShuffle) {
-      // Pick random index
-      let nextIndex = Math.floor(Math.random() * tracks.length);
-      // Avoid repeating same song if possible
-      if (tracks.length > 1 && nextIndex === currentTrackIndex) {
-        nextIndex = (nextIndex + 1) % tracks.length;
-      }
-      setCurrentTrackIndex(nextIndex);
-    } else {
-      // Loop is automatic
-      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
-    }
-  };
-
-  const prevTrack = () => {
-    if (tracks.length === 0) return;
-    // Previous button always goes to previous in list order, even if shuffled (simple behavior)
-    setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
-  };
-
   const handleTrackEnd = () => {
     if (isRepeatOne) {
       if (audioRef.current) {
@@ -158,13 +119,12 @@ export function MusicPlayer() {
         audioRef.current.play();
       }
     } else {
-      nextTrack();
+      next();
     }
   };
 
   const handleClearPlaylist = () => {
-    setTracks([]);
-    setIsPlaying(false);
+    clearPlaylist();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -183,7 +143,7 @@ export function MusicPlayer() {
       url: URL.createObjectURL(file)
     }));
 
-    setTracks(prev => [...prev, ...newTracks]);
+    addTracks(newTracks);
     
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -258,19 +218,19 @@ export function MusicPlayer() {
             </div>
 
             <div className="player-controls large">
-              <button className="control-btn" onClick={() => setIsShuffle(!isShuffle)}>
+              <button className="control-btn" onClick={toggleShuffle}>
                 <Shuffle size={24} className={isShuffle ? 'active-icon' : ''} />
               </button>
-              <button className="control-btn" onClick={prevTrack}>
+              <button className="control-btn" onClick={prev}>
                 <SkipBack size={32} weight="fill" />
               </button>
               <button className="play-pause-large" onClick={togglePlay}>
                 {isPlaying ? <Pause size={36} weight="fill" /> : <Play size={36} weight="fill" />}
               </button>
-              <button className="control-btn" onClick={nextTrack}>
+              <button className="control-btn" onClick={next}>
                 <SkipForward size={32} weight="fill" />
               </button>
-              <button className="control-btn" onClick={() => setIsRepeatOne(!isRepeatOne)}>
+              <button className="control-btn" onClick={toggleRepeatOne}>
                 <RepeatOnce size={24} className={isRepeatOne ? 'active-icon' : ''} />
               </button>
             </div>
@@ -286,7 +246,6 @@ export function MusicPlayer() {
                 value={isMuted ? 0 : volume}
                 onChange={(e) => {
                   setVolume(parseFloat(e.target.value));
-                  setIsMuted(false);
                 }}
               />
             </div>
@@ -310,7 +269,7 @@ export function MusicPlayer() {
           
           {/* Controls Group */}
           <div className="drawer-controls">
-            <button className="control-btn small" onClick={prevTrack} title="Previous">
+            <button className="control-btn small" onClick={prev} title="Previous">
               <SkipBack size={16} weight="fill" />
             </button>
             <button 
@@ -320,7 +279,7 @@ export function MusicPlayer() {
             >
               {isPlaying ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
             </button>
-            <button className="control-btn small" onClick={nextTrack} title="Next">
+            <button className="control-btn small" onClick={next} title="Next">
               <SkipForward size={16} weight="fill" />
             </button>
           </div>
@@ -339,7 +298,7 @@ export function MusicPlayer() {
           <div className="drawer-volume">
             <button 
               className="control-btn tiny" 
-              onClick={() => setIsMuted(!isMuted)}
+              onClick={toggleMute}
             >
               {isMuted || volume === 0 ? <SpeakerX size={14} /> : <SpeakerHigh size={14} />}
             </button>
@@ -352,7 +311,6 @@ export function MusicPlayer() {
               value={isMuted ? 0 : volume}
               onChange={(e) => {
                 setVolume(parseFloat(e.target.value));
-                setIsMuted(false);
               }}
             />
           </div>
@@ -361,7 +319,7 @@ export function MusicPlayer() {
           <div className="drawer-actions">
             <button 
               className={`control-btn tiny ${isShuffle ? 'active' : ''}`} 
-              onClick={() => setIsShuffle(!isShuffle)}
+              onClick={toggleShuffle}
               title="Shuffle"
             >
               <Shuffle size={14} />

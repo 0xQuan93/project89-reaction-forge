@@ -76,7 +76,7 @@ export type PoseDefinition = {
   isAnimated?: boolean;
 };
 
-const poseLibrary: Record<PoseId, PoseDefinition> = {
+export const poseLibrary: Record<PoseId, PoseDefinition> = {
   'dawn-runner': dawnRunner as unknown as PoseDefinition,
   'sunset-call': sunsetCall as unknown as PoseDefinition,
   'cipher-whisper': cipherWhisper as unknown as PoseDefinition,

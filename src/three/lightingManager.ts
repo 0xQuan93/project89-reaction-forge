@@ -272,6 +272,11 @@ class LightingManager {
     const settings = this.getSettings();
     const lightSettings = settings[lightType] as Record<string, unknown>;
     
+    if (!lightSettings) {
+      console.warn(`[LightingManager] Invalid light type: ${lightType}`);
+      return;
+    }
+    
     if (property === 'position' && typeof value === 'object') {
       lightSettings.position = value;
     } else {

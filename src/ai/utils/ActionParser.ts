@@ -5,17 +5,12 @@ import { useAIStore } from "../../state/useAIStore";
 import { useSceneSettingsStore } from "../../state/useSceneSettingsStore";
 import { geminiService } from "../../services/gemini";
 import { avatarController, type GestureType, type EmotionState } from "../AvatarController";
-import type { ExpressionId, PoseId } from "../../types/reactions";
+import type { PoseId } from "../../types/reactions";
+import { GESTURE_LIBRARY } from "../../data/gestures";
 
 // Valid pose IDs that exist in the pose library
-const VALID_POSE_IDS: PoseId[] = [
-  'dawn-runner', 'sunset-call', 'cipher-whisper', 'nebula-drift',
-  'signal-reverie', 'agent-taunt', 'agent-dance',
-  'agent-clapping', 'silly-agent', 'simple-wave', 'point',
-  'locomotion-walk', 'locomotion-run', 'locomotion-jog', 'locomotion-crouch-walk',
-  'idle-neutral', 'idle-happy', 'idle-breathing', 'idle-nervous',
-  'sit-chair', 'sit-sad', 'emote-wave', 'emote-thumbsup', 'action-swim'
-];
+import { poseLibrary } from "../../poses";
+const VALID_POSE_IDS: PoseId[] = Object.keys(poseLibrary) as PoseId[];
 
 // Map AI commands to actual pose IDs
 const POSE_COMMAND_MAP: Record<string, PoseId> = {
@@ -38,24 +33,35 @@ const POSE_COMMAND_MAP: Record<string, PoseId> = {
   'bow': 'emote-bow',
   'thumbsup': 'emote-thumbsup',
   'swim': 'action-swim',
-  'focus': 'action-focus'
+  'focus': 'action-focus',
+  // New poses from the library
+  'crouch_walk': 'locomotion-crouch-walk',
+  'turn_left': 'locomotion-turn-left',
+  'turn_right': 'locomotion-turn-right',
+  'stop': 'locomotion-stop',
+  'neutral_idle': 'idle-neutral',
+  'happy_idle': 'idle-happy',
+  'breathing_idle': 'idle-breathing',
+  'nervous_idle': 'idle-nervous',
+  'floor_sit': 'sit-floor',
+  'typing_sit': 'sit-typing',
+  'stand_to_sit': 'transition-stand-to-sit',
+  'sit_to_stand': 'transition-sit-to-stand',
+  'floor_to_stand': 'transition-floor-to-stand',
+  'cheer': 'emote-cheer',
+  'dance_silly': 'emote-dance-silly',
+  'bored': 'emote-bored',
+  'defeat': 'action-defeat',
+  'rope_climb': 'action-rope-climb',
+  'climb_top': 'action-climb-top',
+  'waking': 'action-waking',
 };
 
 // Map AI commands to gestures (new system)
-const GESTURE_COMMAND_MAP: Record<string, GestureType> = {
-  'wave': 'wave',
-  'nod': 'nod',
-  'shake': 'shake',
-  'shrug': 'shrug',
-  'point': 'point',
-  'thumbsup': 'thumbsUp',
-  'clap': 'clap',
-  'bow': 'bow',
-  'celebrate': 'celebrate',
-  'think': 'think',
-  'listen': 'listen',
-  'acknowledge': 'acknowledge',
-};
+const GESTURE_COMMAND_MAP: Record<string, GestureType> = Object.keys(GESTURE_LIBRARY).reduce((acc, key) => {
+  acc[key.toLowerCase()] = key as GestureType;
+  return acc;
+}, {} as Record<string, GestureType>);
 
 // Map AI commands to emotions
 const EMOTION_COMMAND_MAP: Record<string, EmotionState> = {
@@ -79,285 +85,380 @@ export class ActionParser {
     // 0. Safety check - ensure VRM is loaded
     if (!avatarManager.getVRM()) {
       console.warn("[ActionParser] No VRM loaded - skipping avatar commands");
-      // Still speak the response
       const cleanText = response.replace(/\[.*?\]/g, '');
       speak(cleanText);
       return;
     }
     
-    // 1. Speak (Using Browser TTS for now, mapped to your LipSync)
-    const cleanText = response.replace(/\[.*?\]/g, ''); // Remove commands from speech
-    speak(cleanText);
+    // 1. Extract and speak text (removing all bracketed commands)
+    const cleanText = response.replace(/\[.*?\]/g, '').trim();
+    if (cleanText) {
+      speak(cleanText);
+    }
     
+    // 2. Parse all commands using regex
+    // Format: [COMMAND: value] or [COMMAND]
+    const commandRegex = /\[(\w+)(?::\s*(.*?))?\]/g;
+    let match;
     let actionTaken = false;
 
-    // 2. Check for Reaction commands first (gesture + emotion combo)
-    const reactMatch = response.match(/\[REACT:\s*(\w+)\]/i);
-    if (reactMatch && reactMatch[1]) {
-      const reaction = reactMatch[1].toLowerCase();
-      console.log(`[ActionParser] Executing reaction: ${reaction}`);
+    while ((match = commandRegex.exec(response)) !== null) {
+      const command = match[1].toUpperCase();
+      const value = match[2]?.trim().toLowerCase() || "";
+
+      console.log(`[ActionParser] Processing command: ${command} with value: ${value}`);
+
       try {
-        await avatarController.react(reaction);
-        actionTaken = true;
-      } catch (e) {
-        console.error("[ActionParser] Failed to execute reaction:", e);
-      }
-    }
-
-    // 3. Check for Gesture commands
-    const gestureMatch = response.match(/\[GESTURE:\s*(\w+)\]/i);
-    if (gestureMatch && gestureMatch[1]) {
-      const gestureName = gestureMatch[1].toLowerCase();
-      const gesture = GESTURE_COMMAND_MAP[gestureName];
-      
-      if (gesture) {
-        console.log(`[ActionParser] Performing gesture: ${gesture}`);
-        try {
-          await avatarController.performGesture(gesture);
-          actionTaken = true;
-        } catch (e) {
-          console.error("[ActionParser] Failed to perform gesture:", e);
-        }
-      } else {
-        console.warn(`[ActionParser] Unknown gesture: ${gestureName}`);
-      }
-    }
-
-    // 4. Check for Emotion commands
-    const emotionMatch = response.match(/\[EMOTION:\s*(\w+)\]/i);
-    if (emotionMatch && emotionMatch[1]) {
-      const emotionName = emotionMatch[1].toLowerCase();
-      const emotion = EMOTION_COMMAND_MAP[emotionName];
-      
-      if (emotion) {
-        console.log(`[ActionParser] Setting emotion: ${emotion}`);
-        try {
-          await avatarController.setEmotion(emotion);
-          actionTaken = true;
-        } catch (e) {
-          console.error("[ActionParser] Failed to set emotion:", e);
-        }
-      } else {
-        console.warn(`[ActionParser] Unknown emotion: ${emotionName}`);
-      }
-    }
-
-    // 5. Check for Generative Pose Command
-    const genMatch = response.match(/\[GENERATE_POSE:\s*(.*?)\]/i);
-    if (genMatch && genMatch[1]) {
-        const description = genMatch[1];
-        console.log(`[ActionParser] Generating custom pose: "${description}"`);
-        useAIStore.getState().setThought("Generating Pose...");
-        
-        try {
-            if (!geminiService.isReady()) {
-                console.warn('[ActionParser] Gemini service not ready for pose generation');
-            } else {
-                const result = await geminiService.generatePose(description);
-                if (result) {
-                    // Apply generated pose
-                    if (result.vrmPose) {
-                        const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
-                        await avatarManager.applyRawPose({
-                            vrmPose: result.vrmPose,
-                            sceneRotation: result.sceneRotation
-                        }, rotationLocked, 'static');
-                    }
-                    
-                    // Apply generated background if provided
-                    if ((result as any).background) {
-                        await sceneManager.setBackground((result as any).background);
-                    }
-                    
-                    console.log("[ActionParser] ✅ Generated pose/scene applied successfully");
-                    actionTaken = true;
-                }
-            }
-        } catch (e) {
-            console.error("[ActionParser] Failed to generate pose:", e);
-        }
-        useAIStore.getState().setThought(null);
-    }
-
-    // 5b. Check for Background command
-    const bgMatch = response.match(/\[BACKGROUND:\s*(.*?)\]/i);
-    if (bgMatch && bgMatch[1]) {
-        const bgId = bgMatch[1].trim();
-        console.log(`[ActionParser] Changing background to: ${bgId}`);
-        await sceneManager.setBackground(bgId);
-        actionTaken = true;
-    }
-
-    // 5c. Check for Scene Rotation command
-    const rotMatch = response.match(/\[SCENE_ROTATION:\s*(\d+)\]/i);
-    if (rotMatch && rotMatch[1]) {
-        const deg = parseInt(rotMatch[1]);
-        const vrm = avatarManager.getVRM();
-        
-        // Respect rotation lock and manual posing mode
-        const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
-        const isManualPosing = avatarManager.isManualPosingEnabled();
-        
-        if (vrm && !rotationLocked && !isManualPosing) {
-            console.log(`[ActionParser] Rotating scene to: ${deg}deg`);
-            vrm.scene.rotation.y = THREE.MathUtils.degToRad(deg);
+        switch (command) {
+          case 'REACT':
+            await avatarController.react(value);
             actionTaken = true;
-        } else if (vrm) {
-            console.log(`[ActionParser] Scene rotation blocked (locked: ${rotationLocked}, manual: ${isManualPosing})`);
-        }
-    }
+            break;
 
-    // 5d. Check for Export command
-    const exportMatch = response.match(/\[EXPORT:\s*(\w+)\]/i);
-    if (exportMatch && exportMatch[1]) {
-        const type = exportMatch[1].toLowerCase();
-        console.log(`[ActionParser] Triggering export: ${type}`);
-        // We'll use the sceneManager capture for PNG
-        if (type === 'png' || type === 'photo') {
-            const dataUrl = await sceneManager.captureSnapshot();
-            if (dataUrl) {
+          case 'GESTURE':
+            const gesture = GESTURE_COMMAND_MAP[value];
+            if (gesture) {
+              await avatarController.performGesture(gesture);
+              actionTaken = true;
+            }
+            break;
+
+          case 'EMOTION':
+          case 'EXPRESSION':
+            const emotion = EMOTION_COMMAND_MAP[value];
+            if (emotion) {
+              await avatarController.setEmotion(emotion);
+              actionTaken = true;
+            } else if (['joy', 'surprise', 'calm'].includes(value)) {
+              avatarManager.applyExpression(value as any);
+              actionTaken = true;
+            }
+            break;
+
+          case 'POSE':
+            const mappedPoseId = POSE_COMMAND_MAP[value];
+            const finalPoseId = mappedPoseId || (VALID_POSE_IDS.includes(value as any) ? value : null);
+            if (finalPoseId) {
+              // Enable root motion for locomotion poses to prevent "moonwalking"
+              const rootMotion = finalPoseId.includes('locomotion') || ['run', 'walk', 'jog'].includes(value);
+              await this.applyPresetPose(finalPoseId as PoseId, rootMotion);
+              actionTaken = true;
+            }
+            break;
+
+          case 'BACKGROUND':
+            await sceneManager.setBackground(value);
+            actionTaken = true;
+            break;
+
+          case 'SCENE_ROTATION':
+            const deg = parseInt(value);
+            const vrm = avatarManager.getVRM();
+            const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
+            const isManualPosing = avatarManager.isManualPosingEnabled();
+            if (vrm && !rotationLocked && !isManualPosing && !isNaN(deg)) {
+              vrm.scene.rotation.y = THREE.MathUtils.degToRad(deg);
+              actionTaken = true;
+            }
+            break;
+
+          case 'LIGHTING':
+            const { lightingManager } = await import('../../three/lightingManager');
+            lightingManager.applyPreset(value);
+            actionTaken = true;
+            break;
+
+          case 'EFFECTS':
+            const { postProcessingManager } = await import('../../three/postProcessingManager');
+            postProcessingManager.applyPreset(value);
+            actionTaken = true;
+            break;
+
+          case 'EFFECTS_CONFIG':
+            try {
+              const config = JSON.parse(value);
+              const { postProcessingManager } = await import('../../three/postProcessingManager');
+              if (config && typeof config === 'object') {
+                const current = postProcessingManager.getSettings();
+                // Deep merge for nested settings
+                const categories = [
+                  'bloom', 'colorGrading', 'vignette', 'filmGrain', 
+                  'hueSaturation', 'pixelate', 'chromaticAberration', 'glitch'
+                ];
+                
+                const newSettings = { ...current };
+                if (config.enabled !== undefined) newSettings.enabled = config.enabled;
+
+                categories.forEach(cat => {
+                  if (config[cat] && typeof config[cat] === 'object') {
+                    // @ts-ignore
+                    newSettings[cat] = { ...newSettings[cat], ...config[cat] };
+                  }
+                });
+
+                postProcessingManager.applySettings(newSettings);
+                actionTaken = true;
+              }
+            } catch (e) {
+              console.warn("[ActionParser] Invalid JSON for EFFECTS_CONFIG", e);
+            }
+            break;
+
+          case 'CAMERA':
+            sceneManager.setCameraPreset(value as any);
+            actionTaken = true;
+            break;
+
+          case 'CAMERA_CONFIG':
+            try {
+              const config = JSON.parse(value);
+              if (config && typeof config === 'object') {
+                const { position, target } = config;
+                if (position && target) {
+                  const pos = new THREE.Vector3(position.x ?? 0, position.y ?? 0, position.z ?? 0);
+                  const tgt = new THREE.Vector3(target.x ?? 0, target.y ?? 0, target.z ?? 0);
+                  // Basic validation to prevent NaNs
+                  if (!pos.toArray().some(isNaN) && !tgt.toArray().some(isNaN)) {
+                    sceneManager.transitionCameraTo(pos, tgt, 1.0);
+                    actionTaken = true;
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn("[ActionParser] Invalid JSON for CAMERA_CONFIG", e);
+            }
+            break;
+
+          case 'LIGHT_CONFIG':
+            try {
+              const config = JSON.parse(value);
+              const { lightingManager } = await import('../../three/lightingManager');
+              
+              const validTypes = ['keyLight', 'fillLight', 'rimLight', 'ambient'];
+              
+              if (config && typeof config === 'object') {
+                Object.keys(config).forEach(lightType => {
+                  if (!validTypes.includes(lightType)) return;
+                  
+                  const settings = config[lightType];
+                  if (settings && typeof settings === 'object') {
+                    Object.keys(settings).forEach(prop => {
+                      lightingManager.updateLight(lightType as any, prop, settings[prop]);
+                    });
+                  }
+                });
+                actionTaken = true;
+              }
+            } catch (e) {
+              console.warn("[ActionParser] Invalid JSON for LIGHT_CONFIG", e);
+            }
+            break;
+
+          case 'ENV_CONFIG':
+            try {
+              const config = JSON.parse(value);
+              const { environmentManager } = await import('../../three/environmentManager');
+              if (config && typeof config === 'object') {
+                const current = environmentManager.getSettings();
+                environmentManager.applySettings({ ...current, ...config });
+                actionTaken = true;
+              }
+            } catch (e) {
+              console.warn("[ActionParser] Invalid JSON for ENV_CONFIG", e);
+            }
+            break;
+
+          case 'MUSIC':
+            try {
+              const { useMusicStore } = await import('../../state/useMusicStore');
+              const store = useMusicStore.getState();
+              const args = value.split(' ');
+              const action = args[0];
+              
+              switch (action) {
+                case 'play': store.play(); break;
+                case 'pause': store.pause(); break;
+                case 'stop': store.pause(); break;
+                case 'next': store.next(); break;
+                case 'prev': store.prev(); break;
+                case 'mute': store.toggleMute(); break;
+                case 'shuffle': store.toggleShuffle(); break;
+                case 'volume': 
+                case 'vol':
+                  const vol = parseFloat(args[1]);
+                  if (!isNaN(vol)) store.setVolume(vol);
+                  break;
+              }
+              actionTaken = true;
+            } catch (e) {
+              console.warn("[ActionParser] Music control failed", e);
+            }
+            break;
+
+          case 'AVATAR':
+            try {
+              useAIStore.getState().setThought("Searching Avatar...");
+              const { useAvatarListStore } = await import('../../state/useAvatarListStore');
+              const { useAvatarSource } = await import('../../state/useAvatarSource');
+              
+              const listStore = useAvatarListStore.getState();
+              // Ensure list is loaded
+              if (listStore.avatars.length === 0) {
+                await listStore.fetchAvatars();
+              }
+              
+              const term = value.toLowerCase();
+              let found;
+
+              if (term === 'random') {
+                found = listStore.getRandomAvatar();
+              } else {
+                found = listStore.avatars.find(a => 
+                  a.name.toLowerCase().includes(term) || 
+                  a.id.toLowerCase() === term ||
+                  (a.description && a.description.toLowerCase().includes(term))
+                );
+              }
+              
+              if (found) {
+                useAIStore.getState().setThought(`Loading ${found.name}...`);
+                useAvatarSource.getState().setRemoteUrl(found.model_file_url, found.name);
+                actionTaken = true;
+              } else {
+                console.warn(`[ActionParser] Avatar not found: ${value}`);
+              }
+              useAIStore.getState().setThought(null);
+            } catch (e) {
+              console.warn("[ActionParser] Avatar load failed", e);
+              useAIStore.getState().setThought(null);
+            }
+            break;
+
+          case 'UI':
+            try {
+              const { useUIStore } = await import('../../state/useUIStore');
+              const ui = useUIStore.getState();
+              
+              if (value === 'clean' || value === 'stream') {
+                ui.setStreamMode(true);
+              } else if (value === 'default' || value === 'normal') {
+                ui.setStreamMode(false);
+                ui.setActiveCssOverlay(null);
+              } else if (value.startsWith('overlay_')) {
+                ui.setActiveCssOverlay(value.replace('_', '-')); // fix potential ai typo overlay_glitch -> overlay-glitch
+              } else if (value === 'scanlines') {
+                ui.setActiveCssOverlay('overlay-scanlines');
+              } else if (value === 'glitch') {
+                ui.setActiveCssOverlay('overlay-glitch');
+              } else if (value === 'vignette') {
+                ui.setActiveCssOverlay('overlay-vignette');
+              } else if (value === 'crt') {
+                ui.setActiveCssOverlay('overlay-crt');
+              }
+              actionTaken = true;
+            } catch (e) {
+              console.warn("[ActionParser] UI control failed", e);
+            }
+            break;
+
+          case 'EXPORT':
+            if (value === 'png' || value === 'photo') {
+              const dataUrl = await sceneManager.captureSnapshot();
+              if (dataUrl) {
                 const link = document.createElement('a');
                 link.download = `poselab-ai-snapshot-${Date.now()}.png`;
                 link.href = dataUrl;
                 link.click();
                 actionTaken = true;
+              }
+            } else if (value === 'video') {
+              const { exportAsWebM } = await import('../../export/exportVideo');
+              const canvas = sceneManager.getCanvas();
+              if (canvas) {
+                useAIStore.getState().setThought("Recording Video...");
+                // 5 second default duration for AI-triggered video
+                await exportAsWebM(canvas, 5, `poselab-ai-video-${Date.now()}.webm`);
+                useAIStore.getState().setThought(null);
+                actionTaken = true;
+              }
+            } else if (value === 'render') {
+              const { exportOfflineWebM } = await import('../../export/exportVideo');
+              useAIStore.getState().setThought("Rendering High-Quality Video...");
+              // 5 second default duration
+              await exportOfflineWebM({ duration: 5 });
+              useAIStore.getState().setThought(null);
+              actionTaken = true;
             }
-        }
-    }
+            break;
 
-    // 5e. Check for VMC command
-    const vmcMatch = response.match(/\[VMC:\s*(\w+)\]/i);
-    if (vmcMatch && vmcMatch[1]) {
-        const cmd = vmcMatch[1].toLowerCase();
-        console.log(`[ActionParser] VMC command: ${cmd}`);
-        const { setVmcEnabled } = (await import('../../state/useReactionStore')).useReactionStore.getState();
-        if (cmd === 'connect' || cmd === 'on') {
-            setVmcEnabled(true);
+          case 'VMC':
+            const { setVmcEnabled } = (await import('../../state/useReactionStore')).useReactionStore.getState();
+            if (value === 'connect' || value === 'on') setVmcEnabled(true);
+            else if (value === 'disconnect' || value === 'off') setVmcEnabled(false);
             actionTaken = true;
-        } else if (cmd === 'disconnect' || cmd === 'off') {
-            setVmcEnabled(false);
-            actionTaken = true;
-        }
-    }
+            break;
 
-    // 5f. Check for Visual Awareness command
-    if (response.includes('[LOOK_AT_USER]')) {
-        console.log(`[ActionParser] Visual Awareness triggered: Looking at user...`);
-        useAIStore.getState().setThought("Watching...");
-        try {
-            // This is handled by a singleton or we need access to the manager instance
-            // In PoseLab, we usually have a ref in a component, but let's see if we can find it globally
-            // For now, let's assume we can trigger it via a message or a global access
-            // (Note: In a real app, you'd export the manager instance)
+          case 'LOOK_AT_USER':
+            useAIStore.getState().setThought("Watching...");
             const { getMocapManager } = await import('../../utils/mocapInstance');
             const manager = getMocapManager();
             if (manager) {
-                await manager.aiInterpret("The user wants you to look at them and interpret their state.");
-                actionTaken = true;
+              await manager.aiInterpret("The user wants you to look at them and interpret their state.");
+              actionTaken = true;
             }
-        } catch (e) {
-            console.error("[ActionParser] Failed to look at user:", e);
-        }
-        useAIStore.getState().setThought(null);
-    }
+            useAIStore.getState().setThought(null);
+            break;
 
-    // 5g. Check for Lighting command
-    const lightMatch = response.match(/\[LIGHTING:\s*(\w+)\]/i);
-    if (lightMatch && lightMatch[1]) {
-        const presetId = lightMatch[1].toLowerCase();
-        console.log(`[ActionParser] Changing lighting to: ${presetId}`);
-        const { lightingManager } = await import('../../three/lightingManager');
-        lightingManager.applyPreset(presetId);
-        actionTaken = true;
-    }
-
-    // 5h. Check for Effects command
-    const effectMatch = response.match(/\[EFFECTS:\s*(\w+)\]/i);
-    if (effectMatch && effectMatch[1]) {
-        const presetId = effectMatch[1].toLowerCase();
-        console.log(`[ActionParser] Changing effects to: ${presetId}`);
-        const { postProcessingManager } = await import('../../three/postProcessingManager');
-        postProcessingManager.applyPreset(presetId);
-        actionTaken = true;
-    }
-
-    // 6. Check for Preset Pose commands
-    const poseMatch = response.match(/\[POSE:\s*(\w+)\]/i);
-    if (poseMatch && poseMatch[1]) {
-        const poseName = poseMatch[1].toLowerCase();
-        const poseId = POSE_COMMAND_MAP[poseName];
-        
-        if (poseId) {
-            const success = await this.applyPresetPose(poseId);
-            if (success) actionTaken = true;
-        } else if (VALID_POSE_IDS.includes(poseName as PoseId)) {
-            const success = await this.applyPresetPose(poseName as PoseId);
-            if (success) actionTaken = true;
-        } else {
-            console.warn(`[ActionParser] Unknown pose command: ${poseName}`);
-        }
-    }
-    
-    // 7. Legacy Expression commands (backwards compatibility)
-    const exprMatch = response.match(/\[EXPRESSION:\s*(\w+)\]/i);
-    if (exprMatch && exprMatch[1]) {
-        const exprName = exprMatch[1].toLowerCase();
-        const emotion = EMOTION_COMMAND_MAP[exprName];
-        if (emotion) {
-            await avatarController.setEmotion(emotion);
-            actionTaken = true;
-        } else {
-            // Fallback to old system
-            const legacyExpr = exprName as ExpressionId;
-            if (['joy', 'surprise', 'calm'].includes(legacyExpr)) {
-                avatarManager.applyExpression(legacyExpr);
+          case 'GENERATE_POSE':
+            useAIStore.getState().setThought("Generating Pose...");
+            if (geminiService.isReady()) {
+              const result = await geminiService.generatePose(value);
+              if (result?.vrmPose) {
+                const rotLocked = useSceneSettingsStore.getState().rotationLocked;
+                await avatarManager.applyRawPose({
+                  vrmPose: result.vrmPose,
+                  sceneRotation: result.sceneRotation
+                }, rotLocked, 'static');
+                if ((result as any).background) {
+                  await sceneManager.setBackground((result as any).background);
+                }
                 actionTaken = true;
+              }
             }
+            useAIStore.getState().setThought(null);
+            break;
+
+          case 'DIRECTOR':
+            useAIStore.getState().setThought("Directing Sequence...");
+            const { agentManager } = await import('../AgentManager');
+            const script = await agentManager.generateDirectorScript(value);
+            if (script) {
+              const { directorManager } = await import('../../three/DirectorManager');
+              await directorManager.playScript(script);
+              actionTaken = true;
+            }
+            useAIStore.getState().setThought(null);
+            break;
         }
+      } catch (e) {
+        console.error(`[ActionParser] Failed to execute command ${command}:`, e);
+      }
     }
-    
-    // 8. If no action was taken, start idle animation to feel alive
+
+    // 3. If no action was taken, ensure we look alive
     if (!actionTaken) {
-       this.triggerSpeaking();
-       avatarController.startIdleAnimation();
+      avatarController.startIdleAnimation();
     }
   }
 
-  // Helper to safely apply a preset pose with error handling
-  private static async applyPresetPose(poseId: PoseId): Promise<boolean> {
+  private static async applyPresetPose(poseId: PoseId, rootMotion = false): Promise<boolean> {
     try {
-      console.log(`[ActionParser] Applying preset pose: ${poseId}`);
       const rotationLocked = useSceneSettingsStore.getState().rotationLocked;
-      // CRITICAL FIX: Use 'loop' mode instead of just 'animated=true'
-      // When animated=true but animationMode='static', it plays once and freezes.
-      // We want looping animations for the AI avatar.
-      await avatarManager.applyPose(poseId, rotationLocked, true, 'loop');
-      console.log(`[ActionParser] ✅ Pose applied (looping): ${poseId}`);
+      await avatarManager.applyPose(poseId, rotationLocked, true, 'loop', rootMotion);
       return true;
     } catch (e) {
       console.error(`[ActionParser] Failed to apply pose ${poseId}:`, e);
       return false;
     }
-  }
-
-  private static triggerSpeaking() {
-    // Simple visual feedback - random expression to look alive
-    // Note: 'fun' isn't in ExpressionId strict type but might be supported by underlying VRM
-    // Let's stick to safe ones
-    const safeExpressions: ExpressionId[] = ['joy', 'surprise'];
-    const randomExpr = safeExpressions[Math.floor(Math.random() * safeExpressions.length)];
-    
-    // Reset any previous expression
-    avatarManager.applyExpression('calm');
-    
-    // Apply new one briefly
-    setTimeout(() => {
-        avatarManager.applyExpression(randomExpr);
-        
-        // Reset back to calm after a few seconds
-        setTimeout(() => {
-            avatarManager.applyExpression('calm');
-        }, 2000);
-    }, 100);
   }
 }

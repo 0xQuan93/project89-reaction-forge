@@ -14,7 +14,7 @@ import { projectManager } from './persistence/projectManager';
 import { autosaveManager } from './persistence/autosaveManager';
 import { initAvatarBridge } from './multiplayer/avatarBridge';
 import { ConnectionProgressPanel } from './components/ConnectionProgressPanel';
-// import { AIAgentWidget } from './components/AIAgentWidget';
+import { AIAgentWidget } from './components/AIAgentWidget';
 import { SessionHUD } from './components/SessionHUD';
 import { MobileWelcomeModal } from './components/MobileWelcomeModal';
 
@@ -22,6 +22,8 @@ import { MobileWelcomeModal } from './components/MobileWelcomeModal';
 
 // Initialize multiplayer avatar bridge on app startup
 initAvatarBridge();
+
+const IS_DEV = import.meta.env.DEV;
 
 function App() {
   const { mode, setMode, mobileDrawerOpen, setMobileDrawerOpen, focusModeActive } = useUIStore();
@@ -185,7 +187,7 @@ function App() {
 
       <ToastHost />
       <ConnectionProgressPanel />
-      {/* <AIAgentWidget /> */}
+      {IS_DEV && <AIAgentWidget />}
       <SessionHUD />
       <MobileWelcomeModal />
       {/* <LobbyPanel /> */}

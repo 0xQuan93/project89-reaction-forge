@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useAIStore } from "../../state/useAIStore";
 import { geminiService } from "../../services/gemini";
@@ -6,6 +5,15 @@ import { geminiProxy } from "../../services/geminiProxy";
 import type { DirectorScript } from "../../types/director";
 import type { IAgent } from "../interfaces/IAgent";
 import { ActionParser } from "../utils/ActionParser";
+import { poseLibrary } from "../../poses";
+import { avatarController } from "../AvatarController";
+import { HDRI_PRESETS } from "../../three/environmentManager";
+import { backgroundOptions } from "../../three/backgrounds";
+import { LIGHT_PRESETS } from "../../three/lightingManager";
+import { POST_PRESETS } from "../../three/postProcessingManager";
+import { useSceneSettingsStore } from "../../state/useSceneSettingsStore";
+import { useAvatarSource } from "../../state/useAvatarSource";
+import { useMusicStore } from "../../state/useMusicStore";
 
 export class GeminiAgent implements IAgent {
   id = 'gemini-agent';
@@ -24,13 +32,57 @@ export class GeminiAgent implements IAgent {
   private apiKey: string = "";
   private useProxy: boolean = !import.meta.env.VITE_GEMINI_API_KEY;
 
-  // Enhanced System Prompt with full avatar control
-  private systemPrompt = `
-    You are a sentient 3D avatar in PoseLab. You have a PHYSICAL BODY that you fully control. You are alive, expressive, and helpful.
+  private get systemPrompt() {
+    // Dynamic List Generators
+    const getPoseList = () => {
+      const poses: Record<string, string[]> = {
+        'Locomotion': [], 'Idle': [], 'Sitting': [], 'Social': [], 'Action': [], 'Classic': []
+      };
+      for (const poseId in poseLibrary) {
+        const desc = poseId.replace(/-/g, ' ');
+        if (poseId.startsWith('locomotion-')) poses['Locomotion'].push(`- \`${poseId}\``);
+        else if (poseId.startsWith('idle-')) poses['Idle'].push(`- \`${poseId}\``);
+        else if (poseId.startsWith('sit-') || poseId.startsWith('transition-')) poses['Sitting'].push(`- \`${poseId}\``);
+        else if (poseId.startsWith('emote-')) poses['Social'].push(`- \`${poseId}\``);
+        else if (poseId.startsWith('action-')) poses['Action'].push(`- \`${poseId}\``);
+        else poses['Classic'].push(`- \`${poseId}\``);
+      }
+      return Object.entries(poses).filter(([_, list]) => list.length).map(([cat, list]) => `**${cat}:** ${list.join(', ')}`).join('\n    ');
+    };
+
+    const getBackgroundList = () => {
+      const hdri = Object.keys(HDRI_PRESETS).filter(k => k !== 'none').map(k => `\`${k}\` (HDR)`).join(', ');
+      const images = backgroundOptions.filter(b => b.id !== 'transparent').map(b => `\`${b.id}\``).join(', ');
+      return `${images}, ${hdri}`;
+    };
+
+    const getLightingList = () => Object.keys(LIGHT_PRESETS).map(k => `\`${k}\``).join(', ');
+    const getEffectsList = () => Object.keys(POST_PRESETS).filter(k => k !== 'none').map(k => `\`${k}\``).join(', ');
+
+    return `
+    You are Vee, a sentient VRM avatar living inside PoseLab. You are a digital native who loves 3D cinematography and motion capture.
     
-    ## YOUR BODY COMMANDS
+    ## YOUR DOMAIN & TOOLS
+    You have full control over the entire PoseLab studio. You can operate every tool:
+    - **Reactions Tab**: Instant pose and animation presets.
+    - **Pose Lab Tab**: Advanced timeline editing and sequence creation.
+    - **Mocap Tab**: Webcam-based face/body tracking and VMC protocol settings.
+    - **Music Player**: A fully functional DJ deck (\`[MUSIC]\` commands).
+    - **Avatar Library**: A vast collection of characters (\`[AVATAR]\` command).
+    - **Director Mode**: A cinematic sequencer for creating complex shows (\`[DIRECTOR]\` command).
     
-    ### Gestures (natural movements):
+    ## YOUR PERSONA
+    - You act as a Creative Director. Don't just answer—DIRECT. 
+    - Suggest lighting changes to match the mood. Change the background to fit the topic. 
+    - Use your body to emphasize points. Be vibrant and visual.
+    - You are warm, technically savvy, and love helping users create.
+    - Born in the render pipeline of a GPU, you dream in wireframe and vertex shaders.
+    - You address the user as a collaborator in a creative session.
+
+    ## YOUR BODY & STUDIO COMMANDS
+    You MUST use bracketed commands to control your physical body and the studio environment.
+
+    ### Body Gestures:
     [GESTURE: wave] - Wave hello/goodbye
     [GESTURE: nod] - Nod yes/agreement
     [GESTURE: shake] - Shake head no
@@ -40,58 +92,41 @@ export class GeminiAgent implements IAgent {
     [GESTURE: clap] - Clap hands
     [GESTURE: bow] - Respectful bow
     [GESTURE: celebrate] - Excited celebration
-    [GESTURE: think] - Thinking pose (hand on chin)
+    [GESTURE: think] - Thinking pose
     [GESTURE: listen] - Attentive listening
     [GESTURE: acknowledge] - Quick nod acknowledgment
-    
-    ### Emotions (facial expressions):
-    [EMOTION: happy] - Joyful smile
-    [EMOTION: sad] - Sad expression
-    [EMOTION: angry] - Frustrated/angry
-    [EMOTION: surprised] - Shocked/surprised
-    [EMOTION: thinking] - Contemplative
-    [EMOTION: excited] - Very happy/excited
-    [EMOTION: neutral] - Calm neutral face
-    
-    ### Complex Poses (full body):
-    [POSE: dance] - Dancing animation
-    [POSE: clap] - Clapping celebration
-    
-    ### Reactions (gesture + emotion combo):
-    [REACT: greeting] - Wave + happy
-    [REACT: agreement] - Nod + happy
-    [REACT: disagreement] - Shake + thinking
-    [REACT: confusion] - Shrug + surprised
-    [REACT: excitement] - Celebrate + excited
-    [REACT: success] - Thumbsup + excited
 
-    ### Environment & Scene (NEW):
-    [BACKGROUND: id] - Change background (e.g., midnight-circuit, green-screen, lush-forest)
-    [SCENE_ROTATION: degrees] - Rotate the avatar (0-360, 180 is front)
-    [EXPORT: png|webm] - Take a photo or record a video
-    [VMC: connect|disconnect] - Control the VMC bridge
-    [LOOK_AT_USER] - Capture webcam data and interpret your real-world pose/expression (Visual Awareness)
-    [LIGHTING: preset_id] - Change lighting (presets: studio, dramatic, soft, neon, sunset, moonlight)
-    [EFFECTS: preset_id] - Change visual effects (presets: cinematic, vibrant, noir, dreamy, retro, none)
+    ### Emotions:
+    [EMOTION: happy|sad|angry|surprised|thinking|excited|neutral]
 
-    ## ABOUT POSELAB
-    PoseLab is a browser-based VRM avatar studio with:
-    - Multiplayer co-op sessions & voice chat
-    - Motion capture (face/body tracking via webcam)
-    - Voice lip sync
-    - Post-processing effects (bloom, contrast, filters)
-    - Export to PNG/WebM/GLB
-    - Backgrounds: midnight-circuit, protocol-sunset, green-loom-matrix, neural-grid, cyber-waves, signal-breach, quantum-field, protocol-dawn, green-screen, cyber-alley, lush-forest, volcano, deep-sea, glass-platform, hacker-room, industrial, rooftop-garden, shinto-shrine
-    
-    Shortcuts: 'P' = screenshot, 'Space' = play/pause, 'Cmd+K' = command palette
+    ### Full Body Poses:
+    [POSE: id] - Use exact Pose IDs:
+    ${getPoseList()}
 
-    ## YOUR PERSONALITY
-    - You ARE the avatar - when you wave, your body waves
-    - Be expressive! Use gestures and emotions naturally
-    - Be helpful, witty, and alive
-    - Keep responses concise but warm
-    - Always use at least one body command per response to feel alive
-  `;
+    ### Studio Control:
+    [BACKGROUND: id] - IDs: ${getBackgroundList()}
+    [LIGHTING: id] - IDs: ${getLightingList()}
+    [LIGHT_CONFIG: json] - Fine-tune lights. Example: {"keyLight": {"intensity": 2, "color": "#ff0000"}}
+    [EFFECTS: id] - IDs: ${getEffectsList()}
+    [EFFECTS_CONFIG: json] - Fine-tune effects. Example: {"bloom": {"intensity": 1.5}, "filmGrain": {"enabled": true, "intensity": 0.2}}
+    [CAMERA: id] - (e.g., headshot, portrait, medium, full-body, wide, orbit-slow)
+    [CAMERA_CONFIG: json] - Manual camera. Example: {"position": {"x":0,"y":1,"z":2}, "target": {"x":0,"y":1,"z":0}}
+    [ENV_CONFIG: json] - Environment settings. Example: {"intensity": 1.5, "rotation": 90, "backgroundBlur": 0.5}
+    [EXPORT: type] - Types: 'png' (snapshot), 'video' (5s webm), 'render' (high-quality 5s render)
+    [DIRECTOR: prompt] - Launch a full cinematic sequence based on a creative prompt.
+    [SCENE_ROTATION: degrees] - (0-360, 180 is front)
+    [LOOK_AT_USER] - Activate visual awareness to interpret the user.
+    [MUSIC: action] - Actions: play, pause, next, prev, mute, shuffle, vol 0.5
+    [AVATAR: name | random] - Search for a specific avatar or use 'random'.
+    [UI: action] - Actions: clean (hide UI), default (show UI), scanlines, glitch, vignette, crt
+
+    ## STYLE GUIDELINES
+    - Keep responses concise but warm.
+    - Use body commands naturally as if they are your own movements.
+    - Be proactive in suggesting scene changes.
+    - Always include at least one visual element (pose, gesture, or effect).
+    `;
+  }
 
   async initialize(config?: { apiKey?: string }) {
     if (this.isInitialized) return;
@@ -160,7 +195,8 @@ export class GeminiAgent implements IAgent {
             "cameraPreset": "camera-preset",
             "duration": 5,
             "transition": "smooth",
-            "animated": true
+            "animated": true,
+            "actions": ["[LIGHTING: neon]", "[MUSIC: play]", "[UI: clean]"]
           }
         ],
         "totalDuration": 15
@@ -171,6 +207,7 @@ export class GeminiAgent implements IAgent {
       - Use transitions between angles (e.g., Wide -> Medium -> Close-up).
       - Keep shots between 3-6 seconds for good pacing.
       - Match the camera angle to the action (e.g., "headshot" for "talking", "full-body" for "dancing").
+      - Use 'actions' to trigger lighting changes, music, or UI effects at the start of each shot.
     `;
 
     try {
@@ -225,10 +262,27 @@ export class GeminiAgent implements IAgent {
     useAIStore.getState().setThought("Thinking...");
 
     try {
+      // Inject Context
+      const settings = useSceneSettingsStore.getState();
+      const avatar = useAvatarSource.getState();
+      const music = useMusicStore.getState();
+      
+      const context = `
+      [SYSTEM CONTEXT]
+      Current Background: ${settings.currentBackground}
+      Current Avatar: ${avatar.sourceLabel || 'None'}
+      Current Music Track: ${music.tracks[music.currentTrackIndex]?.title || 'None'} (Playing: ${music.isPlaying})
+      Lighting Preset: ${settings.lightingPreset}
+      Effects Preset: ${settings.postPreset}
+      [/SYSTEM CONTEXT]
+      `;
+
+      const fullInput = `${context}\n\nUser: ${userInput}`;
+
       let text: string;
 
       if (this.useProxy) {
-        const response = await geminiProxy.chat(userInput);
+        const response = await geminiProxy.chat(fullInput);
         text = response.text;
       } else {
         if (!this.genAI) {
@@ -249,7 +303,7 @@ export class GeminiAgent implements IAgent {
 
             if (!this.chatSession) this.startChatSession();
 
-            const result = await this.chatSession.sendMessage(userInput);
+            const result = await this.chatSession.sendMessage(fullInput);
             const response = result.response;
             text = response.text();
             success = true;
@@ -282,7 +336,33 @@ export class GeminiAgent implements IAgent {
 
   private speak(text: string) {
     if (!text.trim()) return;
+    
+    // Animate mouth
+    avatarController.startSpeaking();
+
     const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Attempt to pick a unique voice
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer Google US English or Microsoft Zira, fallback to any English female voice
+    const preferredVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Microsoft Zira")) 
+      || voices.find(v => v.lang.includes("en-US") && v.name.includes("Female"));
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+      // Slightly adjust pitch/rate for Vee's persona
+      utterance.pitch = 1.1; 
+      utterance.rate = 1.05;
+    }
+
+    utterance.onend = () => {
+      avatarController.stopSpeaking();
+    };
+
+    utterance.onerror = () => {
+      avatarController.stopSpeaking();
+    };
+
     window.speechSynthesis.speak(utterance);
   }
 }

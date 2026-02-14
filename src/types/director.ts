@@ -25,6 +25,7 @@ export interface Shot {
   transition: 'cut' | 'fade' | 'smooth';
   animated?: boolean;
   rootMotion?: boolean;
+  actions?: string[]; // Array of bracketed commands to execute (e.g., ["[LIGHTING: dramatic]", "[MUSIC: play]"])
 }
 
 export interface DirectorScript {

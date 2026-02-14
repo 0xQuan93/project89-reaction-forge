@@ -14,8 +14,15 @@ import {
   DownloadSimple, 
   UploadSimple, 
   Trash, 
-  Check
+  Check,
+  Lightning,
+  Lock,
+  ArrowClockwise,
+  CaretDown
 } from '@phosphor-icons/react';
+import { Button } from '../design-system/Button';
+import { Input } from '../design-system/Input';
+import { Panel } from '../design-system/Panel';
 
 export function AIGeneratorTab() {
   const { addCustomPose, customPoses, removeCustomPose, importPoses } = useCustomPoseStore();
@@ -222,189 +229,189 @@ export function AIGeneratorTab() {
   if (!apiKey) {
     return (
       <div className="tab-content">
-        <div className="tab-section">
-          <h3><Robot size={18} weight="duotone" /> AI Setup Required</h3>
-          <p className="muted small">
-            To use the AI generator, you need a Google Gemini API Key.
-          </p>
-          
-          <div style={{ margin: '12px 0' }}>
-            <input
-              type="password"
-              className="text-input"
-              placeholder="Paste your Gemini API Key here"
-              value={userApiKey}
-              onChange={(e) => setUserApiKey(e.target.value)}
-              style={{ marginBottom: '8px' }}
-            />
-            <button 
-              className="primary full-width"
-              onClick={() => handleSaveKey(userApiKey)}
-              disabled={!userApiKey.trim()}
-            >
-              Save Key
-            </button>
+        <Panel title="AI Setup Required">
+          <div style={{ padding: '4px' }}>
+            <p className="muted small" style={{ marginBottom: '16px' }}>
+              To use the AI generator, you need a Google Gemini API Key. This enables advanced pose generation and animation capabilities.
+            </p>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <Input
+                label="Gemini API Key"
+                type="password"
+                placeholder="AIzaSy..."
+                value={userApiKey}
+                onChange={(e) => setUserApiKey(e.target.value)}
+                leftIcon={<Lock size={16} weight="duotone" />}
+              />
+              <Button 
+                variant="primary"
+                style={{ width: '100%', marginTop: '12px' }}
+                onClick={() => handleSaveKey(userApiKey)}
+                disabled={!userApiKey.trim()}
+                leftIcon={<Check size={16} weight="bold" />}
+              >
+                Initialize Brain
+              </Button>
+            </div>
+            
+            <p className="small muted" style={{ fontSize: '0.75rem' }}>
+              Your key is stored locally and sent directly to Google.
+              <br />
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                Get a free key at Google AI Studio
+              </a>
+            </p>
           </div>
-          
-          <p className="small muted">
-            Your key is stored locally in your browser and sent directly to Google.
-            <br />
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              Get a free Gemini API Key here
-            </a>
-          </p>
-        </div>
+        </Panel>
       </div>
     );
   }
 
   return (
     <div className="tab-content">
-      <div className="tab-section">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3>AI Pose Generator</h3>
+      <div className="tab-section" style={{ background: 'var(--glass-bg)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-5)', border: '1px solid var(--border-subtle)', marginBottom: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase', fontSize: 'var(--text-sm)', letterSpacing: '0.1em' }}>
+            AI Pose Synthesis
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="small muted" style={{ fontSize: '0.8em' }}>
-              {envApiKey ? 'Using Env Key' : `Key: ...${apiKey.slice(-4)}`}
-            </span>
+            <div className="status-indicator" style={{ background: 'rgba(0, 255, 214, 0.1)', padding: '2px 8px', borderRadius: 'var(--radius-full)', border: '1px solid rgba(0, 255, 214, 0.2)' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold' }}>
+                {envApiKey ? 'SYSTEM' : `LOCAL: ...${apiKey.slice(-4)}`}
+              </span>
+            </div>
             {!envApiKey && (
               <button 
-                className="secondary small"
+                className="icon-button"
                 onClick={handleClearKey}
                 title="Change API Key"
-                style={{ padding: '2px 6px', fontSize: '0.7em' }}
+                style={{ width: '24px', height: '24px' }}
               >
-                Change
+                <ArrowClockwise size={14} weight="bold" />
               </button>
             )}
           </div>
         </div>
 
         {/* Model Selection */}
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <select 
-              className="text-input" 
-              value={selectedModel} 
-              onChange={handleModelChange}
-              style={{ flex: 1, fontSize: '0.9em' }}
-            >
-              <option value="gemini-1.5-flash">gemini-1.5-flash (Default)</option>
-              <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-              <option value="gemini-pro">gemini-pro-latest</option>
-              {availableModels.map(m => (
-                 !['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'].includes(m) && 
-                 <option key={m} value={m}>{m}</option>
-              ))}
-              <option value="custom">Custom...</option>
-            </select>
-            {selectedModel === 'custom' && (
-              <input
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Neural Model</label>
+            <div className="select-wrapper" style={{ position: 'relative' }}>
+              <select 
+                className="text-input" 
+                value={selectedModel} 
+                onChange={handleModelChange}
+                style={{ width: '100%', paddingRight: '30px' }}
+              >
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
+                <option value="gemini-pro">Gemini Pro Legacy</option>
+                {availableModels.map(m => (
+                   !['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'].includes(m) && 
+                   <option key={m} value={m}>{m}</option>
+                ))}
+                <option value="custom">Custom ID...</option>
+              </select>
+              <CaretDown size={14} weight="bold" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5 }} />
+            </div>
+          </div>
+          {selectedModel === 'custom' && (
+            <div style={{ flex: 1 }}>
+              <Input
                 type="text"
-                className="text-input"
-                placeholder="Model ID (e.g. gemini-1.0-pro)"
+                placeholder="e.g. gemini-1.0-pro"
                 value={customModelInput}
                 onChange={(e) => setCustomModelInput(e.target.value)}
                 onBlur={handleCustomModelBlur}
-                style={{ flex: 1 }}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        <textarea
-          className="text-input"
-          placeholder="Describe a pose (e.g., 'Sitting on a chair looking pensive', 'Superhero landing', 'Victory jump')..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          style={{ minHeight: '80px', resize: 'vertical' }}
-          disabled={isGenerating}
-        />
-        
-        {error && (
-          <div className="error-message" style={{ color: '#ff4444', fontSize: '0.9em', marginTop: '8px' }}>
-            Error: {error}
-          </div>
-        )}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Creative Prompt</label>
+          <textarea
+            className="text-input"
+            placeholder="Describe a pose or action... (e.g. 'Superhero landing with glowing hands')"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            style={{ minHeight: '100px', resize: 'vertical', width: '100%', marginBottom: '12px' }}
+            disabled={isGenerating}
+          />
+          
+          {error && (
+            <div className="error-message" style={{ color: 'var(--error)', fontSize: '0.8rem', marginBottom: '12px', padding: '8px', background: 'rgba(255, 51, 102, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 51, 102, 0.2)' }}>
+              Sequence Error: {error}
+            </div>
+          )}
 
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-          <button
-            className="primary full-width"
+          <Button
+            variant="primary"
+            style={{ width: '100%' }}
             onClick={handleGenerate}
             disabled={!prompt.trim() || isGenerating}
+            leftIcon={isGenerating ? <ArrowClockwise size={18} weight="bold" className="spin" /> : <Sparkle size={18} weight="fill" />}
           >
-            {isGenerating ? <><Sparkle size={16} weight="fill" /> Generating...</> : <><Sparkle size={16} weight="duotone" /> Generate Pose</>}
-          </button>
+            {isGenerating ? 'Synthesizing...' : 'Generate Neural Pose'}
+          </Button>
         </div>
         
-        <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-          <label style={{ fontSize: '0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <input
-              type="checkbox"
-              checked={useLimits}
-              onChange={(e) => setUseLimits(e.target.checked)}
-            />
-            Bio-Limits
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-lg)' }}>
+          <label className="ai-remember-key" style={{ margin: 0 }}>
+            <input type="checkbox" checked={useLimits} onChange={(e) => setUseLimits(e.target.checked)} />
+            <span>Bio-Limits</span>
           </label>
           
-          <label style={{ fontSize: '0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <input
-              type="checkbox"
-              checked={isAnimating}
-              onChange={(e) => setIsAnimating(e.target.checked)}
-            />
-            Animate
+          <label className="ai-remember-key" style={{ margin: 0 }}>
+            <input type="checkbox" checked={isAnimating} onChange={(e) => setIsAnimating(e.target.checked)} />
+            <span>Animate</span>
           </label>
 
           {isAnimating && (
-            <label style={{ fontSize: '0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <input
-                type="checkbox"
-                checked={isLoop}
-                onChange={(e) => setIsLoop(e.target.checked)}
-              />
-              Loop
+            <label className="ai-remember-key" style={{ margin: 0 }}>
+              <input type="checkbox" checked={isLoop} onChange={(e) => setIsLoop(e.target.checked)} />
+              <span>Loop</span>
             </label>
           )}
           
-          <div style={{ flex: '1 0 100%', height: '4px' }} className="mobile-only-spacer" />
-          
           <button 
-            className="secondary small" 
+            className="text-accent small" 
             onClick={() => setShowDebug(!showDebug)}
-            style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: 'auto' }}
+            style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold', marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.6 }}
           >
-            {showDebug ? 'Hide Debug' : 'Show Debug'}
+            {showDebug ? '[ Hide Debug ]' : '[ Show Debug ]'}
           </button>
         </div>
 
         {showDebug && (
-          <div className="tab-section" style={{ marginTop: '12px', padding: '8px', background: '#00000040' }}>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-              <button 
-                className="secondary small" 
-                onClick={handleCheckModels}
-                style={{ fontSize: '0.8em' }}
-              >
-                <MagnifyingGlass size={16} weight="duotone" /> Troubleshoot: Check Available Models
-              </button>
-            </div>
+          <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.4)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+            <Button 
+              variant="secondary"
+              size="small"
+              style={{ width: '100%', marginBottom: '12px' }}
+              onClick={handleCheckModels}
+              leftIcon={<MagnifyingGlass size={14} weight="bold" />}
+            >
+              Scan Model Capability
+            </Button>
 
             {showModels && (
-              <div className="code-block" style={{ fontSize: '0.8em', maxHeight: '100px', overflowY: 'auto', marginBottom: '8px' }}>
-                <strong>Available Models:</strong><br/>
+              <div className="code-block" style={{ fontSize: '0.7rem', maxHeight: '100px', overflowY: 'auto', marginBottom: '12px', padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '4px' }}>AVAILABLE ENDPOINTS:</div>
                 {availableModels.length > 0 ? (
-                  availableModels.map(m => <div key={m}>{m}</div>)
+                  availableModels.map(m => <div key={m} style={{ opacity: 0.8 }}>• {m}</div>)
                 ) : (
-                  <div>No compatible models found.</div>
+                  <div style={{ opacity: 0.5 }}>No response from gateway.</div>
                 )}
               </div>
             )}
             
             {rawResponse && (
               <div style={{ marginTop: '8px' }}>
-                <strong style={{ fontSize: '0.8em' }}>Last AI Response:</strong>
-                <pre className="code-block" style={{ fontSize: '0.7em', maxHeight: '200px', overflow: 'auto' }}>
+                <div style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '0.7rem', marginBottom: '4px' }}>RAW TELEMETRY:</div>
+                <pre style={{ fontSize: '0.65rem', maxHeight: '150px', overflow: 'auto', background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '4px', margin: 0, fontFamily: 'var(--font-mono)', opacity: 0.8 }}>
                   {rawResponse}
                 </pre>
               </div>
@@ -413,96 +420,88 @@ export function AIGeneratorTab() {
         )}
       </div>
 
-      {generatedPose && (
-        <div className="tab-section" style={{ border: '1px solid var(--accent)', background: 'rgba(0, 255, 157, 0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="small" style={{ color: 'var(--accent)' }}>Preview Active</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="secondary small" onClick={() => avatarManager.applyRawPose({ vrmPose: generatedPose }, rotationLocked, 'static')}>
-                Re-Apply
-              </button>
-              <button className="primary small" onClick={handleSave}>
-                <FloppyDisk size={16} weight="duotone" /> Save to Library
-              </button>
-            </div>
+      {(generatedPose || generatedAnimation) && (
+        <div className="tab-section" style={{ border: '1px solid var(--accent)', background: 'linear-gradient(135deg, rgba(0, 255, 214, 0.1) 0%, transparent 100%)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-4)', marginBottom: 'var(--space-4)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, right: 0, padding: '4px 12px', background: 'var(--accent)', color: 'var(--color-abyss)', fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase', borderBottomLeftRadius: 'var(--radius-md)' }}>
+            Preview Active
           </div>
-        </div>
-      )}
-
-      {generatedAnimation && (
-        <div className="tab-section" style={{ border: '1px solid var(--accent)', background: 'rgba(0, 255, 157, 0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="small" style={{ color: 'var(--accent)' }}>Animation Preview Active</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkle size={20} weight="fill" color="var(--accent)" />
+              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'bold' }}>
+                {generatedAnimation ? 'Dynamic Animation' : 'Static Pose'} Synthesized
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                className="secondary small"
-                onClick={() => avatarManager.applyRawPose(generatedAnimation.data, rotationLocked, generatedAnimation.loop ? 'loop' : 'once')}
+              <Button 
+                variant="secondary" 
+                size="small" 
+                onClick={() => {
+                  if (generatedAnimation) {
+                    avatarManager.applyRawPose(generatedAnimation.data, rotationLocked, generatedAnimation.loop ? 'loop' : 'once');
+                  } else {
+                    avatarManager.applyRawPose({ vrmPose: generatedPose! }, rotationLocked, 'static');
+                  }
+                }}
+                leftIcon={<ArrowClockwise size={14} weight="bold" />}
               >
                 Replay
-              </button>
+              </Button>
+              {generatedPose && (
+                <Button variant="primary" size="small" onClick={handleSave} leftIcon={<FloppyDisk size={14} weight="fill" />}>
+                  Archive
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      <div className="tab-section">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3>Your Library ({customPoses.length})</h3>
+      <div className="tab-section" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-5)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase', fontSize: 'var(--text-sm)', letterSpacing: '0.1em' }}>
+            Pose Archive ({customPoses.length})
+          </h3>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <label className="secondary small button" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <UploadSimple size={16} weight="duotone" /> Import
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportLibrary}
-                style={{ display: 'none' }}
-              />
+            <label className="btn btn--secondary btn--small" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', height: '32px' }}>
+              <UploadSimple size={16} weight="bold" />
+              <span>Import</span>
+              <input type="file" accept=".json" onChange={handleImportLibrary} style={{ display: 'none' }} />
             </label>
-            <button 
-              className="secondary small"
-              onClick={handleExportLibrary}
+            <Button 
+              variant="secondary" 
+              size="small" 
+              onClick={handleExportLibrary} 
               disabled={customPoses.length === 0}
+              leftIcon={<DownloadSimple size={16} weight="bold" />}
             >
-              <DownloadSimple size={16} weight="duotone" /> Export All
-            </button>
+              Export All
+            </Button>
           </div>
         </div>
         
         {customPoses.length === 0 ? (
-          <div className="muted small" style={{ textAlign: 'center', padding: '20px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-            No saved poses yet. Create one or import a library!
+          <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed rgba(255,255,255,0.05)', borderRadius: 'var(--radius-lg)', color: 'var(--text-muted)' }}>
+            <Robot size={32} weight="duotone" style={{ opacity: 0.3, marginBottom: '12px' }} />
+            <div className="small">Neural archive empty. Generate or import data.</div>
           </div>
         ) : (
-          <div className="pose-list">
+          <div className="pose-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {customPoses.map((pose) => (
-              <div key={pose.id} className="pose-item">
-                <div className="pose-item__info">
-                  <strong>{pose.name}</strong>
-                  <div className="muted small" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
-                    {pose.description}
-                  </div>
+              <div key={pose.id} className="pose-item" style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: 'var(--text-sm)', marginBottom: '2px' }} className="truncate">{pose.name}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }} className="truncate">{pose.description}</div>
                 </div>
-                <div className="pose-item__actions">
-                  <button
-                    className="icon-button"
-                    onClick={() => handleApplySaved(pose.poseData)}
-                    title="Apply"
-                  >
-                    <Check size={16} weight="bold" />
+                <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                  <button className="icon-button" onClick={() => handleApplySaved(pose.poseData)} title="Recall Pose">
+                    <Check size={16} weight="bold" color="var(--accent)" />
                   </button>
-                  <button
-                    className="icon-button"
-                    onClick={() => handleExportPose(pose)}
-                    title="Download JSON"
-                  >
-                    <DownloadSimple size={16} weight="duotone" />
+                  <button className="icon-button" onClick={() => handleExportPose(pose)} title="Download Telemetry">
+                    <DownloadSimple size={16} weight="bold" />
                   </button>
-                  <button
-                    className="icon-button"
-                    onClick={() => removeCustomPose(pose.id)}
-                    title="Delete"
-                  >
-                    <Trash size={16} weight="duotone" />
+                  <button className="icon-button" onClick={() => removeCustomPose(pose.id)} title="Purge Data">
+                    <Trash size={16} weight="bold" color="var(--error)" />
                   </button>
                 </div>
               </div>

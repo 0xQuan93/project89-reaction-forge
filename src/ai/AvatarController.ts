@@ -284,6 +284,16 @@ class AvatarController {
           this.state.isAnimating = false;
           this.state.currentGesture = null;
           console.log(`[AvatarController] Gesture complete: ${gesture}`);
+          
+          // Naturally revert to neutral pose after gesture
+          // Using smooth transition to 'idle-neutral'
+          setTimeout(() => {
+            if (!this.state.isAnimating && !this.state.isSpeaking) {
+              console.log('[AvatarController] Reverting to neutral idle');
+              this.applyPose('idle-neutral', true);
+            }
+          }, 500);
+          
           resolve();
         }
       };
@@ -413,34 +423,56 @@ class AvatarController {
    * Trigger speaking visual feedback
    */
   startSpeaking(): void {
+    if (this.state.isSpeaking) return;
     this.state.isSpeaking = true;
     
-    // Add subtle head movements while speaking
+    // Add subtle head movements and mouth animation while speaking
     const vrm = avatarManager.getVRM();
-    if (!vrm?.humanoid) return;
+    if (!vrm) return;
 
     let time = 0;
     const speakingLoop = () => {
-      if (!this.state.isSpeaking) return;
+      if (!this.state.isSpeaking) {
+        // Ensure mouth is closed when stopping
+        if (vrm.expressionManager) {
+          vrm.expressionManager.setValue('Aa', 0);
+          vrm.expressionManager.update();
+        }
+        return;
+      }
 
       time += 0.016;
       
-      const head = vrm.humanoid!.getNormalizedBoneNode('head' as VRMHumanBoneName);
-      if (head) {
-        // Subtle nodding and tilting while speaking
-        const nodAmount = Math.sin(time * 3) * 2;
-        const tiltAmount = Math.sin(time * 1.5) * 1;
-        const euler = new THREE.Euler(
-          THREE.MathUtils.degToRad(nodAmount),
-          THREE.MathUtils.degToRad(tiltAmount),
-          0,
-          'XYZ'
-        );
-        head.quaternion.setFromEuler(euler);
+      // 1. Procedural Mouth Movement (Lip-sync simulation)
+      if (vrm.expressionManager) {
+        // Create natural mouth opening/closing oscillation
+        // Using multiple sine waves for more irregular/natural movement
+        const mouthOpen = 
+          Math.sin(time * 10) * 0.3 + 
+          Math.sin(time * 25) * 0.2 + 
+          0.5;
+        
+        vrm.expressionManager.setValue('Aa', Math.max(0, Math.min(1, mouthOpen)));
       }
 
-      vrm.humanoid!.update();
-      vrm.update(0);
+      // 2. Subtle Head Movements
+      if (vrm.humanoid) {
+        const head = vrm.humanoid.getNormalizedBoneNode('head' as VRMHumanBoneName);
+        if (head) {
+          // Subtle nodding and tilting while speaking
+          const nodAmount = Math.sin(time * 3) * 2;
+          const tiltAmount = Math.sin(time * 1.5) * 1;
+          const euler = new THREE.Euler(
+            THREE.MathUtils.degToRad(nodAmount),
+            THREE.MathUtils.degToRad(tiltAmount),
+            0,
+            'XYZ'
+          );
+          head.quaternion.setFromEuler(euler);
+        }
+      }
+
+      vrm.update(0.016);
 
       requestAnimationFrame(speakingLoop);
     };

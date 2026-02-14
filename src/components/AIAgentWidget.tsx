@@ -103,9 +103,10 @@ export function AIAgentWidget() {
 
     const response = await agentManager.processInput(userMessage);
     
-    // Clean response if it contains commands, but keep the text
-    const cleanResponse = response || "..."; 
-    setChatHistory(prev => [...prev, { role: 'ai', text: cleanResponse }]);
+    // Clean response: remove all bracketed commands [COMMAND: value]
+    const cleanResponse = response ? response.replace(/\[.*?\]/g, '').trim() : "..."; 
+    
+    setChatHistory(prev => [...prev, { role: 'ai', text: cleanResponse || "..." }]);
   };
 
   return (
@@ -119,65 +120,94 @@ export function AIAgentWidget() {
       <div className="ai-widget-content">
         {/* Header */}
         <div className="ai-widget-header">
-          <div className="ai-status-indicator">
-            <div className={`ai-pulse-dot ${isAIActive ? 'active' : ''} ${isLoading ? 'loading' : ''}`} />
-            <span className="ai-label">
-              {isLoading ? `Initializing ${loadProgress}%` : isAIActive ? 'AI Agent Online' : 'AI Agent Offline'}
-            </span>
+          <div className="ai-label">
+            <Brain size={20} weight="duotone" className="ai-icon" />
+            <span>AI Copilot</span>
           </div>
           
           <div className="ai-header-controls">
+            <div className={`ai-pulse-dot ${isAIActive ? 'active' : ''} ${isLoading ? 'loading' : ''}`} 
+                 title={isLoading ? `Initializing ${loadProgress}%` : isAIActive ? 'Online' : 'Offline'} 
+            />
+            
             {apiKey && !showKeyInput && (
               <button 
-                className="ai-clear-key-btn"
+                className="ai-header-btn"
                 onClick={handleClearKey}
                 title="Clear API Key"
               >
-                <Key size={14} weight="duotone" /><X size={10} weight="bold" />
+                <Key size={16} weight="duotone" />
               </button>
             )}
+            
             <button 
-              className={`ai-power-btn ${isAIActive ? 'active' : ''}`}
+              className={`ai-header-btn ${isAIActive ? 'active' : ''}`}
               onClick={handleToggleActive}
               title={isAIActive ? "Deactivate AI" : "Activate AI"}
             >
               {isAIActive ? <Lightning size={16} weight="fill" /> : <Plug size={16} weight="duotone" />}
+            </button>
+            
+            <button 
+              className="ai-header-btn"
+              onClick={() => setIsOpen(false)}
+              title="Close Drawer"
+            >
+              <X size={16} weight="bold" />
             </button>
           </div>
         </div>
 
         {/* Content Body */}
         {showKeyInput && !isAIActive ? (
-          <div className="ai-key-input">
-            <p>Enter Google Gemini API Key:</p>
-            <div className="ai-key-row">
-              <Input 
-                type="password" 
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-              />
-              <Button onClick={handleSaveKey}>Save</Button>
+          <div className="ai-chat-history" style={{ justifyContent: 'center' }}>
+            <div className="ai-key-input">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Key size={20} weight="duotone" color="var(--accent)" />
+                <h3 style={{ margin: 0, fontSize: 'var(--text-sm)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>Gemini Access</h3>
+              </div>
+              <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
+                Enter your Google Gemini API Key to enable the AI Brain.
+              </p>
+              <div className="ai-key-row">
+                <Input 
+                  type="password" 
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  style={{ flex: 1 }}
+                />
+                <Button onClick={handleSaveKey} size="small">Save</Button>
+              </div>
+              <label className="ai-remember-key">
+                <input 
+                  type="checkbox" 
+                  checked={rememberKey}
+                  onChange={(e) => setRememberKey(e.target.checked)}
+                />
+                <span>Remember key across sessions</span>
+              </label>
+              <div className="ai-security-note">
+                <Lock size={12} weight="duotone" /> 
+                <span>Stored locally, {rememberKey ? 'persists' : 'cleared on close'}</span>
+              </div>
+              <small style={{ opacity: 0.7 }}>
+                Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Google AI Studio</a>
+              </small>
             </div>
-            <label className="ai-remember-key">
-              <Input 
-                type="checkbox" 
-                checked={rememberKey}
-                onChange={(e) => setRememberKey(e.target.checked)}
-              />
-              <span>Remember across sessions</span>
-            </label>
-            <small className="ai-security-note" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Lock size={12} weight="duotone" /> Key stored locally, {rememberKey ? 'persists until cleared' : 'cleared when tab closes'}
-            </small>
-            <small>Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Google AI Studio</a></small>
           </div>
         ) : (
           <>
             <div className="ai-chat-history">
               {chatHistory.length === 0 && (
                 <div className="ai-empty-state">
-                  I'm your AI Copilot. Ask me about PoseLab features or tell me to pose!
+                  <Brain size={48} weight="duotone" className="ai-empty-icon" />
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', marginBottom: '8px', color: 'var(--accent)' }}>
+                    Vee Online
+                  </div>
+                  <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', maxWidth: '200px' }}>
+                    I'm Vee, your creative director. Let's set the stage, light the lights, and make some magic!
+                  </p>
                 </div>
               )}
               
@@ -188,8 +218,9 @@ export function AIAgentWidget() {
               ))}
               
               {currentThought && (
-                <div className="ai-thought" style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                  <Lightning size={14} weight="fill" style={{ flexShrink: 0, marginTop: '2px' }} /> {currentThought}
+                <div className="ai-thought">
+                  <Lightning size={12} weight="fill" /> 
+                  <span>{currentThought}</span>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -200,11 +231,17 @@ export function AIAgentWidget() {
                 type="text" 
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={isAIActive ? "Ask me anything..." : "Activate AI to chat"}
+                placeholder={isAIActive ? "What shall we create?" : "Activate Vee to begin"}
                 disabled={!isAIActive || isLoading}
+                className="ai-input"
+                autoComplete="off"
               />
-              <Button type="submit" disabled={!isAIActive || isLoading || !inputText.trim()}>
-                <PaperPlaneTilt size={16} weight="fill" />
+              <Button 
+                type="submit" 
+                disabled={!isAIActive || isLoading || !inputText.trim()}
+                style={{ width: '44px', height: '44px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <PaperPlaneTilt size={20} weight="fill" />
               </Button>
             </form>
           </>

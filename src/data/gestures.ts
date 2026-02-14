@@ -146,4 +146,68 @@ export const GESTURE_LIBRARY: Record<string, { duration: number; keyframes: Gest
       { time: 1.0, bones: { hips: { x: 0, y: 0, z: 0 }, spine: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 }, leftUpperArm: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
     ],
   },
+  shrug: {
+    duration: 1.5,
+    keyframes: [
+      { time: 0, bones: { leftUpperArm: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.3, bones: { leftUpperArm: { x: 0, y: 0, z: 20 }, rightUpperArm: { x: 0, y: 0, z: -20 }, spine: { x: 5, y: 0, z: 0 } }, easing: 'easeInOut' },
+      { time: 0.8, bones: { leftUpperArm: { x: 0, y: 0, z: 25 }, rightUpperArm: { x: 0, y: 0, z: -25 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { leftUpperArm: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 }, spine: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
+  point: {
+    duration: 1.5,
+    keyframes: [
+      { time: 0, bones: { rightUpperArm: { x: 0, y: 0, z: 0 }, rightLowerArm: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.3, bones: { rightUpperArm: { x: -20, y: 0, z: -80 }, rightLowerArm: { x: 0, y: 20, z: 0 } }, easing: 'easeOutBack' },
+      { time: 0.8, bones: { rightUpperArm: { x: -20, y: 0, z: -80 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { rightUpperArm: { x: 0, y: 0, z: 0 }, rightLowerArm: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
+  bow: {
+    duration: 2.0,
+    keyframes: [
+      { time: 0, bones: { spine: { x: 0, y: 0, z: 0 }, head: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.5, bones: { spine: { x: 30, y: 0, z: 0 }, head: { x: 10, y: 0, z: 0 } }, easing: 'easeInOut' },
+      { time: 1.2, bones: { spine: { x: 35, y: 0, z: 0 }, head: { x: 15, y: 0, z: 0 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { spine: { x: 0, y: 0, z: 0 }, head: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
+  clap: {
+    duration: 1.5,
+    keyframes: [
+      { time: 0, bones: { leftUpperArm: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.2, bones: { leftUpperArm: { x: -20, y: 20, z: 40 }, rightUpperArm: { x: -20, y: -20, z: -40 } }, easing: 'easeInOut' },
+      { time: 0.4, bones: { leftUpperArm: { x: -30, y: 30, z: 20 }, rightUpperArm: { x: -30, y: -30, z: -20 } }, easing: 'easeInOut' },
+      { time: 0.6, bones: { leftUpperArm: { x: -20, y: 20, z: 40 }, rightUpperArm: { x: -20, y: -20, z: -40 } }, easing: 'easeInOut' },
+      { time: 0.8, bones: { leftUpperArm: { x: -30, y: 30, z: 20 }, rightUpperArm: { x: -30, y: -30, z: -20 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { leftUpperArm: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
+  think: {
+    duration: 2.0,
+    keyframes: [
+      { time: 0, bones: { head: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.4, bones: { head: { x: 10, y: -15, z: 5 }, rightUpperArm: { x: 20, y: 40, z: -40 }, rightLowerArm: { x: 0, y: 110, z: 0 } }, easing: 'easeInOut' },
+      { time: 1.2, bones: { head: { x: 12, y: -18, z: 6 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { head: { x: 0, y: 0, z: 0 }, rightUpperArm: { x: 0, y: 0, z: 0 }, rightLowerArm: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
+  acknowledge: {
+    duration: 1.0,
+    keyframes: [
+      { time: 0, bones: { head: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.3, bones: { head: { x: 15, y: 0, z: 0 } }, easing: 'easeInOut' },
+      { time: 0.6, bones: { head: { x: 0, y: 0, z: 0 } }, easing: 'easeInOut' },
+    ],
+  },
+  listen: {
+    duration: 2.0,
+    keyframes: [
+      { time: 0, bones: { head: { x: 0, y: 0, z: 0 } }, easing: 'easeOut' },
+      { time: 0.4, bones: { head: { x: 0, y: 15, z: 5 } }, easing: 'easeInOut' },
+      { time: 1.2, bones: { head: { x: 0, y: 18, z: 6 } }, easing: 'easeInOut' },
+      { time: 1.0, bones: { head: { x: 0, y: 0, z: 0 } }, easing: 'easeIn' },
+    ],
+  },
 };

@@ -95,7 +95,19 @@ class DirectorManager {
     // sceneManager now handles all presets including animations
     sceneManager.setCameraPreset(shot.cameraPreset, false, transitionDuration);
     
-    // 4. Schedule next shot
+    // 4. Execute Arbitrary Actions (Lighting, Music, etc.)
+    if (shot.actions && shot.actions.length > 0) {
+      // Dynamic import to avoid circular dependencies
+      import('../ai/utils/ActionParser').then(({ ActionParser }) => {
+        shot.actions!.forEach(action => {
+          console.log(`[Director] Executing action: ${action}`);
+          // Pass empty speak function as we don't want TTS during script execution unless specified
+          ActionParser.execute(action, () => {}); 
+        });
+      });
+    }
+
+    // 5. Schedule next shot
     this.shotTimeout = setTimeout(() => {
       this.nextShot();
     }, shot.duration * 1000);

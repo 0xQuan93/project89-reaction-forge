@@ -85,57 +85,67 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
         
         <div className="modal-body">
-          {/* AI Brain Settings - Currently Disabled
-          <div className="setting-group">
-            <label>AI Brain (Agent)</label>
-            <div className="agent-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-              <button 
-                className={`theme-btn ${activeAgentId === 'gemini-agent' ? 'active' : ''}`}
-                onClick={() => handleAgentSwitch('gemini-agent')}
-              >
-                <Robot size={18} weight={activeAgentId === 'gemini-agent' ? 'fill' : 'regular'} /> Gemini (Cloud)
-              </button>
-              <button 
-                className={`theme-btn ${activeAgentId === 'remote-agent' ? 'active' : ''}`}
-                onClick={() => handleAgentSwitch('remote-agent')} // Just select UI, don't switch yet? No, switch immediately for now or when configuring
-              >
-                <Globe size={18} weight={activeAgentId === 'remote-agent' ? 'fill' : 'regular'} /> Remote / Eliza
-              </button>
+          {import.meta.env.DEV && (
+            <div className="setting-group">
+              <label style={{ fontFamily: 'var(--font-display)', textTransform: 'uppercase', fontSize: 'var(--text-xs)', letterSpacing: '0.1em', marginBottom: '12px', display: 'block', color: 'var(--accent)' }}>
+                AI Brain Configuration
+              </label>
+              <div className="agent-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                <button 
+                  className={`theme-btn ${activeAgentId === 'gemini-agent' ? 'active' : ''}`}
+                  onClick={() => handleAgentSwitch('gemini-agent')}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '12px' }}
+                >
+                  <Robot size={20} weight="duotone" />
+                  <span>Gemini Pro</span>
+                </button>
+                <button 
+                  className={`theme-btn ${activeAgentId === 'remote-agent' ? 'active' : ''}`}
+                  onClick={() => handleAgentSwitch('remote-agent')}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '12px' }}
+                >
+                  <Globe size={20} weight="duotone" />
+                  <span>Remote Agent</span>
+                </button>
+              </div>
+
+              {activeAgentId === 'remote-agent' && (
+                  <div className="remote-config" style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-subtle)', marginBottom: '12px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                          <Input 
+                              label="Endpoint URL"
+                              type="text" 
+                              value={remoteEndpoint} 
+                              onChange={e => setRemoteEndpoint(e.target.value)}
+                              placeholder="http://localhost:3000/message"
+                              autoComplete="off"
+                          />
+                      </div>
+                      <div style={{ marginBottom: '16px' }}>
+                          <Input 
+                              label="API Key (Optional)"
+                              type="password" 
+                              value={remoteKey} 
+                              onChange={e => setRemoteKey(e.target.value)}
+                              placeholder="sk-..."
+                          />
+                      </div>
+                      <Button 
+                          variant="primary"
+                          style={{ width: '100%' }}
+                          onClick={() => handleAgentSwitch('remote-agent')}
+                          leftIcon={<Lightning size={16} weight="fill" />}
+                      >
+                          Connect Sequence
+                      </Button>
+                  </div>
+              )}
+              <p className="muted small" style={{ marginBottom: '20px', padding: '0 4px' }}>
+                <Sparkle size={12} weight="duotone" style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                Gemini is the standard cloud brain. Remote supports custom ElizaOS nodes.
+              </p>
             </div>
-            {activeAgentId === 'remote-agent' && (
-                <div className="remote-config" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
-                    <div style={{ marginBottom: '8px' }}>
-                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Endpoint URL</label>
-                        <input 
-                            type="text" 
-                            value={remoteEndpoint} 
-                            onChange={e => setRemoteEndpoint(e.target.value)}
-                            placeholder="http://localhost:3000/message"
-                            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                        <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>API Key (Optional)</label>
-                        <input 
-                            type="password" 
-                            value={remoteKey} 
-                            onChange={e => setRemoteKey(e.target.value)}
-                            placeholder="sk-..."
-                            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
-                        />
-                    </div>
-                    <button 
-                        className="secondary small" 
-                        style={{ width: '100%' }}
-                        onClick={() => handleAgentSwitch('remote-agent')}
-                    >
-                        Connect & Save
-                    </button>
-                </div>
-            )}
-            <p className="muted small">Choose who drives the avatar. Gemini is built-in. Remote allows custom ElizaOS agents.</p>
-          </div>
-          */}
+          )}
 
           <div className="setting-group">
             <label>Interface Theme</label>
