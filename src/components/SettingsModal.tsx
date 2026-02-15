@@ -6,7 +6,12 @@ import { useToastStore } from '../state/useToastStore';
 import { agentManager } from '../ai/AgentManager';
 import { GeminiAgent } from '../ai/agents/GeminiAgent';
 import { RemoteAgent } from '../ai/agents/RemoteAgent';
-import { Desktop, GearSix, Moon, Sun, FilmStrip, Cube, Scan, Circle, Robot, Globe } from '@phosphor-icons/react';
+import { Button } from '../design-system/Button';
+import { Input } from '../design-system/Input';
+import { 
+  Desktop, GearSix, Moon, Sun, FilmStrip, Cube, Scan, Circle, 
+  Robot, Globe, Lightning, Sparkle 
+} from '@phosphor-icons/react';
 
 interface SettingsModalProps {
   isOpen: boolean;

@@ -15,14 +15,13 @@ import {
   UploadSimple, 
   Trash, 
   Check,
-  Lightning,
   Lock,
   ArrowClockwise,
   CaretDown
 } from '@phosphor-icons/react';
-import { Button } from '../design-system/Button';
-import { Input } from '../design-system/Input';
-import { Panel } from '../design-system/Panel';
+import { Button } from '../../design-system/Button';
+import { Input } from '../../design-system/Input';
+import { Panel } from '../../design-system/Panel';
 
 export function AIGeneratorTab() {
   const { addCustomPose, customPoses, removeCustomPose, importPoses } = useCustomPoseStore();

@@ -163,15 +163,19 @@ export class ActionParser {
             break;
 
           case 'LIGHTING':
-            const { lightingManager } = await import('../../three/lightingManager');
-            lightingManager.applyPreset(value);
-            actionTaken = true;
+            {
+              const { lightingManager } = await import('../../three/lightingManager');
+              lightingManager.applyPreset(value);
+              actionTaken = true;
+            }
             break;
 
           case 'EFFECTS':
-            const { postProcessingManager } = await import('../../three/postProcessingManager');
-            postProcessingManager.applyPreset(value);
-            actionTaken = true;
+            {
+              const { postProcessingManager } = await import('../../three/postProcessingManager');
+              postProcessingManager.applyPreset(value);
+              actionTaken = true;
+            }
             break;
 
           case 'EFFECTS_CONFIG':
@@ -392,53 +396,133 @@ export class ActionParser {
             break;
 
           case 'VMC':
-            const { setVmcEnabled } = (await import('../../state/useReactionStore')).useReactionStore.getState();
-            if (value === 'connect' || value === 'on') setVmcEnabled(true);
-            else if (value === 'disconnect' || value === 'off') setVmcEnabled(false);
-            actionTaken = true;
+            {
+              const { setVmcEnabled } = (await import('../../state/useReactionStore')).useReactionStore.getState();
+              if (value === 'connect' || value === 'on') setVmcEnabled(true);
+              else if (value === 'disconnect' || value === 'off') setVmcEnabled(false);
+              actionTaken = true;
+            }
             break;
 
           case 'LOOK_AT_USER':
-            useAIStore.getState().setThought("Watching...");
-            const { getMocapManager } = await import('../../utils/mocapInstance');
-            const manager = getMocapManager();
-            if (manager) {
-              await manager.aiInterpret("The user wants you to look at them and interpret their state.");
-              actionTaken = true;
+            {
+              useAIStore.getState().setThought("Watching...");
+              const { getMocapManager } = await import('../../utils/mocapInstance');
+              const manager = getMocapManager();
+              if (manager) {
+                await manager.aiInterpret("The user wants you to look at them and interpret their state.");
+                actionTaken = true;
+              }
+              useAIStore.getState().setThought(null);
             }
-            useAIStore.getState().setThought(null);
             break;
 
           case 'GENERATE_POSE':
-            useAIStore.getState().setThought("Generating Pose...");
-            if (geminiService.isReady()) {
-              const result = await geminiService.generatePose(value);
-              if (result?.vrmPose) {
-                const rotLocked = useSceneSettingsStore.getState().rotationLocked;
-                await avatarManager.applyRawPose({
-                  vrmPose: result.vrmPose,
-                  sceneRotation: result.sceneRotation
-                }, rotLocked, 'static');
-                if ((result as any).background) {
-                  await sceneManager.setBackground((result as any).background);
+            {
+              useAIStore.getState().setThought("Generating Pose...");
+              if (geminiService.isReady()) {
+                const result = await geminiService.generatePose(value);
+                if (result?.vrmPose) {
+                  const rotLocked = useSceneSettingsStore.getState().rotationLocked;
+                  await avatarManager.applyRawPose({
+                    vrmPose: result.vrmPose,
+                    sceneRotation: result.sceneRotation
+                  }, rotLocked, 'static');
+                  if ((result as any).background) {
+                    await sceneManager.setBackground((result as any).background);
+                  }
+                  actionTaken = true;
                 }
-                actionTaken = true;
               }
+              useAIStore.getState().setThought(null);
             }
-            useAIStore.getState().setThought(null);
             break;
 
           case 'DIRECTOR':
-            useAIStore.getState().setThought("Directing Sequence...");
-            const { agentManager } = await import('../AgentManager');
-            const script = await agentManager.generateDirectorScript(value);
-            if (script) {
-              const { directorManager } = await import('../../three/DirectorManager');
-              await directorManager.playScript(script);
+            {
+              useAIStore.getState().setThought("Directing Sequence...");
+              const { agentManager } = await import('../AgentManager');
+              const script = await agentManager.generateDirectorScript(value);
+              if (script) {
+                const { directorManager } = await import('../../three/DirectorManager');
+                const { useDirectorStore } = await import('../../state/useDirectorStore');
+                const { useUIStore } = await import('../../state/useUIStore');
+
+                // 1. Set the script in the store so it's visible/editable
+                useDirectorStore.getState().setScript(script);
+                
+                // 2. Switch UI to Director tab
+                useUIStore.getState().setPoseLabTab('director');
+                
+                // 3. Play the script
+                await directorManager.playScript(script);
+                actionTaken = true;
+              }
+              useAIStore.getState().setThought(null);
+            }
+            break;
+
+          case 'TIMELINE':
+            {
+              const { useTimelineStore } = await import('../../state/useTimelineStore');
+              const tl = useTimelineStore.getState();
+              const tlArgs = value.split(' ');
+              const tlAction = tlArgs[0];
+              
+              if (tlAction === 'play') tl.setIsPlaying(true);
+              else if (tlAction === 'pause') tl.setIsPlaying(false);
+              else if (tlAction === 'stop') { tl.setIsPlaying(false); tl.setCurrentTime(0); }
+              else if (tlAction === 'clear') tl.clearTimeline();
+              else if (tlAction === 'time' && tlArgs[1]) tl.setCurrentTime(parseFloat(tlArgs[1]));
+              else if (tlAction === 'keyframe') {
+                const { avatarManager } = await import('../../three/avatarManager');
+                const pose = avatarManager.captureCurrentPose();
+                if (pose && Object.keys(pose).length > 0) {
+                    tl.addKeyframe({ 
+                        time: tl.currentTime, 
+                        pose: pose, 
+                        easing: 'linear'
+                    });
+                    console.log("[ActionParser] Timeline keyframe added at", tl.currentTime);
+                    useAIStore.getState().setThought("Added Keyframe");
+                }
+              }
               actionTaken = true;
             }
-            useAIStore.getState().setThought(null);
             break;
+
+          case 'SETTINGS':
+            {
+              const { useSettingsStore } = await import('../../state/useSettingsStore');
+              const setStore = useSettingsStore.getState();
+              const setArgs = value.split(' ');
+              const setType = setArgs[0];
+              const setVal = setArgs[1];
+
+              if (setType === 'quality') setStore.setQuality(setVal as any);
+              else if (setType === 'shadows') setStore.setShadows(setVal === 'on' || setVal === 'true');
+              else if (setType === 'theme') setStore.setTheme(setVal as any);
+              else if (setType === 'viewport') setStore.setViewportStyle(setVal as any);
+              actionTaken = true;
+            }
+            break;
+
+          case 'CALIBRATE':
+            {
+              const { getMocapManager } = await import('../../utils/mocapInstance');
+              const mManager = getMocapManager();
+              if (mManager) {
+                  mManager.calibrate();
+                  useAIStore.getState().setThought("Calibrated Mocap");
+                  actionTaken = true;
+              }
+            }
+            break;
+            
+          case 'RESET_CAMERA':
+             sceneManager.setCameraPreset('headshot');
+             actionTaken = true;
+             break;
         }
       } catch (e) {
         console.error(`[ActionParser] Failed to execute command ${command}:`, e);

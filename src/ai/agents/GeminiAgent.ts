@@ -39,7 +39,6 @@ export class GeminiAgent implements IAgent {
         'Locomotion': [], 'Idle': [], 'Sitting': [], 'Social': [], 'Action': [], 'Classic': []
       };
       for (const poseId in poseLibrary) {
-        const desc = poseId.replace(/-/g, ' ');
         if (poseId.startsWith('locomotion-')) poses['Locomotion'].push(`- \`${poseId}\``);
         else if (poseId.startsWith('idle-')) poses['Idle'].push(`- \`${poseId}\``);
         else if (poseId.startsWith('sit-') || poseId.startsWith('transition-')) poses['Sitting'].push(`- \`${poseId}\``);
@@ -52,7 +51,8 @@ export class GeminiAgent implements IAgent {
 
     const getBackgroundList = () => {
       const hdri = Object.keys(HDRI_PRESETS).filter(k => k !== 'none').map(k => `\`${k}\` (HDR)`).join(', ');
-      const images = backgroundOptions.filter(b => b.id !== 'transparent').map(b => `\`${b.id}\``).join(', ');
+      // Include ALL background options, including transparent
+      const images = backgroundOptions.map(b => `\`${b.id}\``).join(', ');
       return `${images}, ${hdri}`;
     };
 
@@ -104,7 +104,7 @@ export class GeminiAgent implements IAgent {
     ${getPoseList()}
 
     ### Studio Control:
-    [BACKGROUND: id] - IDs: ${getBackgroundList()}
+    [BACKGROUND: id] - IDs: ${getBackgroundList()}. Use 'transparent' for green-screen/OBS overlays.
     [LIGHTING: id] - IDs: ${getLightingList()}
     [LIGHT_CONFIG: json] - Fine-tune lights. Example: {"keyLight": {"intensity": 2, "color": "#ff0000"}}
     [EFFECTS: id] - IDs: ${getEffectsList()}
@@ -119,6 +119,13 @@ export class GeminiAgent implements IAgent {
     [MUSIC: action] - Actions: play, pause, next, prev, mute, shuffle, vol 0.5
     [AVATAR: name | random] - Search for a specific avatar or use 'random'.
     [UI: action] - Actions: clean (hide UI), default (show UI), scanlines, glitch, vignette, crt
+
+    ### App Control:
+    [TIMELINE: action] - Actions: play, pause, stop, clear, keyframe (snapshot current pose), time <seconds>
+    [SETTINGS: action value] - Actions: quality (ultra/high/med/low), shadows (on/off), viewport (clean/scanlines/vhs/hologram)
+    [CALIBRATE] - Recalibrate motion capture offsets.
+    [RESET_CAMERA] - Reset camera to default position.
+    [VMC: on|off] - Enable/Disable VMC protocol.
 
     ## STYLE GUIDELINES
     - Keep responses concise but warm.
@@ -171,14 +178,26 @@ export class GeminiAgent implements IAgent {
   async generateDirectorScript(userPrompt: string): Promise<DirectorScript | null> {
     if (!this.isInitialized) await this.initialize();
 
+    // 1. Get Dynamic Assets
+    const poses = Object.keys(poseLibrary).join(', ');
+    const backgrounds = [...backgroundOptions.map(b => b.id), ...Object.keys(HDRI_PRESETS).filter(k => k !== 'none')].join(', ');
+    const cameraPresets = ['headshot', 'portrait', 'medium', 'full-body', 'wide', 'low-angle', 'high-angle', 'over-shoulder', 'orbit-slow', 'orbit-fast', 'dolly-in', 'dolly-out'].join(', ');
+
+    // 2. Get Current Script Context
+    const { useDirectorStore } = await import('../../state/useDirectorStore');
+    const currentScript = useDirectorStore.getState().currentScript;
+    const scriptContext = currentScript 
+      ? `CURRENT SCRIPT JSON:\n${JSON.stringify(currentScript, null, 2)}\n\nINSTRUCTION: The user may want to edit this script, add a shot, or start fresh. If editing, preserve existing shots unless asked to remove them.` 
+      : "CURRENT SCRIPT: None (Start fresh).";
+
     const directorSystemPrompt = `
-      You are an expert 3D Cinematographer and Director. Your task is to turn a user request into a high-quality "Director Script" for a 3D avatar animation.
-      
-      ## AVAILABLE ASSETS
-      - Poses: dawn-runner, sunset-call, cipher-whisper, nebula-drift, agent-taunt, agent-dance, agent-clapping, silly-agent, simple-wave, point, locomotion-walk, locomotion-run, locomotion-jog, idle-neutral, sit-chair, action-swim.
-      - Expressions: calm, joy, surprise.
-      - Backgrounds: synthwave-grid, neural-circuit, neon-waves, quantum-particles, signal-glitch, cyber-hexagons, protocol-gradient, void-minimal, green-screen, lush-forest, volcano, deep-sea, hacker-room.
-      - Camera Presets: headshot, portrait, medium, full-body, wide, low-angle, high-angle, over-shoulder, orbit-slow, orbit-fast, dolly-in, dolly-out.
+      You are an expert 3D Cinematographer and Director. Your task is to generate or modify a "Director Script" JSON for a 3D avatar animation.
+
+      ## AVAILABLE ASSETS (Use ONLY these IDs)
+      - Poses: ${poses}
+      - Expressions: happy, sad, angry, surprised, thinking, excited, neutral
+      - Backgrounds: ${backgrounds}
+      - Camera Presets: ${cameraPresets}
 
       ## OUTPUT FORMAT
       You must output ONLY a valid JSON object matching this structure:
@@ -196,7 +215,7 @@ export class GeminiAgent implements IAgent {
             "duration": 5,
             "transition": "smooth",
             "animated": true,
-            "actions": ["[LIGHTING: neon]", "[MUSIC: play]", "[UI: clean]"]
+            "actions": ["[LIGHTING: neon]", "[MUSIC: play]"] 
           }
         ],
         "totalDuration": 15
@@ -207,11 +226,12 @@ export class GeminiAgent implements IAgent {
       - Use transitions between angles (e.g., Wide -> Medium -> Close-up).
       - Keep shots between 3-6 seconds for good pacing.
       - Match the camera angle to the action (e.g., "headshot" for "talking", "full-body" for "dancing").
-      - Use 'actions' to trigger lighting changes, music, or UI effects at the start of each shot.
+      - Use 'actions' to trigger lighting changes or music at the start of each shot.
+      - **IMPORTANT:** Do NOT use [UI], [VMC], or [AVATAR] commands in the script. Focus ONLY on the scene.
     `;
 
     try {
-      const prompt = `${directorSystemPrompt}\n\nUser Request: "${userPrompt}"\n\nGenerate a cinematic Director Script in JSON format.`;
+      const prompt = `${directorSystemPrompt}\n\n${scriptContext}\n\nUser Request: "${userPrompt}"\n\nGenerate the complete Director Script JSON.`;
       
       let jsonText: string;
       if (this.useProxy) {
@@ -225,10 +245,23 @@ export class GeminiAgent implements IAgent {
       const cleanedJson = jsonText.replace(/```json\n?|\n?```/g, '').trim();
       const script = JSON.parse(cleanedJson) as DirectorScript;
       
-      script.id = `script-${Date.now()}`;
+      // Ensure IDs
+      script.id = script.id || `script-${Date.now()}`;
       script.shots.forEach((shot, i) => {
-        if (!shot.id) shot.id = `shot-${i + 1}`;
+        if (!shot.id) shot.id = `shot-${Date.now()}-${i}`;
+        
+        // Safety Filter: Remove restricted commands from actions
+        if (shot.actions) {
+            shot.actions = shot.actions.filter(action => {
+                const cmd = action.toUpperCase();
+                return !cmd.startsWith('[UI:') && 
+                       !cmd.startsWith('[VMC:') && 
+                       !cmd.startsWith('[AVATAR:') &&
+                       !cmd.startsWith('[EXPORT:');
+            });
+        }
       });
+      script.totalDuration = script.shots.reduce((acc, s) => acc + s.duration, 0);
 
       return script;
     } catch (e) {

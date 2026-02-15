@@ -31,7 +31,6 @@ export function MusicPlayer() {
     isMuted,
     isShuffle,
     isRepeatOne,
-    play,
     pause,
     togglePlay,
     next,
